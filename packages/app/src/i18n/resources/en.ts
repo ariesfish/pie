@@ -90,6 +90,20 @@ export const en = {
 		noSkills: "No skills loaded",
 		search: "Search skills…",
 	},
+	workspace: {
+		rail: {
+			files: "Files",
+			changes: "Changes",
+			resources: "Packages",
+			close: "Hide rail",
+		},
+	},
+	message: {
+		actions: {
+			copyCode: "Copy code",
+			copied: "Copied",
+		},
+	},
 	files: {
 		empty: "Empty directory",
 		binary: "binary",

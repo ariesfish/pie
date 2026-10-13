@@ -1,5 +1,5 @@
 // Chat message row (P2c-2): block-level rendering of agent messages —
-// assistant text runs through MdViewer (markdown in chat), tool_use /
+// assistant text runs through MarkdownRenderer (markdown in chat), tool_use /
 // tool_result blocks render as tool cards, thinking blocks collapse.
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,7 +8,7 @@ import {
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { ChevronRight, Terminal, Wrench } from "lucide-react-native";
 
-import { MdViewer } from "@/components/files/md-viewer";
+import { MarkdownRenderer } from "@/components/markdown/renderer";
 import { isMessageEntry, type SessionEntry } from "@pie/protocol";
 
 import { useConnectionStore, type ToolCallRecord } from "@/stores/connection-store";
@@ -54,7 +54,7 @@ export function MessageRow({ entry }: { entry: SessionEntry }) {
 	const rendered = blocks.map((b, i) => {
 		switch (b.type) {
 			case "text":
-				return <View key={i} style={styles.assistantTextWrap}>{String(b.text ?? "") === "" ? null : <MdViewer inline source={String(b.text)} />}</View>;
+				return <View key={i} style={styles.assistantTextWrap}>{String(b.text ?? "") === "" ? null : <MarkdownRenderer compact text={String(b.text)} />}</View>;
 			case "thinking":
 				return <ThinkingBlock key={i} text={String(b.thinking ?? b.text ?? "")} />;
 			case "tool_use":

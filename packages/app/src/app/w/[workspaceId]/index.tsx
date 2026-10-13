@@ -21,6 +21,7 @@ import { useWorkspaceStore } from "@/stores/workspace-store";
 import { useIsCompactFormFactor } from "@/constants/layout";
 
 export default function WorkspaceScreen() {
+	const { t } = useTranslation();
 	const params = useLocalSearchParams<{ workspaceId?: string }>();
 	const routeWorkspaceId =
 		typeof params.workspaceId === "string" ? decodeURIComponent(params.workspaceId) : null;
@@ -93,14 +94,22 @@ export default function WorkspaceScreen() {
 					<RailResizeHandle width={railWidth} onResize={setRailWidth} />
 					<View style={styles.railInner}>
 					<View style={styles.railTabs}>
-						<RailMode on={explorerMode === "files"} onPress={() => setExplorerMode("files")}>
+						<RailMode
+						on={explorerMode === "files"}
+						onPress={() => setExplorerMode("files")}
+						label={t("workspace.rail.files")}
+					>
 							<FolderOpen
 								size={14}
 								color={explorerMode === "files" ? theme.colors.accentForeground : theme.colors.foregroundMuted}
 								strokeWidth={1.5}
 							/>
 						</RailMode>
-						<RailMode on={explorerMode === "changes"} onPress={() => setExplorerMode("changes")}>
+						<RailMode
+						on={explorerMode === "changes"}
+						onPress={() => setExplorerMode("changes")}
+						label={t("workspace.rail.changes")}
+					>
 							<GitCompare
 								size={14}
 								color={explorerMode === "changes" ? theme.colors.accentForeground : theme.colors.foregroundMuted}
@@ -110,6 +119,7 @@ export default function WorkspaceScreen() {
 						<RailMode
 							on={explorerMode === "resources"}
 							onPress={() => setExplorerMode("resources")}
+							label={t("workspace.rail.resources")}
 						>
 							<Package
 								size={14}
@@ -118,7 +128,7 @@ export default function WorkspaceScreen() {
 							/>
 						</RailMode>
 						<View style={styles.railTabSpacer} />
-						<RailMode onPress={() => setExplorerMode(null)}>
+						<RailMode onPress={() => setExplorerMode(null)} label={t("workspace.rail.close")}>
 							<X size={14} color={theme.colors.foregroundExtraMuted} strokeWidth={1.5} />
 						</RailMode>
 					</View>
@@ -204,16 +214,20 @@ function RailMode({
 	children,
 	onPress,
 	on,
+	label,
 }: {
 	children: React.ReactNode;
 	onPress: () => void;
 	on?: boolean;
+	label: string;
 }) {
 	const { theme } = useUnistyles();
 	return (
 		<Pressable
 			hitSlop={4}
 			onPress={onPress}
+			accessibilityLabel={label}
+			accessibilityRole="tab"
 			style={({ pressed }) => [
 				styles.railTab,
 				on && { backgroundColor: theme.colors.surface2 },

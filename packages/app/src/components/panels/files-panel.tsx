@@ -16,7 +16,7 @@ import { ArrowLeft, Check, FileText, Folder, Pencil } from "lucide-react-native"
 
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import { CodeViewer } from "@/components/files/code-viewer";
-import { MdViewer } from "@/components/files/md-viewer";
+import { MarkdownRenderer } from "@/components/markdown/renderer";
 
 export function FilesPanel() {
 	const { t } = useTranslation();
@@ -104,7 +104,7 @@ export function FilesPanel() {
 					</View>
 				) : isMarkdown && !editing ? (
 					<ScrollView>
-						<MdViewer source={viewerText} />
+						<MarkdownRenderer text={viewerText} />
 					</ScrollView>
 				) : (
 					<CodeViewer

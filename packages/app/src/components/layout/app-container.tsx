@@ -101,6 +101,7 @@ function MobileHomeSurface({ children }: { children: ReactNode }) {
 
 /** Compact explorer drawer: mode strip + the shared ExplorerPane content. */
 function MobileExplorerRail() {
+	const { t } = useTranslation();
 	const { theme } = useUnistyles();
 	const explorerMode = useTabsStore((s) => s.explorerMode);
 	const setExplorerMode = useTabsStore((s) => s.setExplorerMode);
@@ -109,8 +110,18 @@ function MobileExplorerRail() {
 	return (
 		<View style={styles.explorerRail}>
 			<View style={styles.explorerTabs}>
-				<RailMode icon={<FolderOpen size={14} color={mode === "files" ? theme.colors.accentForeground : theme.colors.foregroundMuted} strokeWidth={1.5} />} on={mode === "files"} onPress={() => setExplorerMode("files")} />
-				<RailMode icon={<GitCompare size={14} color={mode === "changes" ? theme.colors.accentForeground : theme.colors.foregroundMuted} strokeWidth={1.5} />} on={mode === "changes"} onPress={() => setExplorerMode("changes")} />
+				<RailMode
+					icon={<FolderOpen size={14} color={mode === "files" ? theme.colors.accentForeground : theme.colors.foregroundMuted} strokeWidth={1.5} />}
+					on={mode === "files"}
+					onPress={() => setExplorerMode("files")}
+					label={t("workspace.rail.files")}
+				/>
+				<RailMode
+					icon={<GitCompare size={14} color={mode === "changes" ? theme.colors.accentForeground : theme.colors.foregroundMuted} strokeWidth={1.5} />}
+					on={mode === "changes"}
+					onPress={() => setExplorerMode("changes")}
+					label={t("workspace.rail.changes")}
+				/>
 			</View>
 			<ExplorerPane mode={mode} />
 		</View>
@@ -121,16 +132,20 @@ function RailMode({
 	icon,
 	on,
 	onPress,
+	label,
 }: {
 	icon: ReactNode;
 	on: boolean;
 	onPress: () => void;
+	label: string;
 }) {
 	const { theme } = useUnistyles();
 	return (
 		<Pressable
 			hitSlop={4}
 			onPress={onPress}
+			accessibilityLabel={label}
+			accessibilityRole="tab"
 			style={({ pressed }) => [
 				styles.railMode,
 				on && { backgroundColor: theme.colors.surface2, borderBottomColor: theme.colors.accent },

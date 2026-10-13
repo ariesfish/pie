@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft, DownloadCloud, Trash2 } from "lucide-react-native";
 
 import { Button } from "@/components/ui/button";
-import { MdViewer } from "@/components/files/md-viewer";
+import { MarkdownRenderer } from "@/components/markdown/renderer";
 import { useConnectionStore } from "@/stores/connection-store";
 import { useResourcesStore } from "@/stores/resources-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
@@ -205,7 +205,7 @@ function SkillBody() {
 						<ActivityIndicator />
 					</View>
 				) : (
-					<MdViewer source={skillBody} />
+					<MarkdownRenderer text={skillBody} />
 				)}
 			</ScrollView>
 		</View>

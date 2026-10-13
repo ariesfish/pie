@@ -90,6 +90,20 @@ export const zhCN = {
 		noSkills: "暂无已加载的技能",
 		search: "搜索技能…",
 	},
+	workspace: {
+		rail: {
+			files: "文件",
+			changes: "变更",
+			resources: "包",
+			close: "收起侧栏",
+		},
+	},
+	message: {
+		actions: {
+			copyCode: "复制代码",
+			copied: "已复制",
+		},
+	},
 	files: {
 		empty: "空目录",
 		binary: "二进制",

@@ -52,6 +52,10 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | assistant-selection-copy/markup.ts | assistant-selection-copy/markup.ts (verbatim; consumers arrive with W4) | 2026-10-13 | A |
 | types/{react-native-dataset,react-native-markdown-display}.d.ts | src/types/* counterparts (verbatim) | 2026-10-13 | A |
 | test-stubs/{react-native-unistyles,lucide-react-native}.ts | test-stubs/* counterparts (verbatim; vitest.config gains web-first extensions + RN aliases) | 2026-10-13 | A |
+| files-panel / resources-panel / message-row / widget-view (MdViewer → MarkdownRenderer swap) | consumers rewritten against components/markdown/renderer (compact for chat/widget, default for previews) | 2026-10-13 | B (call-site swap) |
+| app/w/[workspaceId]/index.tsx + app-container.tsx RailMode | RailMode tab roles/labels (accessibility hardening for the walkthrough) | 2026-10-13 | C |
+| components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
+| components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |
 | mobile-panels/model.ts + model.test.ts + gesture-intent.ts + gesture-intent.test.ts | mobile-panels/model.ts + model.test.ts + gesture-intent.ts + gesture-intent.test.ts (view names adapted: agent→home, agent-list→sessions, file-explorer→explorer; selection types moved to tabs-store) | 2026-10-13 | A (logic verbatim, names adapted) |
 | mobile-panels/provider.tsx + gestures.ts + presentation.tsx | mobile-panels/provider.tsx + gestures.ts + presentation.tsx (panel-store → tabs-store mobilePanel slice; WindowChromeRootRegion via pass-through shim until window-chrome lands) | 2026-10-13 | B |

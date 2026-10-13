@@ -63,11 +63,22 @@ async function main() {
 	mkdirSync(join(workspace, "src"), { recursive: true });
 	mkdirSync(agentDir, { recursive: true });
 	write(workspace, "src/app.ts", 'export function greet(name: string): string {\n\treturn `Hello, ${name}!`;\n}\n// dirty line\n');
-	write(workspace, "README.md", "# Walkthrough Fixture\n\nA tiny repo for exercising the files tree, changes panel and diff view.\n");
-	write(workspace, "notes.txt", "untracked\n"); // stays untracked for the changes list
+	write(
+		workspace,
+		"README.md",
+		"# Walkthrough Fixture\n\nA tiny repo for exercising the files tree, changes panel and diff view.\n\n## Rendering\n\nMarkdown preview goes through the ported renderer:\n\n```ts\nconst answer = 42;\n```\n",
+	);
 	run("git", ["init", "-q", "."], { cwd: workspace });
 	run("git", ["add", "-A"], { cwd: workspace });
 	run("git", ["commit", "-qm", "fixture init"], { cwd: workspace });
+	// The commit lands CLEAN, then the tree goes dirty: a tracked-file edit
+	// (the trailing-dirty-line app.ts rewrite below) + an untracked notes.txt.
+	write(
+		workspace,
+		"src/app.ts",
+		'export function greet(name: string): string {\n\treturn `Hello, ${name}!`;\n}\n',
+	);
+	write(workspace, "notes.txt", "untracked\n");
 
 	// ---------------------------------------------------------------- web export
 	const exportDir = join(scratch, "web-export");
@@ -247,8 +258,26 @@ async function runAssertions(appUrl) {
 	check("03 open app.ts → files tab + CodeMirror mounted", cm > 0, `cm-editors=${cm}`);
 	await shot(page, "03-files-tab");
 
+	// 03b open README.md → ported MarkdownRenderer (heading + code fence)
+	await page.getByText("app.ts", { exact: true }).first().click(); // collapse src? no — re-focus
+	await page.getByText("README.md", { exact: true }).first().click();
+	await sleep(1000);
+	const mdHeading = await page
+		.getByText("Walkthrough Fixture", { exact: true })
+		.first()
+		.isVisible()
+		.catch(() => false);
+	const copyBtn = await page
+		.getByLabel("Copy code")
+		.count()
+		.catch(() => 0);
+	check("03b README.md → markdown renderer + copy button", mdHeading && copyBtn > 0, `heading=${mdHeading} copyBtn=${copyBtn}`);
+	await shot(page, "03b-md-preview");
+	await page.mouse.move(10, 10);
+	await sleep(300);
+
 	// 04 rail → changes; click the dirty file → diff view
-	await page.locator('[style*="flex: 1"]').filter({ has: page.locator("svg") }).nth(1).click();
+	await page.getByRole("tab", { name: "Changes" }).click();
 	await sleep(400);
 	await page.getByText("src/app.ts", { exact: false }).first().click();
 	await sleep(900);
@@ -356,8 +385,13 @@ async function runAssertions(appUrl) {
 	await sleep(1000);
 	await sleep(400);
 	const explorerBackdrop = await page.locator('[data-testid="explorer-backdrop"]').count();
-	const explorerTree = await page.getByText("README.md", { exact: true }).first().isVisible().catch(() => false);
-	check("10 compact → explorer drawer opens (right edge swipe)", explorerBackdrop === 1 && explorerTree, `backdrop=${explorerBackdrop} tree=${explorerTree}`);
+	// The drawer shares the rail's mode state; after 04 it shows the changes
+	// list, so assert the drawer's own rail tabs instead of a files-tree row.
+	const drawerFilesTab = await page
+		.getByRole("tab", { name: "Files" })
+		.count()
+		.catch(() => 0);
+	check("10 compact → explorer drawer opens (right edge swipe)", explorerBackdrop === 1 && drawerFilesTab === 1, `backdrop=${explorerBackdrop} filesTab=${drawerFilesTab}`);
 	await shot(page, "13-compact-explorer");
 
 	await browser.close();

@@ -1,13 +1,13 @@
 // Ext-widget surface (P2c typed widgets): shape-detection over the v1 line
 // set — progress rows render as a styled bar, checkbox rows as check lines,
-// everything else normalizes to markdown and rides MdViewer. This is the
+// everything else normalizes to markdown and rides MarkdownRenderer (compact
 // §6.5 heuristic layer until Pi grows a typed setWidget protocol.
 import { useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { X } from "lucide-react-native";
 
-import { MdViewer } from "@/components/files/md-viewer";
+import { MarkdownRenderer } from "@/components/markdown/renderer";
 
 export interface WidgetSurface {
 	sessionId: string;
@@ -44,7 +44,7 @@ export function WidgetView({ widget }: { widget: WidgetSurface }) {
 						))}
 					</View>
 				) : (
-					<MdViewer key={i} inline source={chunk.text} />
+					<MarkdownRenderer key={i} compact text={chunk.text} />
 				),
 			)}
 			{/* clear affordance mirrors clear:true semantics (best-effort UX) */}

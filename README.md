@@ -13,8 +13,8 @@
 | `@pie/protocol` | Wire 协议类型、编解码、能力协商（daemon 与客户端共享） |
 | `@pie/client` | 类型化 daemon 客户端：连接、请求关联、事件重放、会话树同步状态机 |
 | `@pie/daemon` | 内嵌 Pi SDK 的本地守护进程 + WebSocket 服务 + 内置聊天演示页 |
-| `@pie/desktop` | Electron 壳（P1，已含无头烟测） |
-| `@pie/app` | 移动端 App（iOS/Android/Web，Expo Router，P1 已初始化并验证 web/ios bundle） |
+| `@pie/desktop` | Electron 壳 + sidecar daemon（P2 收官：arm64 dmg 打包 + 打包后烟测） |
+| `@pie/app` | 正式 UI 主战场（iOS/Android/Web，Expo Router，中/英双语，P2c-3 + 桌面 Wave 1） |
 
 ## 快速开始（演示页：聊天 + 会话树 + 权限卡）
 
@@ -59,12 +59,12 @@ App 输入 daemon 的 `ws://<host>:8760` + token 即可连接（与演示页相�
 ## 开发
 
 ```bash
-npm run check             # 五个包 typecheck + 71 个 vitest 用例
+npm run check             # 五个包 typecheck + 101 个 vitest 用例
 npm run smoke             # 无 LLM 的端到端烟测（临时 agent dir，不写 ~/.pi/agent）
 npm run daemon            # 前台启动 daemon（首次运行会打印浏览器入口 URL）
 ```
 
-P1 状态（本轮新增）：
+进度记录（逐轮）：
 - **会话树命令全落地**：`session.tree` / `session.entries` / `session.forkAt`（at/before 两种语义）/ `session.forkPreview` / `session.navigate`（navigate 后广播重同步快照）
 - **权限协议**：`--permission=off|annotations|ask`（默认 off，与 pi TUI 信任模型一致，见 [ADR-0002](docs/adr/0002-permission-layer.md)）；页面上有完整审批卡（拒绝/本次允许/本会话始终允许）
 - **P1 其余命令**：compaction.run/setAuto、exportHtml、retry.abort、bash.abort、scope.set、commands.list、resources.overview
@@ -121,8 +121,15 @@ P1 状态（本轮新增）：
   - 文件树/变更列表/资源收进左侧 explorer 栏（可折叠），不再占主区 tab
 - **策略裁决（P2c 收尾）**：沙箱会话与凭证面缓议、挪 P3 附条件触发——沙箱的真实威胁模型属于 relay/公网远程（本地显式 open 的信任语义已由 P2c-1 的 setProjectTrusted 承接，与 Pi 本体一致）；凭证面的价值等 relay 接入
 - **ADR-0004：不提供终端通道**——终端 cell 流移动端传输与可读性双输；「看 Pi 干了什么」由会话事件（tool/bashDelta）+ 文件/diff 面板承担；用户 shell 体验回归 Pi TUI（本体完整保留）。协议 `terminal` capability 移除，P2c 重定义为富组件（typed widgets/扩展页/MCP/子代理/Skills）
-- 单测 71 项全绿；真实环境回归：118 个真实会话、2791 消息会话的真实 fork 链路已验证
+- 回归基线（P2c 收官）：5 包 typecheck × 0 错误、101/101 测试、pie-smoke 34 步 ALL GREEN、Electron 无头烟测 OK；真实环境已验证 118 个真实会话、2791 消息会话的 fork 链路
 
 ## 状态
 
-P0 脚手架（见路线图：architecture.md §11）。协议类型为 P1 全集初稿，daemon 尚只实现核心命令子集。
+**P0–P2c-3 已完成**（路线图：architecture.md §11）：
+
+- **协议 / daemon**：Wire v1 全命令集落地（会话树、steer/followUp 双队列、fs/git 观察面、packages/skills 资源面）；审批策略 `off|annotations|ask`；34 步无 LLM 端到端烟测全绿
+- **@pie/app 正式 UI**：P2a 底座（四件套 + 主题 token + i18n 中/英）→ P2b 文件查看/编辑 + diff + 桌面三栏/tab → P2c 富组件（工具卡、typed widgets、嵌套调用树、资源页）→ 桌面 Wave 1（Paseo 结构复刻：会话即 tab）
+- **@pie/desktop**：Electron 壳 + sidecar（`ELECTRON_RUN_AS_NODE` spawn、动态端口、崩溃清理），arm64 dmg 打包 + `smoke:packaged` 通过
+- **决策存档**：ADR-0003（移除 session.switch）、ADR-0004（不提供终端通道）；沙箱/凭证面缓议挪 P3 附条件触发；MCP 页跳过
+
+**下一站**：P2 收尾（diff Skia 渲染器升级、语音输入评估）→ P3（relay E2E 公网中继 + 推送、CLI、pi-server 演进观察）。

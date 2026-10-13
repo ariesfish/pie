@@ -38,6 +38,20 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | components/chat/message-row.tsx | message block dispatch concept; tool-card/heuristic shapes are Pie-specific | 2025-10-12 | C |
 | components/widgets/widget-view.tsx | §6.5 line-set → shape heuristics (architecture doc); no paseo asset | 2025-10-12 | — |
 | Wave-1 desktop shell (sidebar/session-list/tabs) | screens/sessions-screen.tsx + components/agent-list.tsx + screens/workspace/workspace-desktop-tabs-row.tsx (structure & date buckets; data = pie session.list) | 2025-10-12 | C/Wave-1 |
+
+<!-- W2a: markdown rendering engine (wholesale port). Trimmed: fence/mermaid
+     (zoomable-viewport excluded), attachments/file_rpc image resolution,
+     desktop-host openExternal bridge, markdown-it stays at v15 (paseo bundles
+     10) — see per-file [pie] markers. -->
+| components/markdown/{renderer.tsx,html-ish.ts,part-groups.ts,link-children.ts,link-text.tsx,inline-image-size.ts} + fence/{index,language,types} | components/markdown/* + fence/{index,language,types} (verbatim except mermaid fork clipped) | 2026-10-13 | A (subset) |
+| components/markdown-text.{web,ios,android,d.ts} + markdown-text-style.ts + markdown-text-selection.tsx | components/markdown-text.* + markdown-text-style.ts + markdown-text-selection.tsx (verbatim) | 2026-10-13 | A |
+| components/highlighted-code-block.tsx | components/highlighted-code-block.tsx (verbatim) | 2026-10-13 | A |
+| utils/{http-url,open-external-url,markdown-parser,markdown-ast,markdown-list,assistant-image-metadata,assistant-image-source,highlight-cache}.ts + tests | utils/* counterparts (open-external-url: desktop-host branch clipped; assistant-image-source: file_rpc branch clipped; markdown-parser: ReturnType typing for markdown-it 15) | 2026-10-13 | A (subset) |
+| hooks/use-stable-event.ts | hooks/use-stable-event.ts (verbatim) | 2026-10-13 | A |
+| styles/{markdown-styles,syntax-token-styles,code-surface}.ts | styles/* counterparts (verbatim; syntax group added to styles/theme.ts) | 2026-10-13 | A |
+| assistant-selection-copy/markup.ts | assistant-selection-copy/markup.ts (verbatim; consumers arrive with W4) | 2026-10-13 | A |
+| types/{react-native-dataset,react-native-markdown-display}.d.ts | src/types/* counterparts (verbatim) | 2026-10-13 | A |
+| test-stubs/{react-native-unistyles,lucide-react-native}.ts | test-stubs/* counterparts (verbatim; vitest.config gains web-first extensions + RN aliases) | 2026-10-13 | A |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |
 | mobile-panels/model.ts + model.test.ts + gesture-intent.ts + gesture-intent.test.ts | mobile-panels/model.ts + model.test.ts + gesture-intent.ts + gesture-intent.test.ts (view names adapted: agent→home, agent-list→sessions, file-explorer→explorer; selection types moved to tabs-store) | 2026-10-13 | A (logic verbatim, names adapted) |
 | mobile-panels/provider.tsx + gestures.ts + presentation.tsx | mobile-panels/provider.tsx + gestures.ts + presentation.tsx (panel-store → tabs-store mobilePanel slice; WindowChromeRootRegion via pass-through shim until window-chrome lands) | 2026-10-13 | B |

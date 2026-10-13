@@ -3,6 +3,7 @@
 // unchanged (Theme slots, semantic builders, status colors, scales, shadows).
 // Pie tints replace Paseo's teal with the Pie blue-violet family.
 
+import { darkHighlightColors, lightHighlightColors } from "@getpaseo/highlight";
 import { Platform } from "react-native";
 
 export const baseColors = {
@@ -469,6 +470,8 @@ export function buildDarkTheme(semanticColors: ReturnType<typeof buildDarkSemant
 		colors: {
 			...semanticColors,
 			palette: baseColors,
+			// [port] syntax group from @getpaseo/highlight (paseo styles/theme.ts)
+			syntax: darkHighlightColors,
 		},
 		shadow: darkShadow,
 		...commonTheme,
@@ -481,6 +484,8 @@ export function buildLightTheme(semanticColors: ReturnType<typeof buildLightSema
 		colors: {
 			...semanticColors,
 			palette: baseColors,
+			// [port] syntax group from @getpaseo/highlight (paseo styles/theme.ts)
+			syntax: lightHighlightColors,
 		},
 		shadow: lightShadow,
 		...commonTheme,

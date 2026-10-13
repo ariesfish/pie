@@ -122,6 +122,8 @@ npm run daemon            # 前台启动 daemon（首次运行会打印浏览器
 - **策略裁决（P2c 收尾）**：沙箱会话与凭证面缓议、挪 P3 附条件触发——沙箱的真实威胁模型属于 relay/公网远程（本地显式 open 的信任语义已由 P2c-1 的 setProjectTrusted 承接，与 Pi 本体一致）；凭证面的价值等 relay 接入
 - **ADR-0004：不提供终端通道**——终端 cell 流移动端传输与可读性双输；「看 Pi 干了什么」由会话事件（tool/bashDelta）+ 文件/diff 面板承担；用户 shell 体验回归 Pi TUI（本体完整保留）。协议 `terminal` capability 移除，P2c 重定义为富组件（typed widgets/扩展页/MCP/子代理/Skills）
 - 回归基线（P2c 收官）：5 包 typecheck × 0 错误、101/101 测试、pie-smoke 34 步 ALL GREEN、Electron 无头烟测 OK；真实环境已验证 118 个真实会话、2791 消息会话的 fork 链路
+- **基础功能接线（2026-10-13）**：workspace 管理（workspaces 屏：daemon `workspace.list` ∪ 本地注册表 + 添加项目，daemon 侧目录校验）、磁盘会话导入（`switchSession` 传 path，TUI/CLI 会话可直接打开）、右侧 explorer 栏（files/changes/resources 模式切换）+ FilesPanel/ChangesPanel 挂载到中央共享 tab（修复孤儿面板问题）、new-session 面板快选化；102 测试
+- **ADR-0005：UI 复用策略升级为「分层整目录搬运」**（2026-10-13，含技术栈联网核查与 AI 时代评估）：骨骼/皮肤层整目录搬（SplitContainer/mobile-panels/workspace-tabs/components），数据层不搬；W1–W4 锁 paseo 钉版（Expo 54/RN 0.81/RNGH 2.28），markdown-it 保持 15、Electron 升 44，W4 后立项 SDK 57；W1 起 React Compiler 1.0 + oxlint 提级，不引入 web-only AI UI 库（assistant-ui RN 绑定入观察名单）
 
 ## 状态
 

@@ -42,6 +42,9 @@ export default function WorkspaceScreen() {
 		const store = useWorkspaceStore.getState();
 		if (routeWorkspaceId && routeWorkspaceId !== store.workspaceId) {
 			store.setWorkspace(routeWorkspaceId);
+			// Restore the workspace's tab bar / rail layout (deterministic tab ids
+			// make the record stable across restarts).
+			useTabsStore.getState().hydrate(routeWorkspaceId);
 			void store.ensureWatch();
 			void store.listDir("");
 			void useSessionListStore.getState().refresh();

@@ -7,13 +7,19 @@ import { View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { isWeb } from "@/constants/platform";
+import {
+	MIN_RAIL_WIDTH,
+	MAX_RAIL_WIDTH,
+	DEFAULT_RAIL_WIDTH,
+	clampRailWidth,
+} from "@/stores/workspace-layout-record";
 
-export const MIN_RAIL_WIDTH = 200;
-export const MAX_RAIL_WIDTH = 520;
-export const DEFAULT_RAIL_WIDTH = 264;
-
-export const clampRailWidth = (px: number): number =>
-	Math.max(MIN_RAIL_WIDTH, Math.min(MAX_RAIL_WIDTH, Math.round(px)));
+export {
+	MIN_RAIL_WIDTH,
+	MAX_RAIL_WIDTH,
+	DEFAULT_RAIL_WIDTH,
+	clampRailWidth,
+} from "@/stores/workspace-layout-record";
 
 export function RailResizeHandle({
 	width,

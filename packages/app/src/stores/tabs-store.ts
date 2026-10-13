@@ -2,9 +2,10 @@
 // workspace-tabs/model.ts). A session IS a tab; files/changes are workspace-
 // global singletons; the new_tab creator is sticky. Tab ids are deterministic
 // (identity.ts), so opening an existing target reveals it instead of
-// duplicating. Mobile panel state (mobile-panels port) and the explorer rail
-// live here too — one layout store until the W1c-2 split-layout port splits
-// persistence out per workspace.
+// duplicating — and the per-workspace layout record (workspace-layout-record)
+// restores the tab bar exactly across restarts. Mobile panel state
+// (mobile-panels port) and the explorer rail live here too — one layout store
+// until the W1c-2 split-layout port splits persistence out per workspace.
 import { create } from "zustand";
 
 import {
@@ -12,7 +13,13 @@ import {
 	normalizeWorkspaceTabTarget,
 } from "@/workspace-tabs/identity";
 import type { WorkspaceTab, WorkspaceTabTarget } from "@/workspace-tabs/model";
-import { DEFAULT_RAIL_WIDTH, clampRailWidth } from "@/components/layout/rail-resize-handle";
+import {
+	DEFAULT_RAIL_WIDTH,
+	NEW_TAB_ID,
+	clampRailWidth,
+	readLayoutRecord,
+	writeLayoutRecord,
+} from "./workspace-layout-record";
 
 /** Right-rail content mode; null = rail hidden (desktop). */
 export type ExplorerMode = "files" | "changes" | "resources" | "activity" | null;
@@ -25,8 +32,6 @@ export interface MobilePanelSelection {
 	/** Bumped on every programmatic change; gestures race-check against it. */
 	revision: number;
 }
-
-const NEW_TAB_ID = "new_tab";
 
 interface TabsState {
 	tabs: WorkspaceTab[];
@@ -62,6 +67,12 @@ interface TabsState {
 	showMobileSessions: () => void;
 	showMobileExplorer: (mode?: Exclude<ExplorerMode, null>) => void;
 	toggleMobileExplorer: (mode?: Exclude<ExplorerMode, null>) => void;
+
+	/** Binds the store to a workspace layout record (loads + saves thereafter).
+	 * Record key = workspace path (single local daemon; a host prefix joins
+	 * when the P3 relay introduces multi-host routing). */
+	workspaceKey: string | null;
+	hydrate: (workspaceKey: string) => void;
 }
 
 /** Only a target change bumps the revision (paseo setMobilePanelTarget). */
@@ -77,9 +88,23 @@ const initialTabs: WorkspaceTab[] = [
 	{ tabId: NEW_TAB_ID, target: { kind: "new_tab" }, createdAt: 0 },
 ];
 
+function persistLayout(get: () => TabsState): void {
+	const { workspaceKey, tabs, activeTabId, explorerMode, railWidth } = get();
+	if (!workspaceKey) return;
+	writeLayoutRecord(workspaceKey, { tabs, activeTabId, explorerMode, railWidth });
+}
+
 export const useTabsStore = create<TabsState>((set, get) => ({
 	tabs: initialTabs,
 	activeTabId: NEW_TAB_ID,
+	workspaceKey: null,
+
+	/** Load a workspace's layout record (defaults when absent) and save on
+	 * every layout mutation thereafter. */
+	hydrate: (workspaceKey) => {
+		if (get().workspaceKey === workspaceKey) return;
+		set({ ...readLayoutRecord(workspaceKey), workspaceKey });
+	},
 
 	openTab: (target) => {
 		const normalized = normalizeWorkspaceTabTarget(target);
@@ -87,9 +112,12 @@ export const useTabsStore = create<TabsState>((set, get) => ({
 		if (normalized.kind === "new_tab") {
 			const exists = get().tabs.some((t) => t.tabId === NEW_TAB_ID);
 			set((s) => ({
-				tabs: exists ? s.tabs : [...s.tabs, { tabId: NEW_TAB_ID, target: normalized, createdAt: Date.now() }],
+				tabs: exists
+					? s.tabs
+					: [...s.tabs, { tabId: NEW_TAB_ID, target: normalized, createdAt: Date.now() }],
 				activeTabId: NEW_TAB_ID,
 			}));
+			persistLayout(get);
 			return NEW_TAB_ID;
 		}
 		const tabId = buildDeterministicWorkspaceTabId(normalized);
@@ -102,6 +130,7 @@ export const useTabsStore = create<TabsState>((set, get) => ({
 				activeTabId: tabId,
 			};
 		});
+		persistLayout(get);
 		return tabId;
 	},
 
@@ -115,6 +144,7 @@ export const useTabsStore = create<TabsState>((set, get) => ({
 			next.splice(clamped, 0, moved);
 			return { ...s, tabs: next };
 		});
+		persistLayout(get);
 	},
 
 	closeTab: (tabId) => {
@@ -129,11 +159,15 @@ export const useTabsStore = create<TabsState>((set, get) => ({
 					: s.activeTabId;
 			return { ...s, tabs: next, activeTabId };
 		});
+		persistLayout(get);
 	},
 
 	setActive: (tabId) => {
 		if (get().activeTabId === tabId) return;
-		set((s) => ({ activeTabId: s.tabs.some((t) => t.tabId === tabId) ? tabId : s.activeTabId }));
+		set((s) => ({
+			activeTabId: s.tabs.some((t) => t.tabId === tabId) ? tabId : s.activeTabId,
+		}));
+		persistLayout(get);
 	},
 
 	activeTarget: () => {
@@ -159,16 +193,23 @@ export const useTabsStore = create<TabsState>((set, get) => ({
 
 	explorerMode: null,
 
-	setExplorerMode: (mode) => set({ explorerMode: mode }),
+	setExplorerMode: (mode) => {
+		set({ explorerMode: mode });
+		persistLayout(get);
+	},
 
 	toggleRail: () => {
 		const mode = get().explorerMode;
 		set({ explorerMode: mode == null ? "files" : null });
+		persistLayout(get);
 	},
 
 	railWidth: DEFAULT_RAIL_WIDTH,
 
-	setRailWidth: (px) => set({ railWidth: clampRailWidth(px) }),
+	setRailWidth: (px) => {
+		set({ railWidth: clampRailWidth(px) });
+		persistLayout(get);
+	},
 
 	treeExpanded: {},
 
@@ -200,3 +241,6 @@ export const useTabsStore = create<TabsState>((set, get) => ({
 					},
 		),
 }));
+
+export { sanitizeLayoutRecord } from "./workspace-layout-record";
+export type { WorkspaceLayoutRecord } from "./workspace-layout-record";

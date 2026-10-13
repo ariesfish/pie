@@ -68,7 +68,10 @@ export function LeftSidebar() {
 				<Text style={styles.sectionTitle}>{t("workspaces.title")}</Text>
 				<Pressable
 					hitSlop={6}
-					onPress={() => router.push("/workspaces")}
+					onPress={() => {
+						router.push("/workspaces");
+						useTabsStore.getState().showMobileHome();
+					}}
 				>
 					<FolderPlus size={13} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 				</Pressable>
@@ -86,9 +89,10 @@ export function LeftSidebar() {
 									active && styles.rowSelected,
 									pressed && styles.rowPressed,
 								]}
-								onPress={() =>
-									router.push({ pathname: "/w/[workspaceId]", params: { workspaceId: w.id } })
-								}
+								onPress={() => {
+									router.push({ pathname: "/w/[workspaceId]", params: { workspaceId: w.id } });
+									useTabsStore.getState().showMobileHome();
+								}}
 							>
 								<Text style={[styles.rowTitle, active && styles.rowTitleOn]} numberOfLines={1}>
 									{w.name}
@@ -139,6 +143,7 @@ export function LeftSidebar() {
 										// Disk sessions (TUI/CLI-created) open via path the first time.
 										void conn.switchSession(session.sessionId, session.path || undefined);
 										useTabsStore.getState().openSession(session.sessionId);
+									useTabsStore.getState().showMobileHome();
 									}}
 								>
 									<Text style={[styles.rowTitle, on && styles.rowTitleOn]} numberOfLines={1}>
@@ -164,7 +169,10 @@ export function LeftSidebar() {
 					label={t("agentList.newSession")}
 					onPress={() => {
 						const ws = useWorkspaceStore.getState().workspaceId;
-						if (ws) void useConnectionStore.getState().startSession(ws);
+						if (ws) {
+							useTabsStore.getState().showMobileHome();
+							void useConnectionStore.getState().startSession(ws);
+						}
 					}}
 					primary
 				/>

@@ -16,6 +16,17 @@ export interface Tab {
 /** Right-rail content mode; null = rail hidden (desktop). */
 export type ExplorerMode = "files" | "changes" | "resources" | "activity" | null;
 
+/** Compact (mobile) panel targets — the drei-pane semantics of paseo's
+ * mobile-panels system ("home" = agent center, "sessions" = left drawer,
+ * "explorer" = right drawer). */
+export type MobilePanelView = "home" | "sessions" | "explorer";
+
+export interface MobilePanelSelection {
+	target: MobilePanelView;
+	/** Bumped on every programmatic change; gestures race-check against it. */
+	revision: number;
+}
+
 const FILES_TAB_ID = "tab-files";
 const CHANGES_TAB_ID = "tab-changes";
 
@@ -25,6 +36,8 @@ interface TabsState {
 	explorerMode: ExplorerMode;
 	/** Expanded directory paths in the file tree (workspace-relative). */
 	treeExpanded: Record<string, boolean>;
+	/** Compact mobile panel selection (paseo mobile-panels semantics). */
+	mobilePanel: MobilePanelSelection;
 
 	openSession: (sessionId: string) => void;
 	openNew: () => void;
@@ -39,9 +52,23 @@ interface TabsState {
 	rightRailOpen: boolean;
 	setRightRailOpen: (open: boolean) => void;
 	toggleExpanded: (path: string) => void;
+	/** Mobile panel commands (each bumps the selection revision). */
+	showMobileHome: () => void;
+	showMobileSessions: () => void;
+	showMobileExplorer: (mode?: Exclude<ExplorerMode, null>) => void;
+	toggleMobileExplorer: (mode?: Exclude<ExplorerMode, null>) => void;
 }
 
 const tabIdOf = (sessionId: string) => `tab-s:${sessionId}`;
+
+/** Only a target change bumps the revision (paseo setMobilePanelTarget). */
+function setMobilePanelTarget(
+	selection: MobilePanelSelection,
+	target: MobilePanelView,
+): MobilePanelSelection {
+	if (selection.target === target) return selection;
+	return { target, revision: selection.revision + 1 };
+}
 
 export const useTabsStore = create<TabsState>((set, get) => ({
 	tabs: [{ id: "tab-new", kind: "new" }],
@@ -104,4 +131,29 @@ export const useTabsStore = create<TabsState>((set, get) => ({
 
 	toggleExpanded: (path) =>
 		set((s) => ({ treeExpanded: { ...s.treeExpanded, [path]: !s.treeExpanded[path] } })),
+
+	mobilePanel: { target: "home", revision: 0 },
+
+	showMobileHome: () =>
+		set((s) => ({ mobilePanel: setMobilePanelTarget(s.mobilePanel, "home") })),
+
+	showMobileSessions: () =>
+		set((s) => ({ mobilePanel: setMobilePanelTarget(s.mobilePanel, "sessions") })),
+
+	showMobileExplorer: (mode) => {
+		set((s) => ({
+			mobilePanel: setMobilePanelTarget(s.mobilePanel, "explorer"),
+			...(mode ? { explorerMode: mode } : {}),
+		}));
+	},
+
+	toggleMobileExplorer: (mode) =>
+		set((s) =>
+			s.mobilePanel.target === "explorer"
+				? { mobilePanel: setMobilePanelTarget(s.mobilePanel, "home") }
+				: {
+						mobilePanel: setMobilePanelTarget(s.mobilePanel, "explorer"),
+					...(mode ? { explorerMode: mode } : {}),
+				},
+		),
 }));

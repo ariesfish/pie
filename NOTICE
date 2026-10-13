@@ -39,6 +39,9 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | components/widgets/widget-view.tsx | §6.5 line-set → shape heuristics (architecture doc); no paseo asset | 2025-10-12 | — |
 | Wave-1 desktop shell (sidebar/session-list/tabs) | screens/sessions-screen.tsx + components/agent-list.tsx + screens/workspace/workspace-desktop-tabs-row.tsx (structure & date buckets; data = pie session.list) | 2025-10-12 | C/Wave-1 |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |
+| mobile-panels/model.ts + model.test.ts + gesture-intent.ts + gesture-intent.test.ts | mobile-panels/model.ts + model.test.ts + gesture-intent.ts + gesture-intent.test.ts (view names adapted: agent→home, agent-list→sessions, file-explorer→explorer; selection types moved to tabs-store) | 2026-10-13 | A (logic verbatim, names adapted) |
+| mobile-panels/provider.tsx + gestures.ts + presentation.tsx | mobile-panels/provider.tsx + gestures.ts + presentation.tsx (panel-store → tabs-store mobilePanel slice; WindowChromeRootRegion via pass-through shim until window-chrome lands) | 2026-10-13 | B |
+| components/layout/app-container.tsx (compact shell) | app-container.tsx + mobile-panels presentation wiring (drawer overlays + edge-swipe open gestures) | 2026-10-13 | B |
 
 Type per docs/paseo-ui-reuse.md: A = direct port, B = port with source swap,
 C = design/pattern reference only.

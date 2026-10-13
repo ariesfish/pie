@@ -16,6 +16,7 @@ import { Composer } from "@/components/chat/composer";
 import { NewSessionPanel } from "@/components/layout/new-session-panel";
 import { FilesPanel } from "@/components/panels/files-panel";
 import { ChangesPanel } from "@/components/panels/changes-panel";
+import { MobileSessionsButton } from "@/components/layout/app-container";
 import { useConnectionStore } from "@/stores/connection-store";
 import { useSessionListStore, sessionTitle } from "@/stores/session-list-store";
 import { useTabsStore } from "@/stores/tabs-store";
@@ -76,6 +77,7 @@ export default function WorkspaceScreen() {
 						{/* compact: open files/changes tabs (no room for a rail) */}
 						{isCompact ? (
 							<>
+									<MobileSessionsButton />
 								<HeaderIcon
 									label={t("panels.files")}
 									onPress={() => useTabsStore.getState().openFiles()}
@@ -92,7 +94,10 @@ export default function WorkspaceScreen() {
 						) : null}
 						<HeaderIcon
 							label={t("panels.explorer")}
-							onPress={toggleRail}
+							onPress={() => {
+								if (isCompact) useTabsStore.getState().toggleMobileExplorer();
+								else toggleRail();
+							}}
 							active={railVisible}
 						>
 							<Activity

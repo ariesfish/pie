@@ -18,6 +18,10 @@ import { useTranslation } from "react-i18next";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
 import { RetainedPanel } from "@/components/retained-panel";
+import { DraggableTabChip } from "@/components/layout/draggable-tab-chip";
+import { SortableTabStrip } from "@/components/layout/sortable-tab-strip";
+import { SplitDropTarget } from "@/components/layout/split-drop-target";
+import { SplitDndShell, useSplitDnd } from "@/components/layout/split-dnd-shell";
 import { getPanelRegistration, type PanelProps } from "@/panels/panel-registry";
 import type { SplitNode, SplitPane } from "@/stores/workspace-layout-actions";
 import { collectAllTabs } from "@/stores/workspace-layout-actions";
@@ -28,7 +32,11 @@ import { useWorkspaceStore } from "@/stores/workspace-store";
 /** Desktop split tree host. */
 export function SplitContainer() {
 	const layout = useTabsStore((s) => s.layout);
-	return <SplitNodeView node={layout.root} />;
+	return (
+		<SplitDndShell>
+			<SplitNodeView node={layout.root} />
+		</SplitDndShell>
+	);
 }
 
 /** Compact host: the focused pane only, full width (no split chrome). */
@@ -183,8 +191,18 @@ function SplitPaneView({ pane, compact = false }: { pane: SplitPane; compact?: b
 					) : null}
 				</View>
 			</Pressable>
-			<PanePanelHost pane={pane} />
+			<DraggablePaneBody pane={pane} />
 		</View>
+	);
+}
+
+/** Pane body drop target — edge drops split, center moves (web). */
+function DraggablePaneBody({ pane }: { pane: SplitPane }) {
+	const { activeTabId } = useSplitDnd();
+	return (
+		<SplitDropTarget paneId={pane.id} zone="pane-body" active={activeTabId !== null}>
+			<PanePanelHost pane={pane} />
+		</SplitDropTarget>
 	);
 }
 
@@ -242,42 +260,50 @@ function PaneTabsRow({ pane, compact }: { pane: SplitPane; compact: boolean }) {
 		}
 	}
 
+	const { activeTabId } = useSplitDnd();
+
 	return (
-		<ScrollView
-			horizontal
-			showsHorizontalScrollIndicator={false}
-			style={styles.tabsScroll}
-			contentContainerStyle={styles.tabsRow}
-		>
-			{pane.tabIds.map((tabId) => {
-				const tab = tabs.find((entry) => entry.tabId === tabId);
-				if (!tab) return null;
-				const on = pane.focusedTabId === tabId;
-				const label = labelFor(tab);
-				const Icon = label.icon;
-				return (
-					<Pressable key={tabId} style={[styles.tab, on && styles.tabOn]} onPress={() => setActive(tabId)}>
-						<Icon
-							size={11}
-							color={on ? theme.colors.foreground : theme.colors.foregroundExtraMuted}
-							strokeWidth={1.75}
-						/>
-						<Text style={[styles.tabText, on && styles.tabTextOn]} numberOfLines={1}>
-							{label.title}
-						</Text>
-						{label.closable && !compact ? (
-							<Pressable style={styles.tabClose} onPress={() => closeTab(tabId)} hitSlop={4}>
-								<X
+		<SplitDropTarget paneId={pane.id} zone="pane" active={activeTabId !== null}>
+			<SortableTabStrip ids={pane.tabIds}>
+				<ScrollView
+				horizontal
+				showsHorizontalScrollIndicator={false}
+				style={styles.tabsScroll}
+				contentContainerStyle={styles.tabsRow}
+			>
+				{pane.tabIds.map((tabId) => {
+					const tab = tabs.find((entry) => entry.tabId === tabId);
+					if (!tab) return null;
+					const on = pane.focusedTabId === tabId;
+					const label = labelFor(tab);
+					const Icon = label.icon;
+					return (
+						<DraggableTabChip key={tabId} tabId={tabId} paneId={pane.id}>
+							<Pressable style={[styles.tab, on && styles.tabOn]} onPress={() => setActive(tabId)}>
+								<Icon
 									size={11}
 									color={on ? theme.colors.foreground : theme.colors.foregroundExtraMuted}
 									strokeWidth={1.75}
 								/>
+								<Text style={[styles.tabText, on && styles.tabTextOn]} numberOfLines={1}>
+									{label.title}
+								</Text>
+								{label.closable && !compact ? (
+									<Pressable style={styles.tabClose} onPress={() => closeTab(tabId)} hitSlop={4}>
+										<X
+											size={11}
+											color={on ? theme.colors.foreground : theme.colors.foregroundExtraMuted}
+											strokeWidth={1.75}
+										/>
+									</Pressable>
+								) : null}
 							</Pressable>
-						) : null}
-					</Pressable>
-				);
-			})}
-		</ScrollView>
+						</DraggableTabChip>
+					);
+					})}
+				</ScrollView>
+			</SortableTabStrip>
+		</SplitDropTarget>
 	);
 }
 

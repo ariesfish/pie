@@ -59,6 +59,8 @@ interface TabsState {
 
 	openTab: (target: WorkspaceTabTarget) => string;
 	moveTab: (tabId: string, toIndex: number) => void;
+	/** Reorder tabs within a pane by explicit id order (dnd drop end). */
+	reorderPaneTabs: (paneId: string, tabIds: string[]) => void;
 	closeTab: (tabId: string) => void;
 	setActive: (tabId: string) => void;
 	activeTarget: () => WorkspaceTabTarget | null;
@@ -185,6 +187,10 @@ export const useTabsStore = create<TabsState>((set, get) => {
 			const clamped = Math.max(0, Math.min(tabIds.length, toIndex));
 			tabIds.splice(clamped, 0, tabId);
 			applyLayout(reorderPaneTabsInLayout({ layout, paneId: pane.id, tabIds }));
+		},
+
+		reorderPaneTabs: (paneId, tabIds) => {
+			applyLayout(reorderPaneTabsInLayout({ layout: get().layout, paneId, tabIds }));
 		},
 
 		closeTab: (tabId) => {

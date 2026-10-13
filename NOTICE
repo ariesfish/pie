@@ -48,7 +48,7 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | components/layout/rail-resize-handle.tsx | components/resize-handle.tsx (single-rail subset of the split-group resize mechanics; full handle lands with W1c-2 nested splits) | 2026-10-13 | C (design reference) |
 | stores/workspace-layout-record.ts | stores/workspace-layout-store.ts (persistence boundary: sanitize/normalize-on-read shape; v2 record carries the split tree, v1 flat records migrate on read; zod migrations deferred) | 2026-10-13 | B (semantic port) |
 | stores/workspace-layout-actions.ts | stores/workspace-layout-actions.ts (complete split-tree op set: normalize/traversal/split-insertion/close cascades/placement rules; minus explorer-sidebar pane host, parent-tab map, draft/browser reconciliation — pie concepts don't exist) | 2026-10-13 | B (full subset) |
-| components/layout/split-container.tsx | components/split-container.tsx (tree rendering: group flex+dividers, pane tab strips + retained panel hosts, splitter drag dnd; pie adaptation drops the dnd-kit tab drag — web-desktop only upstream, lands next) | 2026-10-13 | B (render logic; dnd deferred) |
+| components/layout/split-container.tsx + {draggable-tab-chip,sortable-tab-strip,split-drop-target,split-dnd-shell}[.web/.native + hub] | components/split-container.tsx (tree rendering) + dnd-kit wiring pattern from draggable-list.web/sortable-inline-list.web/split-drop-zone (tab drag reorder/move/split-drop, PointerSensor distance 8, pointerWithin collision preference; native twins pass through) | 2026-10-13 | B |
 
 Type per docs/paseo-ui-reuse.md: A = direct port, B = port with source swap,
 C = design/pattern reference only.

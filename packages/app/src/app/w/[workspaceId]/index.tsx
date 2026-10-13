@@ -1,25 +1,32 @@
 // Ported from getpaseo/paseo (Apache-2.0) — screens/workspace/workspace-screen.tsx
-// (Pie subset: desktop row = center column (workspace header, session tabs
-// row, panel content) + right explorer rail (files / changes / resources /
-// activity). Files & changes open as shared workspace tabs in the center so
-// the explorer rail stays a browser, not a viewer.)
+// (Pie W1c: desktop row = resizable explorer rail + main column (header,
+// tabs row, panel host). Panels render through the registry inside
+// RetainedPanels, so the streaming chat keeps its state while the user works
+// in the files/changes tabs. Drag-to-reorder/split panes land with W1c-2.)
 import { useEffect } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { Activity, FileText, FolderOpen, GitCompare, Plus, Package, X } from "lucide-react-native";
+import {
+	Activity,
+	FolderOpen,
+	GitCompare,
+	MessageSquare,
+	Package,
+	Plus,
+	X,
+} from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
+import "@/panels/register-panels";
 import { ExplorerPane } from "@/components/layout/explorer-pane";
-import { ChatList } from "@/components/chat/chat-list";
-import { Composer } from "@/components/chat/composer";
-import { NewSessionPanel } from "@/components/layout/new-session-panel";
-import { FilesPanel } from "@/components/panels/files-panel";
-import { ChangesPanel } from "@/components/panels/changes-panel";
 import { MobileSessionsButton } from "@/components/layout/app-container";
+import { RailResizeHandle } from "@/components/layout/rail-resize-handle";
+import { RetainedPanel } from "@/components/retained-panel";
+import { getPanelRegistration, type PanelProps } from "@/panels/panel-registry";
 import { useConnectionStore } from "@/stores/connection-store";
 import { useSessionListStore, sessionTitle } from "@/stores/session-list-store";
-import { useTabsStore } from "@/stores/tabs-store";
+import { useTabsStore, type ExplorerMode } from "@/stores/tabs-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import { useIsCompactFormFactor } from "@/constants/layout";
 
@@ -42,75 +49,26 @@ export default function WorkspaceScreen() {
 	}, [routeWorkspaceId]);
 
 	const workspaceName = (routeWorkspaceId ?? "Pie").split("/").filter(Boolean).pop() ?? "Pie";
-	const { theme } = useUnistyles();
-	const { t } = useTranslation();
-
-	const tabs = useTabsStore((s) => s.tabs);
-	const activeTabId = useTabsStore((s) => s.activeTabId);
 	const explorerMode = useTabsStore((s) => s.explorerMode);
 	const setExplorerMode = useTabsStore((s) => s.setExplorerMode);
-	const toggleRail = useTabsStore((s) => s.toggleRail);
+	const railWidth = useTabsStore((s) => s.railWidth);
+	const setRailWidth = useTabsStore((s) => s.setRailWidth);
 	const error = useConnectionStore((s) => s.error);
-
-	const active = tabs.find((x) => x.id === activeTabId) ?? tabs[0];
-
-	/** Tab switches route through connection-store (snapshot resync). */
-	useEffect(() => {
-		if (active?.kind === "session" && active.sessionId) {
-			const path =
-				useSessionListStore.getState().sessions.find((s) => s.sessionId === active.sessionId)?.path;
-			void useConnectionStore.getState().switchSession(active.sessionId, path || undefined);
-		}
-	}, [active?.kind, active?.sessionId]);
 
 	const railVisible = !isCompact && explorerMode != null;
 
 	return (
 		<View style={styles.desktopRow}>
 			<View style={styles.centerColumn}>
-				{/* workspace header (paseo: project row — name + branch slot) */}
-				<View style={styles.headerRow}>
-					<Text style={styles.workspace} numberOfLines={1}>
-						{workspaceName}
-					</Text>
-					<View style={styles.headerActions}>
-						{/* compact: open files/changes tabs (no room for a rail) */}
-						{isCompact ? (
-							<>
-									<MobileSessionsButton />
-								<HeaderIcon
-									label={t("panels.files")}
-									onPress={() => useTabsStore.getState().openFiles()}
-								>
-									<FolderOpen size={14} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
-								</HeaderIcon>
-								<HeaderIcon
-									label={t("panels.changes")}
-									onPress={() => useTabsStore.getState().openChanges()}
-								>
-									<GitCompare size={14} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
-								</HeaderIcon>
-							</>
-						) : null}
-						<HeaderIcon
-							label={t("panels.explorer")}
-							onPress={() => {
-								if (isCompact) useTabsStore.getState().toggleMobileExplorer();
-								else toggleRail();
-							}}
-							active={railVisible}
-						>
-							<Activity
-								size={14}
-								color={railVisible ? theme.colors.accentForeground : theme.colors.foregroundMuted}
-								strokeWidth={1.5}
-							/>
-						</HeaderIcon>
-					</View>
-				</View>
+				{/* workspace header (paseo: project row — name + actions) */}
+				<WorkspaceHeaderRow
+					workspaceName={workspaceName}
+					isCompact={isCompact}
+					railVisible={railVisible}
+				/>
 
-				{/* session tabs row — sessions + shared files/changes tabs */}
-				<SessionTabsRow />
+				{/* tabs row — session tabs + shared file/changes tabs + creator */}
+				<TabsRow />
 
 				{error ? (
 					<View style={styles.errorBar}>
@@ -120,65 +78,100 @@ export default function WorkspaceScreen() {
 					</View>
 				) : null}
 
-				{/* center content: chat | new-session | files | changes */}
-				<View style={styles.centerContent}>
-					{active?.kind === "new" ? (
-						<NewSessionPanel />
-					) : active?.kind === "session" ? (
-						<>
-							<ChatList />
-							<Composer />
-						</>
-					) : active?.kind === "files" ? (
-						<FilesPanel />
-					) : active?.kind === "changes" ? (
-						<ChangesPanel />
-					) : null}
-				</View>
+				{/* panels: every mounted tab keeps its state (RetainedPanel) */}
+				<PanelHost />
 			</View>
 
 			{/* right explorer rail (desktop): files tree / changes / resources / activity */}
 			{railVisible ? (
-				<View style={styles.rail}>
+				<View style={[styles.rail, { width: railWidth }]}>
+					<RailResizeHandle width={railWidth} onResize={setRailWidth} />
 					<View style={styles.railTabs}>
-						<RailTab
+						<RailMode
+							on={explorerMode === "files"}
 							onPress={() => setExplorerMode("files")}
-							active={explorerMode === "files"}
 						>
 							<FolderOpen
 								size={14}
-								color={explorerMode === "files" ? theme.colors.accentForeground : theme.colors.foregroundMuted}
+								color={modeColor(explorerMode === "files")}
 								strokeWidth={1.5}
 							/>
-						</RailTab>
-						<RailTab
+						</RailMode>
+						<RailMode
+							on={explorerMode === "changes"}
 							onPress={() => setExplorerMode("changes")}
-							active={explorerMode === "changes"}
 						>
 							<GitCompare
 								size={14}
-								color={explorerMode === "changes" ? theme.colors.accentForeground : theme.colors.foregroundMuted}
+								color={modeColor(explorerMode === "changes")}
 								strokeWidth={1.5}
 							/>
-						</RailTab>
-						<RailTab
+						</RailMode>
+						<RailMode
+							on={explorerMode === "resources"}
 							onPress={() => setExplorerMode("resources")}
-							active={explorerMode === "resources"}
 						>
 							<Package
 								size={14}
-								color={explorerMode === "resources" ? theme.colors.accentForeground : theme.colors.foregroundMuted}
+								color={modeColor(explorerMode === "resources")}
 								strokeWidth={1.5}
 							/>
-						</RailTab>
+						</RailMode>
 						<View style={styles.railTabSpacer} />
-						<RailTab onPress={() => setExplorerMode(null)} active={false}>
-							<X size={14} color={theme.colors.foregroundExtraMuted} strokeWidth={1.5} />
-						</RailTab>
+						<RailMode onPress={() => setExplorerMode(null)}>
+							<X size={14} color={modeColor(false)} strokeWidth={1.5} />
+						</RailMode>
 					</View>
 					<ExplorerPane mode={explorerMode} />
 				</View>
 			) : null}
+		</View>
+	);
+}
+
+function modeColor(on: boolean): "accent" | "muted" {
+	return on ? "accent" : "muted";
+}
+
+function WorkspaceHeaderRow({
+	workspaceName,
+	isCompact,
+	railVisible,
+}: {
+	workspaceName: string;
+	isCompact: boolean;
+	railVisible: boolean;
+}) {
+	const { theme } = useUnistyles();
+	const { t } = useTranslation();
+	const toggleRail = useTabsStore((s) => s.toggleRail);
+
+	return (
+		<View style={styles.headerRow}>
+			<Text style={styles.workspace} numberOfLines={1}>
+				{workspaceName}
+			</Text>
+			<View style={styles.headerActions}>
+				{isCompact ? <MobileSessionsButton /> : null}
+				<HeaderIcon
+					label={t("panels.explorer")}
+					onPress={() => {
+						if (isCompact) useTabsStore.getState().toggleMobileExplorer();
+						else toggleRail();
+					}}
+					active={railVisible}
+				>
+					<Activity
+						size={14}
+						color={
+							railVisible
+								? theme.colors.accentForeground
+								: theme.colors.foregroundMuted
+						}
+						strokeWidth={1.5}
+					/>
+				</HeaderIcon>
+			</View>
 		</View>
 	);
 }
@@ -194,7 +187,6 @@ function HeaderIcon({
 	active?: boolean;
 	label: string;
 }) {
-	const { theme } = useUnistyles();
 	return (
 		<Pressable
 			accessibilityLabel={label}
@@ -211,14 +203,15 @@ function HeaderIcon({
 	);
 }
 
-function RailTab({
+function RailMode({
 	children,
 	onPress,
-	active,
+	on,
 }: {
 	children: React.ReactNode;
 	onPress: () => void;
 	active?: boolean;
+	on?: boolean;
 }) {
 	const { theme } = useUnistyles();
 	return (
@@ -227,8 +220,8 @@ function RailTab({
 			onPress={onPress}
 			style={({ pressed }) => [
 				styles.railTab,
-				active && { backgroundColor: theme.colors.surface2 },
-				active && { borderBottomColor: theme.colors.accent },
+				on && { backgroundColor: theme.colors.surface2 },
+				on && { borderBottomColor: theme.colors.accent },
 				pressed && { opacity: 0.7 },
 			]}
 		>
@@ -238,17 +231,50 @@ function RailTab({
 }
 
 /**
- * Session tabs row — one tab per session, the shared files/changes tabs, and
- * the sticky new-session tab at the end ("a tab IS a session"; files and
- * changes are workspace-global singletons).
+ * Tabs row — one tab per session, the shared files/changes singletons, and
+ * the sticky creator tab ("tab target = data" model, W1c).
  */
-function SessionTabsRow() {
+function TabsRow() {
 	const { t } = useTranslation();
 	const { theme } = useUnistyles();
 	const tabs = useTabsStore((s) => s.tabs);
 	const activeTabId = useTabsStore((s) => s.activeTabId);
 	const setActive = useTabsStore((s) => s.setActive);
 	const closeTab = useTabsStore((s) => s.closeTab);
+	const sessions = useSessionListStore((s) => s.sessions);
+	const openFilePath = useWorkspaceStore((s) => s.openFilePath);
+
+	function labelFor(tab: (typeof tabs)[number]): {
+		title: string;
+		icon: React.ComponentType<{ size: number; color: string; strokeWidth?: number }>;
+		closable: boolean;
+	} {
+		const registration = getPanelRegistration(tab.target.kind);
+		const fallbackIcon = registration?.presentation.icon ?? MessageSquare;
+		switch (tab.target.kind) {
+			case "new_tab":
+				return { title: t("agentList.newSession"), icon: Plus, closable: false };
+			case "session": {
+				const { sessionId } = tab.target;
+				const session = sessions.find((s) => s.sessionId === sessionId);
+				return {
+					title: session ? sessionTitle(session) : `${sessionId.slice(0, 8)}…`,
+					icon: MessageSquare,
+					closable: true,
+				};
+			}
+			case "files":
+				return {
+					title: openFilePath
+						? (openFilePath.split("/").pop() ?? t("panels.files"))
+						: t("panels.files"),
+					icon: fallbackIcon,
+					closable: true,
+				};
+			case "changes":
+				return { title: t("panels.changes"), icon: fallbackIcon, closable: true };
+		}
+	}
 
 	return (
 		<ScrollView
@@ -258,43 +284,72 @@ function SessionTabsRow() {
 			contentContainerStyle={styles.tabsRow}
 		>
 			{tabs.map((tab) => {
-				const on = tab.id === activeTabId;
-				const session =
-					tab.kind === "session"
-						? useSessionListStore
-								.getState()
-								.sessions.find((s) => s.sessionId === tab.sessionId)
-						: undefined;
-				const openFile = useWorkspaceStore.getState().openFilePath;
-				const title =
-					tab.kind === "new"
-						? t("agentList.newSession")
-						: tab.kind === "files"
-							? openFile
-								? (openFile.split("/").pop() ?? t("panels.files"))
-								: t("panels.files")
-							: tab.kind === "changes"
-								? t("panels.changes")
-								: sessionTitle(session ?? ({ firstMessage: tab.sessionId ?? "" } as never));
+				const on = tab.tabId === activeTabId;
+				const label = labelFor(tab);
+				const Icon = label.icon;
 				return (
-					<Pressable key={tab.id} style={[styles.tab, on && styles.tabOn]} onPress={() => setActive(tab.id)}>
-						{tab.kind === "files" ? (
-							<FileText size={11} color={on ? theme.colors.foreground : theme.colors.foregroundMuted} strokeWidth={1.75} />
-						) : null}
+					<Pressable
+						key={tab.tabId}
+						style={[styles.tab, on && styles.tabOn]}
+						onPress={() => setActive(tab.tabId)}
+					>
+						<Icon
+							size={11}
+							color={on ? theme.colors.foreground : theme.colors.foregroundExtraMuted}
+							strokeWidth={1.75}
+						/>
 						<Text style={[styles.tabText, on && styles.tabTextOn]} numberOfLines={1}>
-							{title}
+							{label.title}
 						</Text>
-						{tab.kind !== "new" ? (
-							<Pressable style={styles.tabClose} onPress={() => closeTab(tab.id)} hitSlop={4}>
-								<X size={11} color={on ? theme.colors.foreground : theme.colors.foregroundExtraMuted} strokeWidth={1.75} />
+						{label.closable ? (
+							<Pressable style={styles.tabClose} onPress={() => closeTab(tab.tabId)} hitSlop={4}>
+								<X
+									size={11}
+									color={on ? theme.colors.foreground : theme.colors.foregroundExtraMuted}
+									strokeWidth={1.75}
+								/>
 							</Pressable>
-						) : (
-							<Plus size={11} color={on ? theme.colors.foreground : theme.colors.foregroundExtraMuted} strokeWidth={1.75} />
-						)}
+						) : null}
 					</Pressable>
 				);
 			})}
 		</ScrollView>
+	);
+}
+
+/**
+ * Panel host: renders every mounted tab's registered component inside a
+ * RetainedPanel — only the active tab renders on screen, but all of them
+ * stay mounted (streaming continues, scroll positions survive).
+ */
+function PanelHost() {
+	const tabs = useTabsStore((s) => s.tabs);
+	const activeTabId = useTabsStore((s) => s.activeTabId);
+
+	// Session-tab switches route through connection-store (snapshot resync).
+	const active = tabs.find((t) => t.tabId === activeTabId) ?? tabs[0];
+	useEffect(() => {
+		if (active?.target.kind === "session") {
+			const sessionId = active.target.sessionId;
+			const path =
+				useSessionListStore.getState().sessions.find((s) => s.sessionId === sessionId)?.path;
+			void useConnectionStore.getState().switchSession(sessionId, path || undefined);
+		}
+	}, [active?.target]);
+
+	return (
+		<View style={styles.panelHost}>
+			{tabs.map((tab) => {
+				const registration = getPanelRegistration(tab.target.kind);
+				if (!registration) return null;
+				const Panel = registration.component as React.ComponentType<PanelProps>;
+				return (
+					<RetainedPanel key={tab.tabId} active={tab.tabId === activeTabId}>
+						<Panel target={tab.target} />
+					</RetainedPanel>
+				);
+			})}
+		</View>
 	);
 }
 
@@ -310,7 +365,12 @@ const styles = StyleSheet.create((theme) => ({
 		borderBottomWidth: theme.borderWidth[1],
 		borderBottomColor: theme.colors.border,
 	},
-	workspace: { color: theme.colors.foreground, fontSize: theme.fontSize.base, fontWeight: theme.fontWeight.semibold },
+	workspace: {
+		color: theme.colors.foreground,
+		fontSize: theme.fontSize.base,
+		fontSizeAdjust: "none",
+		fontWeight: theme.fontWeight.semibold,
+	},
 	headerActions: { flexDirection: "row", alignItems: "center", gap: theme.spacing[1] },
 	headerIcon: {
 		width: 28,
@@ -323,7 +383,6 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	headerIconOn: { backgroundColor: theme.colors.accent, borderColor: theme.colors.accent },
 	rail: {
-		width: 256,
 		borderLeftWidth: theme.borderWidth[1],
 		borderLeftColor: theme.colors.border,
 		backgroundColor: theme.colors.surfaceSidebar,
@@ -333,6 +392,7 @@ const styles = StyleSheet.create((theme) => ({
 		alignItems: "center",
 		gap: 2,
 		paddingHorizontal: theme.spacing[1],
+		paddingLeft: theme.spacing[3],
 		borderBottomWidth: theme.borderWidth[1],
 		borderBottomColor: theme.colors.border,
 	},
@@ -346,7 +406,11 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	railTabSpacer: { width: theme.spacing[1] },
 	tabsScroll: { flexGrow: 0, flexShrink: 0 },
-	tabsRow: { paddingHorizontal: theme.spacing[2], paddingVertical: theme.spacing[1], gap: theme.spacing[1] },
+	tabsRow: {
+		paddingHorizontal: theme.spacing[2],
+		paddingVertical: theme.spacing[1],
+		gap: theme.spacing[1],
+	},
 	tab: {
 		flexDirection: "row",
 		alignItems: "center",
@@ -368,5 +432,7 @@ const styles = StyleSheet.create((theme) => ({
 		backgroundColor: theme.colors.surface1,
 	},
 	errorText: { color: theme.colors.statusDanger, fontSize: 10 },
-	centerContent: { flex: 1 },
+	panelHost: { flex: 1, flexDirection: "row" },
 }));
+
+export type { ExplorerMode };

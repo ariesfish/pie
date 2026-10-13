@@ -13,7 +13,14 @@ import { useResourcesStore } from "@/stores/resources-store";
 import { useConnectionStore } from "@/stores/connection-store";
 import { useTabsStore } from "@/stores/tabs-store";
 import { useSessionListStore } from "@/stores/session-list-store";
+import { RightRail } from "@/components/workspace/right-rail";
 import type { FsEntryInfo, GitStatusEntry, SkillInfo } from "@pie/protocol";
+
+/** Timeline rail mode — the ported RightRail event stream (paseo's right
+ * rail hosts the agent timeline; pie logs the protocol event stream). */
+function ActivityRail() {
+	return <RightRail />;
+}
 
 export function ExplorerPane({
 	mode,
@@ -23,6 +30,7 @@ export function ExplorerPane({
 }) {
 	if (mode === "changes") return <ChangesList />;
 	if (mode === "resources") return <ResourcesList />;
+	if (mode === "activity") return <ActivityRail />;
 	// files is the default mode
 	return <FileTree />;
 }

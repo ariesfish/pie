@@ -1,24 +1,23 @@
-// Tabs model, Wave 1 + wiring fix: a session IS a tab (paseo's core mental
-// model); files/changes are shared workspace tabs (paseo's "tab target is
-// data" — exactly one files tab and one changes tab, reused on every open,
-// because their state lives in the workspace store, not the tab).
+// Tabs model, W1c: "tab target = data" (paseo workspace-tabs model port — see
+// workspace-tabs/model.ts). A session IS a tab; files/changes are workspace-
+// global singletons; the new_tab creator is sticky. Tab ids are deterministic
+// (identity.ts), so opening an existing target reveals it instead of
+// duplicating. Mobile panel state (mobile-panels port) and the explorer rail
+// live here too — one layout store until the W1c-2 split-layout port splits
+// persistence out per workspace.
 import { create } from "zustand";
 
-export type TabKind = "session" | "new" | "files" | "changes";
-
-export interface Tab {
-	id: string;
-	kind: TabKind;
-	/** Session id for session tabs (tab id derives from it). */
-	sessionId?: string;
-}
+import {
+	buildDeterministicWorkspaceTabId,
+	normalizeWorkspaceTabTarget,
+} from "@/workspace-tabs/identity";
+import type { WorkspaceTab, WorkspaceTabTarget } from "@/workspace-tabs/model";
+import { DEFAULT_RAIL_WIDTH, clampRailWidth } from "@/components/layout/rail-resize-handle";
 
 /** Right-rail content mode; null = rail hidden (desktop). */
 export type ExplorerMode = "files" | "changes" | "resources" | "activity" | null;
 
-/** Compact (mobile) panel targets — the drei-pane semantics of paseo's
- * mobile-panels system ("home" = agent center, "sessions" = left drawer,
- * "explorer" = right drawer). */
+/** Compact (mobile) panel targets — paseo mobile-panels semantics. */
 export type MobilePanelView = "home" | "sessions" | "explorer";
 
 export interface MobilePanelSelection {
@@ -27,39 +26,43 @@ export interface MobilePanelSelection {
 	revision: number;
 }
 
-const FILES_TAB_ID = "tab-files";
-const CHANGES_TAB_ID = "tab-changes";
+const NEW_TAB_ID = "new_tab";
 
 interface TabsState {
-	tabs: Tab[];
+	tabs: WorkspaceTab[];
 	activeTabId: string;
-	explorerMode: ExplorerMode;
-	/** Expanded directory paths in the file tree (workspace-relative). */
-	treeExpanded: Record<string, boolean>;
-	/** Compact mobile panel selection (paseo mobile-panels semantics). */
-	mobilePanel: MobilePanelSelection;
 
+	/** Open a target — reveals the existing tab when the identity matches. */
+	openTab: (target: WorkspaceTabTarget) => string;
+	/** Reorder (dnd/tab-menu surface); index bounds are clamped. */
+	moveTab: (tabId: string, toIndex: number) => void;
+	closeTab: (tabId: string) => void;
+	setActive: (tabId: string) => void;
+	/** The active tab's target (null only transiently). */
+	activeTarget: () => WorkspaceTabTarget | null;
+
+	// Convenience opens (openTab under the hood).
 	openSession: (sessionId: string) => void;
 	openNew: () => void;
-	/** Open (or activate) the shared files tab and reveal a file in it. */
 	openFiles: () => void;
-	/** Open (or activate) the shared changes tab. */
 	openChanges: () => void;
-	closeTab: (id: string) => void;
-	setActive: (id: string) => void;
+
+	explorerMode: ExplorerMode;
 	setExplorerMode: (mode: ExplorerMode) => void;
 	toggleRail: () => void;
-	rightRailOpen: boolean;
-	setRightRailOpen: (open: boolean) => void;
+	/** Explorer rail width in px (resizable on desktop). */
+	railWidth: number;
+	setRailWidth: (px: number) => void;
+
+	treeExpanded: Record<string, boolean>;
 	toggleExpanded: (path: string) => void;
-	/** Mobile panel commands (each bumps the selection revision). */
+
+	mobilePanel: MobilePanelSelection;
 	showMobileHome: () => void;
 	showMobileSessions: () => void;
 	showMobileExplorer: (mode?: Exclude<ExplorerMode, null>) => void;
 	toggleMobileExplorer: (mode?: Exclude<ExplorerMode, null>) => void;
 }
-
-const tabIdOf = (sessionId: string) => `tab-s:${sessionId}`;
 
 /** Only a target change bumps the revision (paseo setMobilePanelTarget). */
 function setMobilePanelTarget(
@@ -70,55 +73,91 @@ function setMobilePanelTarget(
 	return { target, revision: selection.revision + 1 };
 }
 
-export const useTabsStore = create<TabsState>((set, get) => ({
-	tabs: [{ id: "tab-new", kind: "new" }],
-	activeTabId: "tab-new",
-	explorerMode: null,
-	treeExpanded: {},
-	rightRailOpen: false,
+const initialTabs: WorkspaceTab[] = [
+	{ tabId: NEW_TAB_ID, target: { kind: "new_tab" }, createdAt: 0 },
+];
 
-	openSession: (sessionId) => {
-		const id = tabIdOf(sessionId);
-		const { tabs } = get();
-		if (!tabs.some((t) => t.id === id)) {
-			set({ tabs: [...tabs, { id, kind: "session", sessionId }], activeTabId: id });
-		} else {
-			set({ activeTabId: id });
+export const useTabsStore = create<TabsState>((set, get) => ({
+	tabs: initialTabs,
+	activeTabId: NEW_TAB_ID,
+
+	openTab: (target) => {
+		const normalized = normalizeWorkspaceTabTarget(target);
+		if (!normalized) return "";
+		if (normalized.kind === "new_tab") {
+			const exists = get().tabs.some((t) => t.tabId === NEW_TAB_ID);
+			set((s) => ({
+				tabs: exists ? s.tabs : [...s.tabs, { tabId: NEW_TAB_ID, target: normalized, createdAt: Date.now() }],
+				activeTabId: NEW_TAB_ID,
+			}));
+			return NEW_TAB_ID;
 		}
+		const tabId = buildDeterministicWorkspaceTabId(normalized);
+		set((s) => {
+			const existing = s.tabs.some((t) => t.tabId === tabId);
+			return {
+				tabs: existing
+					? s.tabs
+					: [...s.tabs, { tabId, target: normalized, createdAt: Date.now() }],
+				activeTabId: tabId,
+			};
+		});
+		return tabId;
 	},
 
-	openNew: () => set({ activeTabId: "tab-new" }),
+	moveTab: (tabId, toIndex) => {
+		set((s) => {
+			const from = s.tabs.findIndex((t) => t.tabId === tabId);
+			if (from === -1) return s;
+			const next = s.tabs.slice();
+			const [moved] = next.splice(from, 1);
+			const clamped = Math.max(0, Math.min(next.length, toIndex));
+			next.splice(clamped, 0, moved);
+			return { ...s, tabs: next };
+		});
+	},
+
+	closeTab: (tabId) => {
+		if (tabId === NEW_TAB_ID) return; // the creator tab never closes
+		set((s) => {
+			const idx = s.tabs.findIndex((t) => t.tabId === tabId);
+			if (idx === -1) return s;
+			const next = s.tabs.filter((t) => t.tabId !== tabId);
+			const activeTabId =
+				s.activeTabId === tabId
+					? (next[Math.min(idx, next.length - 1)]?.tabId ?? NEW_TAB_ID)
+					: s.activeTabId;
+			return { ...s, tabs: next, activeTabId };
+		});
+	},
+
+	setActive: (tabId) => {
+		if (get().activeTabId === tabId) return;
+		set((s) => ({ activeTabId: s.tabs.some((t) => t.tabId === tabId) ? tabId : s.activeTabId }));
+	},
+
+	activeTarget: () => {
+		const { tabs, activeTabId } = get();
+		return tabs.find((t) => t.tabId === activeTabId)?.target ?? null;
+	},
+
+	openSession: (sessionId) => {
+		get().openTab({ kind: "session", sessionId });
+	},
+
+	openNew: () => {
+		get().openTab({ kind: "new_tab" });
+	},
 
 	openFiles: () => {
-		const { tabs } = get();
-		if (!tabs.some((t) => t.id === FILES_TAB_ID)) {
-			set({ tabs: [...tabs, { id: FILES_TAB_ID, kind: "files" }], activeTabId: FILES_TAB_ID });
-		} else {
-			set({ activeTabId: FILES_TAB_ID });
-		}
+		get().openTab({ kind: "files" });
 	},
 
 	openChanges: () => {
-		const { tabs } = get();
-		if (!tabs.some((t) => t.id === CHANGES_TAB_ID)) {
-			set({ tabs: [...tabs, { id: CHANGES_TAB_ID, kind: "changes" }], activeTabId: CHANGES_TAB_ID });
-		} else {
-			set({ activeTabId: CHANGES_TAB_ID });
-		}
+		get().openTab({ kind: "changes" });
 	},
 
-	closeTab: (id) => {
-		const { tabs, activeTabId } = get();
-		if (id === "tab-new") return; // the new-session tab never closes
-		const idx = tabs.findIndex((t) => t.id === id);
-		if (idx === -1) return;
-		const next = tabs.filter((t) => t.id !== id);
-		const nextActive =
-			activeTabId === id ? (next[Math.min(idx, next.length - 1)]?.id ?? "tab-new") : activeTabId;
-		set({ tabs: next, activeTabId: nextActive });
-	},
-
-	setActive: (id) => set({ activeTabId: id }),
+	explorerMode: null,
 
 	setExplorerMode: (mode) => set({ explorerMode: mode }),
 
@@ -127,7 +166,11 @@ export const useTabsStore = create<TabsState>((set, get) => ({
 		set({ explorerMode: mode == null ? "files" : null });
 	},
 
-	setRightRailOpen: (open) => set({ explorerMode: open ? get().explorerMode ?? "files" : null }),
+	railWidth: DEFAULT_RAIL_WIDTH,
+
+	setRailWidth: (px) => set({ railWidth: clampRailWidth(px) }),
+
+	treeExpanded: {},
 
 	toggleExpanded: (path) =>
 		set((s) => ({ treeExpanded: { ...s.treeExpanded, [path]: !s.treeExpanded[path] } })),
@@ -153,7 +196,7 @@ export const useTabsStore = create<TabsState>((set, get) => ({
 				? { mobilePanel: setMobilePanelTarget(s.mobilePanel, "home") }
 				: {
 						mobilePanel: setMobilePanelTarget(s.mobilePanel, "explorer"),
-					...(mode ? { explorerMode: mode } : {}),
-				},
+						...(mode ? { explorerMode: mode } : {}),
+					},
 		),
 }));

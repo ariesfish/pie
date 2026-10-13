@@ -42,6 +42,10 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | mobile-panels/model.ts + model.test.ts + gesture-intent.ts + gesture-intent.test.ts | mobile-panels/model.ts + model.test.ts + gesture-intent.ts + gesture-intent.test.ts (view names adapted: agent→home, agent-list→sessions, file-explorer→explorer; selection types moved to tabs-store) | 2026-10-13 | A (logic verbatim, names adapted) |
 | mobile-panels/provider.tsx + gestures.ts + presentation.tsx | mobile-panels/provider.tsx + gestures.ts + presentation.tsx (panel-store → tabs-store mobilePanel slice; WindowChromeRootRegion via pass-through shim until window-chrome lands) | 2026-10-13 | B |
 | components/layout/app-container.tsx (compact shell) | app-container.tsx + mobile-panels presentation wiring (drawer overlays + edge-swipe open gestures) | 2026-10-13 | B |
+| workspace-tabs/model.ts + identity.ts + identity.test.ts | workspace-tabs/model.ts + identity.ts + identity.test.ts (target kinds narrowed to new_tab/session/files/changes; normalize/dedup/deterministic-id semantics carried over) | 2026-10-13 | B (structure, subset) |
+| panels/panel-manifest.ts + panel-registry.ts + register-panels.tsx | panels/panel-manifest.ts + panel-registry.ts + register-panels.tsx (manifest singleton/host semantics verbatim; descriptor hooks deferred) | 2026-10-13 | B |
+| components/retained-panel.tsx | components/retained-panel.tsx (verbatim) | 2026-10-13 | A |
+| components/layout/rail-resize-handle.tsx | components/resize-handle.tsx (single-rail subset of the split-group resize mechanics; full handle lands with W1c-2 nested splits) | 2026-10-13 | C (design reference) |
 
 Type per docs/paseo-ui-reuse.md: A = direct port, B = port with source swap,
 C = design/pattern reference only.

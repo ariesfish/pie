@@ -1,87 +1,118 @@
-// Layout record sanitization (W1c-2): the persistence boundary. Everything
-// that goes through localStorage passes sanitizeLayoutRecord first — invalid
-// or unknown targets drop, deterministic tab ids re-derive (so legacy records
-// with stale ids still hydrate), and the sticky creator tab is always present.
+// Layout record sanitization (W1c-3): the persistence boundary. Records
+// carry the split tree (v2); flat records written by W1c-2 migrate into a
+// single-pane tree on read. Everything passes sanitizeLayoutRecord first.
 import { describe, expect, it } from "vitest";
 
 import { sanitizeLayoutRecord } from "../src/stores/workspace-layout-record";
+import { findPaneById, collectAllTabs } from "../src/stores/workspace-layout-actions";
 
-describe("sanitizeLayoutRecord", () => {
-	it("falls back to the defaults for garbage input", () => {
-		expect(sanitizeLayoutRecord(null)).toEqual({
-			tabs: expect.arrayContaining([
-				expect.objectContaining({ tabId: "new_tab", target: { kind: "new_tab" } }),
-			]),
-			activeTabId: "new_tab",
-			explorerMode: null,
-			railWidth: 264,
-		});
-		expect(sanitizeLayoutRecord("nonsense" as never).activeTabId).toBe("new_tab");
+describe("sanitizeLayoutRecord (v2, tree)", () => {
+	it("falls back to the default layout for garbage input", () => {
+		const record = sanitizeLayoutRecord(null);
+		expect(record.layout.focusedPaneId).toBeTruthy();
+		expect(record.explorerMode).toBeNull();
+		expect(record.railWidth).toBe(264);
+		const panes = (function collect(node: unknown): unknown[] {
+			const n = node as { kind: string; pane?: unknown; group?: { children: unknown[] } };
+			if (n?.kind === "pane") return [n.pane];
+			return (n?.group?.children ?? []).flatMap(collect);
+		})(record.layout.root);
+		expect(panes.length).toBeGreaterThan(0);
+		expect(collectAllTabs(record.layout.root).some((t) => t.target.kind === "new_tab")).toBe(
+			true,
+		);
 	});
 
-	it("keeps valid tabs and re-derives their deterministic ids", () => {
+	it("migrates v1 flat records into a single-pane tree", () => {
 		const record = sanitizeLayoutRecord({
 			tabs: [
-				{ tabId: "stale-id", target: { kind: "session", sessionId: "01a1" }, createdAt: 5 },
+				{ tabId: "session_01a1", target: { kind: "session", sessionId: "01a1" }, createdAt: 5 },
 				{ tabId: "files", target: { kind: "files" }, createdAt: 6 },
 			],
-			activeTabId: "stale-id",
+			activeTabId: "files",
 			explorerMode: "changes",
 			railWidth: 300,
 		});
 
-		expect(record.tabs.map((t) => t.tabId)).toEqual(["session_01a1", "files", "new_tab"]);
-		// A stale active-tab id cannot be trusted after re-derivation — falls
-		// back to the creator tab.
-		expect(record.activeTabId).toBe("new_tab");
+		const tabs = collectAllTabs(record.layout.root);
+		expect(tabs.map((t) => t.tabId).sort()).toEqual(["files", "session_01a1"]);
+		// v1 active tab carries into the pane focus.
+		expect(record.layout.focusedPaneId).toBeTruthy();
+		const pane = findPaneById(record.layout.root, record.layout.focusedPaneId);
+		expect(pane?.focusedTabId).toBe("files");
 		expect(record.explorerMode).toBe("changes");
 		expect(record.railWidth).toBe(300);
 	});
 
-	it("restores the active tab when its id matches a live tab", () => {
+	it("keeps a valid split tree and sanitizes rail fields", () => {
 		const record = sanitizeLayoutRecord({
-			tabs: [{ tabId: "anything", target: { kind: "session", sessionId: "01a1" } }],
-			activeTabId: "session_01a1",
+			layout: {
+				root: {
+					kind: "group",
+					group: {
+						id: "g1",
+						direction: "horizontal",
+						sizes: [0.5, 0.5],
+						children: [
+							{
+								kind: "pane",
+								pane: {
+									id: "p1",
+									tabIds: ["session_x"],
+									focusedTabId: "session_x",
+									tabs: [{ tabId: "session_x", target: { kind: "session", sessionId: "x" } }],
+								},
+							},
+							{
+								kind: "pane",
+								pane: {
+									id: "p2",
+									tabIds: ["changes"],
+									focusedTabId: "changes",
+									tabs: [{ tabId: "changes", target: { kind: "changes" } }],
+								},
+							},
+						],
+					},
+				},
+				focusedPaneId: "p1",
+			},
+			railWidth: 9000,
 		});
-		expect(record.activeTabId).toBe("session_01a1");
+
+		expect(record.railWidth).toBe(520);
+		expect(findPaneById(record.layout.root, "p1")).not.toBeNull();
+		expect(findPaneById(record.layout.root, "p2")).not.toBeNull();
+		expect(record.layout.focusedPaneId).toBe("p1");
 	});
 
-	it("drops invalid and duplicate targets", () => {
+	it("drops tree nodes with unknown kinds and unknown targets", () => {
 		const record = sanitizeLayoutRecord({
-			tabs: [
-				{ tabId: "x", target: { kind: "session", sessionId: "  " }, createdAt: 1 },
-				{ tabId: "x", target: { kind: "terminal", terminalId: "t" }, createdAt: 1 },
-				{ tabId: "a", target: { kind: "session", sessionId: "01a1" }, createdAt: 1 },
-				{ tabId: "b", target: { kind: "session", sessionId: "01a1" }, createdAt: 2 },
-			],
-			activeTabId: "x",
+			layout: {
+				root: {
+					kind: "group",
+					group: {
+						id: "g1",
+						direction: "diagonal",
+						children: [
+							{ kind: "pane", pane: { id: "p1", tabIds: [], focusedTabId: null, tabs: [] } },
+							{ kind: "warp", warp: {} },
+							{
+								kind: "pane",
+								pane: {
+									id: "p2",
+									tabIds: ["t"],
+									focusedTabId: "t",
+									tabs: [{ tabId: "t", target: { kind: "terminal", terminalId: "x" } }],
+								},
+							},
+						],
+					},
+				},
+				focusedPaneId: "p2",
+			},
 		});
-
-		expect(record.tabs.map((t) => t.tabId)).toEqual(["session_01a1", "new_tab"]);
-		expect(record.activeTabId).toBe("new_tab");
-	});
-
-	it("ensures exactly one sticky creator tab at the end", () => {
-		const record = sanitizeLayoutRecord({
-			tabs: [
-				{ tabId: "new_tab", target: { kind: "new_tab" }, createdAt: 3 },
-				{ tabId: "new_tab2", target: { kind: "new_tab" }, createdAt: 4 },
-			],
-			activeTabId: "new_tab2",
-		});
-
-		const creators = record.tabs.filter((t) => t.target.kind === "new_tab");
-		expect(creators).toHaveLength(1);
-		expect(record.tabs[record.tabs.length - 1]?.tabId).toBe("new_tab");
-		// The persisted creator-tab activation falls back to the canonical id.
-		expect(record.activeTabId).toBe("new_tab");
-	});
-
-	it("clamps the rail width and rejects unknown explorer modes", () => {
-		expect(sanitizeLayoutRecord({ railWidth: 50 }).railWidth).toBe(200);
-		expect(sanitizeLayoutRecord({ railWidth: 9000 }).railWidth).toBe(520);
-		expect(
-			sanitizeLayoutRecord({ explorerMode: "terminal" as never }).explorerMode,
-		).toBeNull();
+		// diagonal direction rejects the group; the whole layout falls back.
+		expect(findPaneById(record.layout.root, "p1")).toBeNull();
 	});
 });

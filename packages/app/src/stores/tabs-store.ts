@@ -1,11 +1,7 @@
-// Tabs model, W1c: "tab target = data" (paseo workspace-tabs model port — see
-// workspace-tabs/model.ts). A session IS a tab; files/changes are workspace-
-// global singletons; the new_tab creator is sticky. Tab ids are deterministic
-// (identity.ts), so opening an existing target reveals it instead of
-// duplicating — and the per-workspace layout record (workspace-layout-record)
-// restores the tab bar exactly across restarts. Mobile panel state
-// (mobile-panels port) and the explorer rail live here too — one layout store
-// until the W1c-2 split-layout port splits persistence out per workspace.
+// Tabs store, W1c-3: backed by the split-tree layout (workspace-layout-actions
+// port). The tree is the source of truth; the flat `tabs`/`activeTabId`
+// projections exist so existing selectors keep working. Public surface keeps
+// the W1c-1 convenience opens and adds pane operations (split/move/close).
 import { create } from "zustand";
 
 import {
@@ -14,8 +10,27 @@ import {
 } from "@/workspace-tabs/identity";
 import type { WorkspaceTab, WorkspaceTabTarget } from "@/workspace-tabs/model";
 import {
+	DEFAULT_PANE_ID,
+	type WorkspaceLayout,
+	canDismissPaneInLayout,
+	closePaneInLayout,
+	closeTabInLayout,
+	collectAllTabs,
+	createNewWorkspaceTab,
+	createTabInLayout,
+	findPaneById,
+	focusPaneInLayout,
+	focusTabInLayout,
+	findPaneContainingTab,
+	moveTabToPaneInLayout,
+	openTabInLayoutFocused,
+	reorderPaneTabsInLayout,
+	resizeSplitInLayout,
+	restoreWorkspaceLayout,
+	splitPaneInLayout,
+} from "./workspace-layout-actions";
+import {
 	DEFAULT_RAIL_WIDTH,
-	NEW_TAB_ID,
 	clampRailWidth,
 	readLayoutRecord,
 	writeLayoutRecord,
@@ -33,18 +48,28 @@ export interface MobilePanelSelection {
 	revision: number;
 }
 
-interface TabsState {
-	tabs: WorkspaceTab[];
-	activeTabId: string;
+const MAX_TREE_DEPTH = 5;
 
-	/** Open a target — reveals the existing tab when the identity matches. */
+interface TabsState {
+	/** The split-tree layout — source of truth (paseo workspace layout). */
+	layout: WorkspaceLayout;
+	/** Projections so W1c-1 selectors keep working. */
+	tabs: WorkspaceTab[];
+	activeTabId: string | null;
+
 	openTab: (target: WorkspaceTabTarget) => string;
-	/** Reorder (dnd/tab-menu surface); index bounds are clamped. */
 	moveTab: (tabId: string, toIndex: number) => void;
 	closeTab: (tabId: string) => void;
 	setActive: (tabId: string) => void;
-	/** The active tab's target (null only transiently). */
 	activeTarget: () => WorkspaceTabTarget | null;
+
+	// Pane operations (W1c-3).
+	focusPane: (paneId: string) => void;
+	splitPaneWithTab: (tabId: string, position: "left" | "right" | "top" | "bottom") => void;
+	moveTabToPane: (tabId: string, toPaneId: string) => void;
+	closePane: (paneId: string) => void;
+	resizeSplit: (groupId: string, sizes: number[]) => void;
+	canClosePane: (paneId: string) => boolean;
 
 	// Convenience opens (openTab under the hood).
 	openSession: (sessionId: string) => void;
@@ -55,7 +80,6 @@ interface TabsState {
 	explorerMode: ExplorerMode;
 	setExplorerMode: (mode: ExplorerMode) => void;
 	toggleRail: () => void;
-	/** Explorer rail width in px (resizable on desktop). */
 	railWidth: number;
 	setRailWidth: (px: number) => void;
 
@@ -68,9 +92,6 @@ interface TabsState {
 	showMobileExplorer: (mode?: Exclude<ExplorerMode, null>) => void;
 	toggleMobileExplorer: (mode?: Exclude<ExplorerMode, null>) => void;
 
-	/** Binds the store to a workspace layout record (loads + saves thereafter).
-	 * Record key = workspace path (single local daemon; a host prefix joins
-	 * when the P3 relay introduces multi-host routing). */
 	workspaceKey: string | null;
 	hydrate: (workspaceKey: string) => void;
 }
@@ -84,163 +105,218 @@ function setMobilePanelTarget(
 	return { target, revision: selection.revision + 1 };
 }
 
-const initialTabs: WorkspaceTab[] = [
-	{ tabId: NEW_TAB_ID, target: { kind: "new_tab" }, createdAt: 0 },
-];
-
-function persistLayout(get: () => TabsState): void {
-	const { workspaceKey, tabs, activeTabId, explorerMode, railWidth } = get();
-	if (!workspaceKey) return;
-	writeLayoutRecord(workspaceKey, { tabs, activeTabId, explorerMode, railWidth });
+function projectLayout(layout: WorkspaceLayout): Pick<TabsState, "layout" | "tabs" | "activeTabId"> {
+	const tabs = collectAllTabs(layout.root);
+	const focusedPane = findPaneById(layout.root, layout.focusedPaneId);
+	const activeTabId = focusedPane?.focusedTabId ?? null;
+	return { layout, tabs, activeTabId };
 }
 
-export const useTabsStore = create<TabsState>((set, get) => ({
-	tabs: initialTabs,
-	activeTabId: NEW_TAB_ID,
-	workspaceKey: null,
 
-	/** Load a workspace's layout record (defaults when absent) and save on
-	 * every layout mutation thereafter. */
-	hydrate: (workspaceKey) => {
-		if (get().workspaceKey === workspaceKey) return;
-		set({ ...readLayoutRecord(workspaceKey), workspaceKey });
-	},
+function persistLayout(get: () => TabsState): void {
+	const { workspaceKey, layout, explorerMode, railWidth } = get();
+	if (!workspaceKey) return;
+	writeLayoutRecord(workspaceKey, { layout, explorerMode, railWidth });
+}
 
-	openTab: (target) => {
-		const normalized = normalizeWorkspaceTabTarget(target);
-		if (!normalized) return "";
-		if (normalized.kind === "new_tab") {
-			const exists = get().tabs.some((t) => t.tabId === NEW_TAB_ID);
-			set((s) => ({
-				tabs: exists
-					? s.tabs
-					: [...s.tabs, { tabId: NEW_TAB_ID, target: normalized, createdAt: Date.now() }],
-				activeTabId: NEW_TAB_ID,
-			}));
+export const useTabsStore = create<TabsState>((set, get) => {
+	const applyLayout = (next: WorkspaceLayout | null, persist = true): void => {
+		if (!next) return;
+		set(projectLayout(next));
+		if (persist) persistLayout(get);
+	};
+
+	return {
+		layout: restoreWorkspaceLayout({ root: { kind: "pane", pane: { id: DEFAULT_PANE_ID, tabIds: [], focusedTabId: null } }, focusedPaneId: DEFAULT_PANE_ID }),
+		tabs: [],
+		activeTabId: null,
+		workspaceKey: null,
+
+		hydrate: (workspaceKey) => {
+			if (get().workspaceKey === workspaceKey) return;
+			const record = readLayoutRecord(workspaceKey);
+			set({
+				...projectLayout(restoreWorkspaceLayout(record.layout)),
+				explorerMode: record.explorerMode,
+				railWidth: record.railWidth,
+				workspaceKey,
+			});
+		},
+
+		openTab: (target) => {
+			const normalized = normalizeWorkspaceTabTarget(target);
+			if (!normalized) return "";
+			const { layout } = get();
+			if (normalized.kind === "new_tab") {
+				const focusedPane =
+					findPaneById(layout.root, layout.focusedPaneId) ?? null;
+				const creatorTab =
+					focusedPane?.tabIds.find((tabId) => {
+						const tab = get().tabs.find((t) => t.tabId === tabId);
+						return tab?.target.kind === "new_tab";
+					}) ?? null;
+				if (creatorTab) {
+					applyLayout(focusTabInLayout({ layout, tabId: creatorTab }) ?? layout);
+					return creatorTab;
+				}
+				const next = allocateCreatorInFocusedPane(layout, Date.now());
+				applyLayout(next);
+				return "";
+			}
+			const result = openTabInLayoutFocused({
+				layout,
+				target: normalized,
+				now: Date.now(),
+				placement: { mode: "focused" },
+			});
+			if (!result) return "";
+			applyLayout(result.layout);
+			return result.tabId;
+		},
+
+		moveTab: (tabId, toIndex) => {
+			const { layout } = get();
+			const pane = findPaneContainingTab(layout.root, tabId);
+			if (!pane) return;
+			const tabIds = pane.tabIds.slice();
+			const from = tabIds.indexOf(tabId);
+			if (from === -1) return;
+			tabIds.splice(from, 1);
+			const clamped = Math.max(0, Math.min(tabIds.length, toIndex));
+			tabIds.splice(clamped, 0, tabId);
+			applyLayout(reorderPaneTabsInLayout({ layout, paneId: pane.id, tabIds }));
+		},
+
+		closeTab: (tabId) => {
+			applyLayout(closeTabInLayout({ layout: get().layout, tabId }));
+		},
+
+		setActive: (tabId) => {
+			applyLayout(focusTabInLayout({ layout: get().layout, tabId }));
+		},
+
+		activeTarget: () => {
+			const { tabs, activeTabId } = get();
+			return tabs.find((t) => t.tabId === activeTabId)?.target ?? null;
+		},
+
+		focusPane: (paneId) => {
+			applyLayout(focusPaneInLayout({ layout: get().layout, paneId }));
+		},
+
+		splitPaneWithTab: (tabId, position) => {
+			const { layout } = get();
+			const sourcePane = findPaneContainingTab(layout.root, tabId);
+			const targetPaneId = sourcePane?.id ?? layout.focusedPaneId ?? DEFAULT_PANE_ID;
+			const result = splitPaneInLayout({
+				layout,
+				tabId,
+				targetPaneId,
+				position,
+				createNodeId: (prefix) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+				maxTreeDepth: MAX_TREE_DEPTH,
+			});
+			applyLayout(result?.layout ?? null);
+		},
+
+		moveTabToPane: (tabId, toPaneId) => {
+			applyLayout(moveTabToPaneInLayout({ layout: get().layout, tabId, toPaneId }));
+		},
+
+		closePane: (paneId) => {
+			applyLayout(closePaneInLayout({ layout: get().layout, paneId }));
+		},
+
+		resizeSplit: (groupId, sizes) => {
+			applyLayout(resizeSplitInLayout({ layout: get().layout, groupId, sizes }));
+		},
+
+		canClosePane: (paneId) => canDismissPaneInLayout(get().layout, paneId),
+
+		openSession: (sessionId) => {
+			get().openTab({ kind: "session", sessionId });
+		},
+
+		openNew: () => {
+			get().openTab({ kind: "new_tab" });
+		},
+
+		openFiles: () => {
+			get().openTab({ kind: "files" });
+		},
+
+		openChanges: () => {
+			get().openTab({ kind: "changes" });
+		},
+
+		explorerMode: null,
+
+		setExplorerMode: (mode) => {
+			set({ explorerMode: mode });
 			persistLayout(get);
-			return NEW_TAB_ID;
-		}
-		const tabId = buildDeterministicWorkspaceTabId(normalized);
-		set((s) => {
-			const existing = s.tabs.some((t) => t.tabId === tabId);
-			return {
-				tabs: existing
-					? s.tabs
-					: [...s.tabs, { tabId, target: normalized, createdAt: Date.now() }],
-				activeTabId: tabId,
-			};
-		});
-		persistLayout(get);
-		return tabId;
-	},
+		},
 
-	moveTab: (tabId, toIndex) => {
-		set((s) => {
-			const from = s.tabs.findIndex((t) => t.tabId === tabId);
-			if (from === -1) return s;
-			const next = s.tabs.slice();
-			const [moved] = next.splice(from, 1);
-			const clamped = Math.max(0, Math.min(next.length, toIndex));
-			next.splice(clamped, 0, moved);
-			return { ...s, tabs: next };
-		});
-		persistLayout(get);
-	},
+		toggleRail: () => {
+			const mode = get().explorerMode;
+			set({ explorerMode: mode == null ? "files" : null });
+			persistLayout(get);
+		},
 
-	closeTab: (tabId) => {
-		if (tabId === NEW_TAB_ID) return; // the creator tab never closes
-		set((s) => {
-			const idx = s.tabs.findIndex((t) => t.tabId === tabId);
-			if (idx === -1) return s;
-			const next = s.tabs.filter((t) => t.tabId !== tabId);
-			const activeTabId =
-				s.activeTabId === tabId
-					? (next[Math.min(idx, next.length - 1)]?.tabId ?? NEW_TAB_ID)
-					: s.activeTabId;
-			return { ...s, tabs: next, activeTabId };
-		});
-		persistLayout(get);
-	},
+		railWidth: DEFAULT_RAIL_WIDTH,
 
-	setActive: (tabId) => {
-		if (get().activeTabId === tabId) return;
-		set((s) => ({
-			activeTabId: s.tabs.some((t) => t.tabId === tabId) ? tabId : s.activeTabId,
-		}));
-		persistLayout(get);
-	},
+		setRailWidth: (px) => {
+			set({ railWidth: clampRailWidth(px) });
+			persistLayout(get);
+		},
 
-	activeTarget: () => {
-		const { tabs, activeTabId } = get();
-		return tabs.find((t) => t.tabId === activeTabId)?.target ?? null;
-	},
+		treeExpanded: {},
 
-	openSession: (sessionId) => {
-		get().openTab({ kind: "session", sessionId });
-	},
+		toggleExpanded: (path) =>
+			set((s) => ({ treeExpanded: { ...s.treeExpanded, [path]: !s.treeExpanded[path] } })),
 
-	openNew: () => {
-		get().openTab({ kind: "new_tab" });
-	},
+		mobilePanel: { target: "home", revision: 0 },
 
-	openFiles: () => {
-		get().openTab({ kind: "files" });
-	},
+		showMobileHome: () =>
+			set((s) => ({ mobilePanel: setMobilePanelTarget(s.mobilePanel, "home") })),
 
-	openChanges: () => {
-		get().openTab({ kind: "changes" });
-	},
+		showMobileSessions: () =>
+			set((s) => ({ mobilePanel: setMobilePanelTarget(s.mobilePanel, "sessions") })),
 
-	explorerMode: null,
+		showMobileExplorer: (mode) => {
+			set((s) => ({
+				mobilePanel: setMobilePanelTarget(s.mobilePanel, "explorer"),
+				...(mode ? { explorerMode: mode } : {}),
+			}));
+		},
 
-	setExplorerMode: (mode) => {
-		set({ explorerMode: mode });
-		persistLayout(get);
-	},
+		toggleMobileExplorer: (mode) =>
+			set((s) =>
+				s.mobilePanel.target === "explorer"
+					? { mobilePanel: setMobilePanelTarget(s.mobilePanel, "home") }
+					: {
+							mobilePanel: setMobilePanelTarget(s.mobilePanel, "explorer"),
+							...(mode ? { explorerMode: mode } : {}),
+						},
+			),
+	};
+});
 
-	toggleRail: () => {
-		const mode = get().explorerMode;
-		set({ explorerMode: mode == null ? "files" : null });
-		persistLayout(get);
-	},
-
-	railWidth: DEFAULT_RAIL_WIDTH,
-
-	setRailWidth: (px) => {
-		set({ railWidth: clampRailWidth(px) });
-		persistLayout(get);
-	},
-
-	treeExpanded: {},
-
-	toggleExpanded: (path) =>
-		set((s) => ({ treeExpanded: { ...s.treeExpanded, [path]: !s.treeExpanded[path] } })),
-
-	mobilePanel: { target: "home", revision: 0 },
-
-	showMobileHome: () =>
-		set((s) => ({ mobilePanel: setMobilePanelTarget(s.mobilePanel, "home") })),
-
-	showMobileSessions: () =>
-		set((s) => ({ mobilePanel: setMobilePanelTarget(s.mobilePanel, "sessions") })),
-
-	showMobileExplorer: (mode) => {
-		set((s) => ({
-			mobilePanel: setMobilePanelTarget(s.mobilePanel, "explorer"),
-			...(mode ? { explorerMode: mode } : {}),
-		}));
-	},
-
-	toggleMobileExplorer: (mode) =>
-		set((s) =>
-			s.mobilePanel.target === "explorer"
-				? { mobilePanel: setMobilePanelTarget(s.mobilePanel, "home") }
-				: {
-						mobilePanel: setMobilePanelTarget(s.mobilePanel, "explorer"),
-						...(mode ? { explorerMode: mode } : {}),
-					},
-		),
-}));
-
-export { sanitizeLayoutRecord } from "./workspace-layout-record";
-export type { WorkspaceLayoutRecord } from "./workspace-layout-record";
+/** The focused pane's creator entry — allocates an independent creator tab
+ * when the focused pane has none (upstream create-tab pathway). */
+function allocateCreatorInFocusedPane(layout: WorkspaceLayout, now: number): WorkspaceLayout {
+	const paneId = layout.focusedPaneId ?? DEFAULT_PANE_ID;
+	const pane = findPaneById(layout.root, paneId);
+	if (!pane) return layout;
+	const hasCreator = collectAllTabs(layout.root).some(
+		(tab) => tab.target.kind === "new_tab" && pane.tabIds.includes(tab.tabId),
+	);
+	if (hasCreator) return layout;
+	const result = createTabInLayout({
+		layout,
+		target: { kind: "new_tab" },
+		now,
+		placement: { mode: "pane", paneId },
+		createTabId: () => `tab_${now.toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+	});
+	return result?.layout ?? layout;
+}

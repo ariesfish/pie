@@ -48,6 +48,7 @@ export const zhCN = {
 		changes: "变更",
 		resources: "资源",
 		explorer: "切换资源栏",
+		split: "分栏",
 	},
 	timeline: {
 		title: "时间线",

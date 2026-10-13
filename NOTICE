@@ -46,7 +46,9 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | panels/panel-manifest.ts + panel-registry.ts + register-panels.tsx | panels/panel-manifest.ts + panel-registry.ts + register-panels.tsx (manifest singleton/host semantics verbatim; descriptor hooks deferred) | 2026-10-13 | B |
 | components/retained-panel.tsx | components/retained-panel.tsx (verbatim) | 2026-10-13 | A |
 | components/layout/rail-resize-handle.tsx | components/resize-handle.tsx (single-rail subset of the split-group resize mechanics; full handle lands with W1c-2 nested splits) | 2026-10-13 | C (design reference) |
-| stores/workspace-layout-record.ts | stores/workspace-layout-store.ts (persistence boundary: sanitize/normalize-on-read shape; pie record is a subset — tabs+rail, no split tree; zod migrations deferred) | 2026-10-13 | B (semantic port) |
+| stores/workspace-layout-record.ts | stores/workspace-layout-store.ts (persistence boundary: sanitize/normalize-on-read shape; v2 record carries the split tree, v1 flat records migrate on read; zod migrations deferred) | 2026-10-13 | B (semantic port) |
+| stores/workspace-layout-actions.ts | stores/workspace-layout-actions.ts (complete split-tree op set: normalize/traversal/split-insertion/close cascades/placement rules; minus explorer-sidebar pane host, parent-tab map, draft/browser reconciliation — pie concepts don't exist) | 2026-10-13 | B (full subset) |
+| components/layout/split-container.tsx | components/split-container.tsx (tree rendering: group flex+dividers, pane tab strips + retained panel hosts, splitter drag dnd; pie adaptation drops the dnd-kit tab drag — web-desktop only upstream, lands next) | 2026-10-13 | B (render logic; dnd deferred) |
 
 Type per docs/paseo-ui-reuse.md: A = direct port, B = port with source swap,
 C = design/pattern reference only.

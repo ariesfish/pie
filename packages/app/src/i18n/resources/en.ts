@@ -48,6 +48,7 @@ export const en = {
 		changes: "Changes",
 		resources: "Resources",
 		explorer: "Toggle explorer rail",
+		split: "Split pane",
 	},
 	timeline: {
 		title: "Timeline",

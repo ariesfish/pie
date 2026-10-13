@@ -39,6 +39,7 @@ function useRevisionCommit(action: () => void) {
 
 /** Left-edge swipe opens the sessions drawer (compact layouts only). */
 export function useOpenSessionsGesture(enabled: boolean) {
+
   const {
     beginGesture,
     finishGesture,

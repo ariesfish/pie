@@ -37,6 +37,12 @@ export function RetainedPanelActivity({ active, children }: RetainedPanelActivit
  * on screen. The stable, non-collapsible native root is intentional: retained
  * panels must not detach or reparent their native descendants when visibility
  * changes.
+ *
+ * Hidden strategy: taken out of flow (absolute) + transparent instead of
+ * display:none — RN-web skips layout-measure for subtrees mounted under
+ * display:none, and inputs (TextInput) come back at 0x0 (caught by the
+ * walkthrough: a session created after the files tab had been opened rendered
+ * a zero-sized composer). Position-based hiding keeps measuring live.
  */
 export const RetainedPanel = memo(function RetainedPanel({
 	active,
@@ -68,6 +74,11 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	hidden: {
-		display: "none",
+		position: "absolute" as const,
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		opacity: 0,
 	},
 });

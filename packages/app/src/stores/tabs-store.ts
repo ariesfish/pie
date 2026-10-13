@@ -121,6 +121,15 @@ function persistLayout(get: () => TabsState): void {
 	writeLayoutRecord(workspaceKey, { layout, explorerMode, railWidth });
 }
 
+/** Module-init layout: a sole-pane creator workspace, with the tabs/
+ * activeTabId projections pre-computed — the projection must never desync
+ * from the initial layout or a fresh mount renders an empty strip and panel
+ * until the first openTab (caught by the walkthrough). */
+const initialLayout = restoreWorkspaceLayout({
+	root: { kind: "pane", pane: { id: DEFAULT_PANE_ID, tabIds: [], focusedTabId: null } },
+	focusedPaneId: DEFAULT_PANE_ID,
+});
+
 export const useTabsStore = create<TabsState>((set, get) => {
 	const applyLayout = (next: WorkspaceLayout | null, persist = true): void => {
 		if (!next) return;
@@ -129,9 +138,7 @@ export const useTabsStore = create<TabsState>((set, get) => {
 	};
 
 	return {
-		layout: restoreWorkspaceLayout({ root: { kind: "pane", pane: { id: DEFAULT_PANE_ID, tabIds: [], focusedTabId: null } }, focusedPaneId: DEFAULT_PANE_ID }),
-		tabs: [],
-		activeTabId: null,
+		...projectLayout(initialLayout),
 		workspaceKey: null,
 
 		hydrate: (workspaceKey) => {

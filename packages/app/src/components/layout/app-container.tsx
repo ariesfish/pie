@@ -89,11 +89,13 @@ function MobileHomeSurface({ children }: { children: ReactNode }) {
 	});
 
 	return (
-		<View style={fillStyle}>
-			<GestureDetector gesture={Gesture.Simultaneous(openSessions, openExplorer)}>
+		<GestureDetector gesture={Gesture.Simultaneous(openSessions, openExplorer)}>
+			{/* GestureDetector needs a native child to attach handlers on web —
+			 * without the View wrap the gesture silently never attaches. */}
+			<View style={fillStyle} collapsable={false}>
 				{children}
-			</GestureDetector>
-		</View>
+			</View>
+		</GestureDetector>
 	);
 }
 

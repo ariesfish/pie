@@ -229,6 +229,7 @@ function PaneTabsRow({ pane, compact }: { pane: SplitPane; compact: boolean }) {
 	const tabs = useTabsStore((s) => s.tabs);
 	const setActive = useTabsStore((s) => s.setActive);
 	const closeTab = useTabsStore((s) => s.closeTab);
+	const openNew = useTabsStore((s) => s.openNew);
 	const sessions = useSessionListStore((s) => s.sessions);
 	const openFilePath = useWorkspaceStore((s) => s.openFilePath);
 
@@ -300,7 +301,18 @@ function PaneTabsRow({ pane, compact }: { pane: SplitPane; compact: boolean }) {
 							</Pressable>
 						</DraggableTabChip>
 					);
-					})}
+				})}
+					{/* Sticky creator entry — a pane's sole creator tab is replaced by the
+					 * first real open (upstream rule), so a trailing "+" keeps creation
+					 * permanently reachable (W1c-1 sticky semantics). */}
+					<Pressable
+						style={styles.tab}
+						onPress={() => openNew()}
+						accessibilityLabel={t("agentList.newSession")}
+						hitSlop={4}
+					>
+						<Plus size={11} color={theme.colors.foregroundExtraMuted} strokeWidth={1.75} />
+					</Pressable>
 				</ScrollView>
 			</SortableTabStrip>
 		</SplitDropTarget>

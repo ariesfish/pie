@@ -91,6 +91,7 @@ export default function WorkspaceScreen() {
 			{railVisible ? (
 				<View style={[styles.rail, { width: railWidth }]}>
 					<RailResizeHandle width={railWidth} onResize={setRailWidth} />
+					<View style={styles.railInner}>
 					<View style={styles.railTabs}>
 						<RailMode on={explorerMode === "files"} onPress={() => setExplorerMode("files")}>
 							<FolderOpen
@@ -122,6 +123,7 @@ export default function WorkspaceScreen() {
 						</RailMode>
 					</View>
 					<ExplorerPane mode={explorerMode} />
+					</View>
 				</View>
 			) : null}
 		</View>
@@ -253,10 +255,12 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	headerIconOn: { backgroundColor: theme.colors.accent, borderColor: theme.colors.accent },
 	rail: {
+		flexDirection: "row",
 		borderLeftWidth: theme.borderWidth[1],
 		borderLeftColor: theme.colors.border,
 		backgroundColor: theme.colors.surfaceSidebar,
 	},
+	railInner: { flex: 1 },
 	railTabs: {
 		flexDirection: "row",
 		alignItems: "center",

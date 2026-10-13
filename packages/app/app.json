@@ -21,7 +21,8 @@
 			"favicon": "./assets/favicon.png"
 		},
 		"experiments": {
-			"typedRoutes": true
+			"typedRoutes": true,
+			"reactCompiler": true
 		}
 	}
 }

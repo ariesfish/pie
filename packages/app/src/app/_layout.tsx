@@ -6,6 +6,8 @@ import { Stack } from "expo-router";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
+import { QueryClient, QueryClientProvider, onlineManager } from "@tanstack/react-query";
 import { UnistylesRuntime, StyleSheet } from "react-native-unistyles";
 
 // Order matters: unistyles must configure before any StyleSheet.create call.
@@ -22,6 +24,23 @@ const ROOT_STACK_SCREEN_OPTIONS = {
 };
 
 const flexStyle = { flex: 1 } as const;
+
+// Local-daemon queries are always "online" — the network status semantics of
+// react-query (offline event listeners, retry-on-reconnect) do not apply to a
+// WS daemon on localhost/relay. Force online before any query runs.
+onlineManager.setOnline(true);
+
+const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			// fs/git data lives behind the pie daemon — refetch on mount is cheap
+			// and keeps panels fresh; fs.changed events invalidate explicitly.
+			staleTime: 5_000,
+			refetchOnWindowFocus: false,
+			networkMode: "always",
+		},
+	},
+});
 
 function AppShell() {
 	const isCompactLayout = useIsCompactFormFactor();
@@ -47,13 +66,17 @@ function RootStack() {
 
 function RootAppTree() {
 	return (
-		<GestureHandlerRootView style={flexStyle}>
-			<SafeAreaProvider>
-				<View style={styles.surfaceFill}>
-					<AppShell />
-				</View>
-			</SafeAreaProvider>
-		</GestureHandlerRootView>
+		<QueryClientProvider client={queryClient}>
+			<KeyboardProvider>
+				<GestureHandlerRootView style={flexStyle}>
+					<SafeAreaProvider>
+						<View style={styles.surfaceFill}>
+							<AppShell />
+						</View>
+					</SafeAreaProvider>
+				</GestureHandlerRootView>
+			</KeyboardProvider>
+		</QueryClientProvider>
 	);
 }
 

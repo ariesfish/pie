@@ -1,6 +1,6 @@
 // Ported from getpaseo/paseo (Apache-2.0) app structure — packages/app/src/app/index.tsx
-// (Pie subset: splash/connect when offline; redirect into the workspace (or the
-// sessions screen) once the daemon connection is live.)
+// (Pie subset: splash/connect when offline; redirect into the desktop-injected
+// workspace (or the workspaces picker) once the daemon connection is live.)
 import { useEffect, useState } from "react";
 import { Redirect } from "expo-router";
 import { Text, TextInput, View } from "react-native";
@@ -20,7 +20,7 @@ export default function Index() {
 
 	const [wsUrl, setWsUrl] = useState("ws://127.0.0.1:8760");
 	const [token, setToken] = useState("");
-	const [workspaceInput, setWorkspaceInput] = useState("");
+	const [injectedWorkspace, setInjectedWorkspace] = useState<string | null>(null);
 
 	// Desktop injection: the Electron window passes sidecar coordinates via
 	// query params (web platform only) — auto-connect on mount.
@@ -34,7 +34,7 @@ export default function Index() {
 		setWsUrl(url);
 		setToken(tk);
 		if (ws) {
-			setWorkspaceInput(ws);
+			setInjectedWorkspace(ws);
 			useWorkspaceStore.getState().setWorkspace(ws);
 		}
 		void connect(url, tk);
@@ -42,12 +42,12 @@ export default function Index() {
 	}, []);
 
 	if (status === "connected") {
-		// Paseo's resolveStartupRoute: last/known workspace wins, else the
-		// sessions screen.
-		return workspaceId ? (
-			<Redirect href={{ pathname: "/w/[workspaceId]", params: { workspaceId } }} />
+		// Desktop injection wins, else the last workspace, else the picker.
+		const target = injectedWorkspace ?? workspaceId;
+		return target ? (
+			<Redirect href={{ pathname: "/w/[workspaceId]", params: { workspaceId: target } }} />
 		) : (
-			<Redirect href="/sessions" />
+			<Redirect href="/workspaces" />
 		);
 	}
 
@@ -75,22 +75,10 @@ export default function Index() {
 				autoCapitalize="none"
 				autoCorrect={false}
 			/>
-			<Text style={styles.fieldLabel}>{t("connect.workspace")}</Text>
-			<TextInput
-				style={styles.input}
-				placeholder={t("connect.workspacePlaceholder")}
-				placeholderTextColor="#4b5262"
-				value={workspaceInput}
-				onChangeText={setWorkspaceInput}
-				onEndEditing={() => useWorkspaceStore.getState().setWorkspace(workspaceInput.trim())}
-				autoCapitalize="none"
-				autoCorrect={false}
-			/>
 			{error ? <Text style={styles.errorText}>{error}</Text> : null}
 			<Button
 				variant="default"
 				onPress={() => {
-					if (workspaceInput.trim()) useWorkspaceStore.getState().setWorkspace(workspaceInput.trim());
 					void connect(wsUrl, token);
 				}}
 			>

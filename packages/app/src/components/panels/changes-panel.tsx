@@ -45,6 +45,13 @@ export function ChangesPanel() {
 		if (!status && !loading) void refresh();
 	}, [status, loading, refresh]);
 
+	// The explorer rail (and the shared changes tab) request a specific diff by
+	// setting diffPath — auto-expand it so the panel follows without waiting
+	// for a second press.
+	useEffect(() => {
+		if (diffPath) setExpanded(diffPath);
+	}, [diffPath]);
+
 	const openDiff = gitFiles.find((f) => f.path === expanded && expanded === diffPath);
 
 	return (

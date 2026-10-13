@@ -63,8 +63,10 @@ interface ConnectionState {
 	setPendingThinking: (level: ThinkingLevel | null) => void;
 	applySessionPreset: (sessionId: string) => Promise<void>;
 	disconnect: () => Promise<void>;
-	/** Switch the chat surface to another daemon-held session (tab switch). */
-	switchSession: (sessionId: string) => Promise<void>;
+	/** Switch the chat surface to another session. Passes the session file
+	 * path when known so the daemon can open disk sessions (TUI/CLI-created)
+	 * the daemon does not already hold in memory. */
+	switchSession: (sessionId: string, sessionPath?: string) => Promise<void>;
 	sendPrompt: (text: string, delivery: "auto" | "steer" | "followUp") => Promise<SendDisposition>;
 	clearError: () => void;
 }
@@ -189,10 +191,12 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 		}
 	},
 
-	switchSession: async (sessionId) => {
+	switchSession: async (sessionId, sessionPath) => {
 		const conn = get().conn;
 		if (!conn) return;
 		// Reset single-session surfaces; the attach snapshot rebuilds the tree.
+		// The model catalog & pending picks are workspace-level and survive the
+		// switch (they are re-applied on session.create via applySessionPreset).
 		set({
 			sessionId,
 			deltaText: "",
@@ -202,13 +206,14 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 			usage: null,
 			toolCalls: {},
 			widgets: {},
-	models: [],
-	pendingModel: null,
-	pendingThinking: null,
-	timeline: [],
+			timeline: [],
 			revision: get().revision + 1,
 		});
-		await conn.request("session.attach", { sessionId, as: "readwrite" });
+		await conn.request("session.attach", {
+			sessionId,
+			as: "readwrite",
+			...(sessionPath ? { path: sessionPath } : {}),
+		});
 	},
 }));
 

@@ -68,12 +68,7 @@ export function LeftSidebar() {
 				<Text style={styles.sectionTitle}>{t("workspaces.title")}</Text>
 				<Pressable
 					hitSlop={6}
-					onPress={() => {
-						const ws = workspaceId ?? registry[0]?.id;
-						if (ws) router.push({ pathname: "/w/[workspaceId]", params: { workspaceId: ws } });
-						useConnectionStore.getState().setPendingModel(null);
-						if (workspaceId) useTabsStore.getState().openNew();
-					}}
+					onPress={() => router.push("/workspaces")}
 				>
 					<FolderPlus size={13} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 				</Pressable>
@@ -139,7 +134,12 @@ export function LeftSidebar() {
 										on && styles.rowSelected,
 										pressed && styles.rowPressed,
 									]}
-									onPress={() => useConnectionStore.getState().switchSession(session.sessionId)}
+									onPress={() => {
+										const conn = useConnectionStore.getState();
+										// Disk sessions (TUI/CLI-created) open via path the first time.
+										void conn.switchSession(session.sessionId, session.path || undefined);
+										useTabsStore.getState().openSession(session.sessionId);
+									}}
 								>
 									<Text style={[styles.rowTitle, on && styles.rowTitleOn]} numberOfLines={1}>
 										{sessionTitle(session)}

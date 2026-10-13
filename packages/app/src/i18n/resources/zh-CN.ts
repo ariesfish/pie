@@ -36,6 +36,18 @@ export const zhCN = {
 			workspaces: {
 		title: "工作区",
 		add: "添加工作区",
+			pathLabel: "项目目录",
+			pathPlaceholder: "/项目的绝对路径",
+			open: "打开工作区",
+			empty: "还没有工作区 —— 添加一个项目目录开始",
+			remove: "从列表移除",
+		},
+	panels: {
+		chat: "对话",
+		files: "文件",
+		changes: "变更",
+		resources: "资源",
+		explorer: "切换资源栏",
 	},
 	timeline: {
 		title: "时间线",
@@ -65,12 +77,6 @@ export const zhCN = {
 			thisMonth: "本月",
 			older: "更早",
 		},
-	},
-	panels: {
-		chat: "会话",
-		files: "文件",
-		changes: "变更",
-		resources: "资源",
 	},
 	resources: {
 		packages: "包",

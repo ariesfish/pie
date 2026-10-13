@@ -4,7 +4,7 @@
  */
 
 import { createServer } from "node:http";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import os from "node:os";
@@ -337,6 +337,20 @@ export class DaemonServer {
 
 		r.register("workspace.open", async (args) => {
 			const path = requiredString(args, "path");
+			// Validate before remembering: the UI's add-workspace flow reports
+			// typos immediately instead of failing on the first fs.list later.
+			let isDir = false;
+			try {
+				isDir = statSync(path).isDirectory();
+			} catch {
+				isDir = false;
+			}
+			if (!isDir) {
+				throw new HostSessionError(
+					`Workspace directory not found: ${path}`,
+					"not_found",
+				);
+			}
 			self.registry.rememberWorkspace(path);
 			return {
 				workspaceId: path,

@@ -182,6 +182,28 @@ describe("wire protocol over real WebSocket", () => {
 		client2.close();
 	});
 
+	it("workspace.open validates the directory and workspace.list remembers it", async () => {
+		const client = await WireClient.connect();
+
+		await expect(client.request("workspace.open", { path: join(dir, "does-not-exist") })).rejects.toThrow(
+			/not found/i,
+		);
+		// A file (not a directory) is also rejected.
+		const filePath = join(dir, "not-a-dir.txt");
+		writeFileSync(filePath, "x");
+		await expect(client.request("workspace.open", { path: filePath })).rejects.toThrow(/not found/i);
+
+		const res = await client.request("workspace.open", { path: workspace });
+		expect(res.workspaceId).toBe(workspace);
+		expect(res.name).toBeTruthy();
+
+		const listed = await client.request("workspace.list", {});
+		const ids = (listed.workspaces as Array<{ workspaceId: string }>).map((w) => w.workspaceId);
+		expect(ids).toContain(workspace);
+		expect(ids).not.toContain(join(dir, "does-not-exist"));
+		client.close();
+	});
+
 	it("rejects bad token with fatal auth_failed", async () => {
 		const ws = await wsConnect();
 		const fatal = new Promise<any>((resolve) => {

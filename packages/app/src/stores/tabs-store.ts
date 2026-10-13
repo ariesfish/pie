@@ -1,8 +1,10 @@
-// Tabs model, Wave 1: a tab IS a session (paseo's core mental model).
-// Files/changes/resources panels live in the explorer sidebar, not the tab row.
+// Tabs model, Wave 1 + wiring fix: a session IS a tab (paseo's core mental
+// model); files/changes are shared workspace tabs (paseo's "tab target is
+// data" — exactly one files tab and one changes tab, reused on every open,
+// because their state lives in the workspace store, not the tab).
 import { create } from "zustand";
 
-export type TabKind = "session" | "new";
+export type TabKind = "session" | "new" | "files" | "changes";
 
 export interface Tab {
 	id: string;
@@ -11,7 +13,11 @@ export interface Tab {
 	sessionId?: string;
 }
 
-export type ExplorerMode = "files" | "changes" | "resources" | null;
+/** Right-rail content mode; null = rail hidden (desktop). */
+export type ExplorerMode = "files" | "changes" | "resources" | "activity" | null;
+
+const FILES_TAB_ID = "tab-files";
+const CHANGES_TAB_ID = "tab-changes";
 
 interface TabsState {
 	tabs: Tab[];
@@ -22,9 +28,14 @@ interface TabsState {
 
 	openSession: (sessionId: string) => void;
 	openNew: () => void;
+	/** Open (or activate) the shared files tab and reveal a file in it. */
+	openFiles: () => void;
+	/** Open (or activate) the shared changes tab. */
+	openChanges: () => void;
 	closeTab: (id: string) => void;
 	setActive: (id: string) => void;
 	setExplorerMode: (mode: ExplorerMode) => void;
+	toggleRail: () => void;
 	rightRailOpen: boolean;
 	setRightRailOpen: (open: boolean) => void;
 	toggleExpanded: (path: string) => void;
@@ -51,6 +62,24 @@ export const useTabsStore = create<TabsState>((set, get) => ({
 
 	openNew: () => set({ activeTabId: "tab-new" }),
 
+	openFiles: () => {
+		const { tabs } = get();
+		if (!tabs.some((t) => t.id === FILES_TAB_ID)) {
+			set({ tabs: [...tabs, { id: FILES_TAB_ID, kind: "files" }], activeTabId: FILES_TAB_ID });
+		} else {
+			set({ activeTabId: FILES_TAB_ID });
+		}
+	},
+
+	openChanges: () => {
+		const { tabs } = get();
+		if (!tabs.some((t) => t.id === CHANGES_TAB_ID)) {
+			set({ tabs: [...tabs, { id: CHANGES_TAB_ID, kind: "changes" }], activeTabId: CHANGES_TAB_ID });
+		} else {
+			set({ activeTabId: CHANGES_TAB_ID });
+		}
+	},
+
 	closeTab: (id) => {
 		const { tabs, activeTabId } = get();
 		if (id === "tab-new") return; // the new-session tab never closes
@@ -66,7 +95,12 @@ export const useTabsStore = create<TabsState>((set, get) => ({
 
 	setExplorerMode: (mode) => set({ explorerMode: mode }),
 
-	setRightRailOpen: (open) => set({ rightRailOpen: open }),
+	toggleRail: () => {
+		const mode = get().explorerMode;
+		set({ explorerMode: mode == null ? "files" : null });
+	},
+
+	setRightRailOpen: (open) => set({ explorerMode: open ? get().explorerMode ?? "files" : null }),
 
 	toggleExpanded: (path) =>
 		set((s) => ({ treeExpanded: { ...s.treeExpanded, [path]: !s.treeExpanded[path] } })),

@@ -15,6 +15,7 @@ import {
 	useSessionListStore,
 } from "@/stores/session-list-store";
 import { useConnectionStore } from "@/stores/connection-store";
+import { useTabsStore } from "@/stores/tabs-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 
 export default function SessionsScreen() {
@@ -94,7 +95,8 @@ export default function SessionsScreen() {
 								onPress={() => {
 								const ws = workspaceId;
 								if (!ws) return;
-								void useConnectionStore.getState().switchSession(session.sessionId).then(() => {
+								void useConnectionStore.getState().switchSession(session.sessionId, session.path || undefined).then(() => {
+									useTabsStore.getState().openSession(session.sessionId);
 									router.replace({ pathname: "/w/[workspaceId]", params: { workspaceId: ws } });
 								});
 							}}

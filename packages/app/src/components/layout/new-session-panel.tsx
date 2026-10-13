@@ -1,8 +1,9 @@
-// New-session tab (Wave 1): the "+" tab — workspace path (prefilled by the
-// desktop injection), model picker placeholder (model catalog arrives with
-// model.set flows), and the create action that opens a fresh session tab.
-import { useState } from "react";
-import { Text, TextInput, View } from "react-native";
+// New-session tab (the "+" tab): create a session in the active workspace —
+// or pick one of the registered workspaces first. The model picker arrives
+// with the composer/model-selection surface.
+import { useMemo, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { StyleSheet } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
@@ -11,29 +12,40 @@ import { useConnectionStore } from "@/stores/connection-store";
 import { useSessionListStore } from "@/stores/session-list-store";
 import { useTabsStore } from "@/stores/tabs-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
+import { useWorkspaceRegistryStore } from "@/stores/workspace-registry-store";
 
 export function NewSessionPanel() {
 	const { t } = useTranslation();
 	const workspaceId = useWorkspaceStore((s) => s.workspaceId);
 	const conn = useConnectionStore((s) => s.conn);
 	const error = useConnectionStore((s) => s.error);
-	const refresh = useSessionListStore((s) => s.refresh);
-	const setWorkspace = useWorkspaceStore((s) => s.setWorkspace);
-	const [path, setPath] = useState(workspaceId ?? "");
+	const registry = useWorkspaceRegistryStore((s) => s.workspaces);
+	const [pick, setPick] = useState(workspaceId ?? null);
 	const [busy, setBusy] = useState(false);
+	const router = useRouter();
+
+	const target = pick ?? workspaceId;
+	const options = useMemo(() => {
+		const ids = registry.map((w) => w.id).filter((id) => id !== target);
+		return target ? [target, ...ids] : ids;
+	}, [registry, target]);
 
 	const create = async () => {
-		if (!conn || !path.trim() || busy) return;
+		const ws = target?.trim();
+		if (!conn || !ws || busy) return;
 		setBusy(true);
 		try {
-			setWorkspace(path.trim());
-			const created = await conn.request("session.create", { workspaceId: path.trim() });
-			await conn.request("session.attach", { sessionId: created.sessionId });
-			useConnectionStore.setState({ sessionId: created.sessionId });
-			await refresh();
-			useTabsStore.getState().openSession(created.sessionId);
-		} catch (err) {
-			useConnectionStore.setState({ error: err instanceof Error ? err.message : String(err) });
+			// startSession = workspace.open + session.create + attach (retry-safe).
+			await useConnectionStore.getState().startSession(ws);
+			await useSessionListStore.getState().refresh();
+			const sessionId = useConnectionStore.getState().sessionId;
+			if (sessionId) useTabsStore.getState().openSession(sessionId);
+			// A different workspace was picked — navigate there (route owns the id).
+			if (ws !== workspaceId) {
+				router.replace({ pathname: "/w/[workspaceId]", params: { workspaceId: ws } });
+			}
+		} catch {
+			// startSession already surfaced the error in connection-store.
 		} finally {
 			setBusy(false);
 		}
@@ -42,35 +54,60 @@ export function NewSessionPanel() {
 	return (
 		<View style={styles.root}>
 			<Text style={styles.title}>{t("agentList.newSession")}</Text>
-			<Text style={styles.label}>{t("connect.workspace")}</Text>
-			<TextInput
-				style={styles.input}
-				value={path}
-				onChangeText={setPath}
-				placeholder={t("connect.workspacePlaceholder")}
-				placeholderTextColor="#4b5262"
-				autoCapitalize="none"
-				autoCorrect={false}
-			/>
-			{error ? <Text style={styles.error}>{error}</Text> : null}
-			<Button variant="default" onPress={() => void create()} disabled={busy}>
-				{busy ? t("common.connecting") : t("agentList.start")}
-			</Button>
+			{options.length > 0 ? (
+				<>
+					<Text style={styles.label}>{t("connect.workspace")}</Text>
+					{options.map((id) => {
+						const on = id === target;
+						return (
+							<Pressable
+								key={id}
+								style={({ pressed }) => [styles.option, on && styles.optionOn, pressed && styles.optionPressed]}
+								onPress={() => setPick(id)}
+							>
+								<View style={styles.optionMain}>
+									<Text style={[styles.optionTitle, on && styles.optionTitleOn]} numberOfLines={1}>
+										{id.split("/").filter(Boolean).pop() ?? id}
+									</Text>
+									<Text style={styles.optionPath} numberOfLines={1}>
+										{id}
+									</Text>
+								</View>
+							</Pressable>
+						);
+					})}
+					<Button variant="default" onPress={() => void create()} disabled={busy}>
+						{busy ? t("common.connecting") : t("agentList.start")}
+					</Button>
+					{error ? <Text style={styles.error}>{error}</Text> : null}
+				</>
+			) : (
+				<Text style={styles.empty}>{t("workspaces.empty")}</Text>
+			)}
 		</View>
 	);
 }
 
 const styles = StyleSheet.create((theme) => ({
-	root: { flex: 1, padding: theme.spacing[6], gap: theme.spacing[2], maxWidth: 420, alignSelf: "center", width: "100%" },
+	root: { flex: 1, padding: theme.spacing[6], gap: theme.spacing[2], maxWidth: 480, alignSelf: "center", width: "100%" },
 	title: { color: theme.colors.foreground, fontSize: theme.fontSize.xl, fontWeight: "600", marginBottom: theme.spacing[2] },
 	label: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
-	input: {
-		backgroundColor: theme.colors.surface1,
+	option: {
+		flexDirection: "row",
+		alignItems: "center",
 		borderRadius: theme.borderRadius.lg,
 		borderWidth: theme.borderWidth[1],
 		borderColor: theme.colors.border,
-		padding: theme.spacing[3],
-		color: theme.colors.foreground,
+		paddingHorizontal: theme.spacing[3],
+		paddingVertical: theme.spacing[2],
+		gap: 2,
 	},
+	optionOn: { borderColor: theme.colors.accent, backgroundColor: theme.colors.surface2 },
+	optionPressed: { opacity: 0.7 },
+	optionMain: { flex: 1 },
+	optionTitle: { color: theme.colors.foreground, fontSize: theme.fontSize.sm },
+	optionTitleOn: { color: theme.colors.foreground, fontWeight: theme.fontWeight.semibold },
+	optionPath: { color: theme.colors.foregroundExtraMuted, fontSize: 10 },
 	error: { color: theme.colors.statusDanger, fontSize: theme.fontSize.sm },
+	empty: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.base, textAlign: "center", padding: theme.spacing[4] },
 }));

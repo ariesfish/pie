@@ -1,6 +1,7 @@
-// Explorer pane (P2b-3, desktop): lazy file tree (one fs.list per expanded
-// directory) or a compact changes list. Navigation writes shared workspace
-// state so the active tab in the main pane follows instantly.
+// Explorer rail (P2b-3 + wiring fix, desktop right column): lazy file tree
+// (one fs.list per expanded directory) or a compact changes list. Pressing a
+// file opens the shared files tab (viewer in the center); pressing a change
+// opens the shared changes tab with that diff expanded.
 import { useEffect } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
@@ -14,17 +15,20 @@ import { useTabsStore } from "@/stores/tabs-store";
 import { useSessionListStore } from "@/stores/session-list-store";
 import type { FsEntryInfo, GitStatusEntry, SkillInfo } from "@pie/protocol";
 
-export function ExplorerPane() {
-	const mode = useTabsStore((s) => s.explorerMode);
-	if (mode === "files") return <FileTree />;
+export function ExplorerPane({
+	mode,
+}: {
+	/** Which rail content to show; the parent owns the mode (rail tabs). */
+	mode: "files" | "changes" | "resources" | "activity" | null;
+}) {
 	if (mode === "changes") return <ChangesList />;
 	if (mode === "resources") return <ResourcesList />;
-	return null;
+	// files is the default mode
+	return <FileTree />;
 }
 
 function ResourcesList() {
 	const { theme } = useUnistyles();
-	const handle = useConnectionStore.getState();
 	const packages = useResourcesStore((s) => s.packages);
 	const skills = useResourcesStore((s) => s.skills);
 	const sessionId = useConnectionStore((s) => s.sessionId);
@@ -34,8 +38,6 @@ function ResourcesList() {
 		if (ws) void useResourcesStore.getState().refreshPackages();
 		if (sessionId) void useResourcesStore.getState().refreshSkills(sessionId);
 		void useSessionListStore.getState().refresh();
-		void ws;
-		void handle;
 	}, [sessionId]);
 
 	return (
@@ -99,8 +101,10 @@ function FileTree() {
 						const child = dirs[entry.path];
 						if (!child || (child.fetchedAt === 0 && !child.loading)) void listDir(entry.path);
 					} else {
-						void openPath(entry.name.endsWith(".md") ? entry.path : entry.path);
-						useWorkspaceStore.setState({ dir: "" });
+						// Open the shared files tab; the viewer renders from
+						// the workspace store's openFile (tab = data).
+						useTabsStore.getState().openFiles();
+						void openPath(entry.path);
 					}
 				}}
 				accent={theme.colors.accentBright}
@@ -156,9 +160,6 @@ function TreeRow({
 				<Text style={styles.rowText} numberOfLines={1}>
 					{entry.name}
 				</Text>
-				{entry.kind === "file" && entry.modifiedAt == null && (
-					<Text style={styles.rowMeta}>?</Text>
-				)}
 			</Pressable>
 			{children_}
 		</View>
@@ -171,10 +172,15 @@ function ChangesList() {
 	const status = useWorkspaceStore((s) => s.gitStatus);
 	const loading = useWorkspaceStore((s) => s.gitLoading);
 	const refresh = useWorkspaceStore((s) => s.refreshStatus);
+	const diffPath = useWorkspaceStore((s) => s.diffPath);
 
 	useEffect(() => {
 		if (!status && !loading) void refresh();
 	}, [status, loading, refresh]);
+
+	// Auto-expand the diff the explorer was asked to show (diffPath is set by
+	// callers; ChangesPanel follows it — see its effect).
+	const activePath = diffPath;
 
 	const changeColor = (entry: GitStatusEntry): string => {
 		const kind = statusKindOf(entry);
@@ -190,33 +196,31 @@ function ChangesList() {
 			{!status ? (
 				<Text style={styles.empty}>{loading ? t("common.connecting") : t("changes.clean")}</Text>
 			) : (
-				status.entries.map((entry) => (
-					<Pressable
-						key={entry.path}
-						style={styles.row}
-						onPress={() => {
-							useWorkspaceStore.setState({ diffPath: entry.path });
-							void useWorkspaceStore.getState().loadDiff(entry.path);
-						}}
-					>
-						<View style={[styles.dot, { backgroundColor: changeColor(entry) }]} />
-						<Text style={styles.rowText} numberOfLines={1}>
-							{entry.origPath ? `${entry.origPath} → ${entry.path}` : entry.path}
-						</Text>
-					</Pressable>
-				))
+				status.entries.map((entry) => {
+					const on = entry.path === activePath;
+					return (
+						<Pressable
+							key={entry.path}
+							style={({ pressed }) => [styles.row, on && styles.rowOn, pressed && styles.rowPressed]}
+							onPress={() => {
+								useTabsStore.getState().openChanges();
+								void useWorkspaceStore.getState().loadDiff(entry.path);
+							}}
+						>
+							<View style={[styles.dot, { backgroundColor: changeColor(entry) }]} />
+							<Text style={styles.rowText} numberOfLines={1}>
+								{entry.origPath ? `${entry.origPath} → ${entry.path}` : entry.path}
+							</Text>
+						</Pressable>
+					);
+				})
 			)}
 		</ScrollView>
 	);
 }
 
 const styles = StyleSheet.create((theme) => ({
-	root: {
-		width: 240,
-		backgroundColor: theme.colors.surface1,
-		borderRightWidth: theme.borderWidth[1],
-		borderRightColor: theme.colors.border,
-	},
+	root: { flex: 1, backgroundColor: "transparent" },
 	list: { paddingVertical: theme.spacing[2], gap: 0 },
 	row: {
 		flexDirection: "row",
@@ -226,6 +230,8 @@ const styles = StyleSheet.create((theme) => ({
 		paddingRight: theme.spacing[2],
 		borderRadius: theme.borderRadius.sm,
 	},
+	rowOn: { backgroundColor: theme.colors.surface2 },
+	rowPressed: { opacity: 0.7 },
 	rowSpacer: { width: 13 },
 	rowText: { color: theme.colors.foreground, fontSize: theme.fontSize.sm, flexShrink: 1 },
 	rowMeta: { color: theme.colors.foregroundExtraMuted, fontSize: 11 },

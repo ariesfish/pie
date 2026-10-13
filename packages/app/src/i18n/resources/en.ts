@@ -36,6 +36,18 @@ export const en = {
 			workspaces: {
 		title: "Workspaces",
 		add: "Add workspace",
+		pathLabel: "Project directory",
+		pathPlaceholder: "/absolute/path/to/project",
+		open: "Open workspace",
+		empty: "No workspaces yet — add a project directory to begin",
+		remove: "Remove from list",
+	},
+	panels: {
+		chat: "Chat",
+		files: "Files",
+		changes: "Changes",
+		resources: "Resources",
+		explorer: "Toggle explorer rail",
 	},
 	timeline: {
 		title: "Timeline",
@@ -65,12 +77,6 @@ export const en = {
 			thisMonth: "This month",
 			older: "Older",
 		},
-	},
-	panels: {
-		chat: "Chat",
-		files: "Files",
-		changes: "Changes",
-		resources: "Resources",
 	},
 	resources: {
 		packages: "Packages",

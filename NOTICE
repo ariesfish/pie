@@ -1,0 +1,46 @@
+# NOTICE
+
+This product includes source ported from [getpaseo/paseo] (Apache-2.0).
+Ported files carry a `// Ported from getpaseo/paseo (Apache-2.0)` header
+and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
+
+## Port ledger
+
+| Imported into (packages/app/src) | Source (paseo/packages/app/src) | Date | Type |
+|---|---|---|---|
+| styles/theme.ts | styles/theme.ts (trimmed: token/scale/semantic structure; Pie tints) | 2025-10-12 | B (structure, new content) |
+| styles/unistyles.ts | styles/unistyles.ts (verbatim + Pie themes) | 2025-10-12 | A |
+| i18n/i18next.ts, i18n/init.ts | i18n/i18next.ts, i18n/init.ts (subset: en/zh-CN) | 2025-10-12 | A |
+| components/ui/loading-spinner.tsx | components/ui/loading-spinner.tsx (verbatim) | 2025-10-12 | A |
+| components/ui/control-geometry.ts | components/ui/control-geometry.ts (verbatim) | 2025-10-12 | A |
+| components/ui/button.tsx | components/ui/button.tsx (verbatim) | 2025-10-12 | A |
+| components/ui/alert.tsx | components/ui/alert.tsx (verbatim) | 2025-10-12 | A |
+| utils/color.ts | utils/color.ts (verbatim) | 2025-10-12 | A |
+| components/chat/format-token-count.ts | components/context-window-meter.utils.ts (verbatim, renamed) | 2025-10-12 | A |
+| components/chat/context-meter.tsx | components/context-window-meter.tsx (ring visual; data source swapped to pie protocol event) | 2025-10-12 | B |
+| components/chat/chat-list.tsx | agent-stream/bottom-anchor-controller.ts + strategy.ts (nearBottom semantics only; thin rewrite) | 2025-10-12 | B (contract port) |
+| components/chat/composer.tsx | composer/* (draft→submit state-machine shape; Pie-specific rendering) | 2025-10-12 | C (design reference) |
+| stores/connection-store.ts | stores/* (zustand pattern; all data Pie-specific) | 2025-10-12 | C (pattern) |
+| babel.config.js | babel.config.js (shape) | 2025-10-12 | A |
+| components/panels/tab-bar.tsx | panels/panel-registry.ts (definePanel presentation shape, scaled to 3 built-ins) | 2025-10-12 | C |
+| components/panels/files-panel.tsx | panels/files-panel.tsx + file-explorer (structure reference; single-level nav P2b-1) | 2025-10-12 | C |
+| components/panels/changes-panel.tsx + diff-view.tsx | git/check-presentation.view.tsx + git/diff-document (structure reference; Skia renderer is the P2b-2 upgrade) | 2025-10-12 | C |
+| stores/workspace-store.ts | stores/* pattern (zustand); data is Pie protocol | 2025-10-12 | C |
+| components/files/code-viewer.platform.web.tsx | file-pane/source/view.web.tsx (CM6 pattern: language/theme compartments; restyled) | 2025-10-12 | B |
+| components/files/code-viewer.platform.native.tsx | file-pane/source/view.native.tsx (tokenized rows + gutter; restyled) | 2025-10-12 | B |
+| components/files/md-viewer.tsx | components/markdown/renderer.tsx (structure reference; rewritten around markdown-it + theme) | 2025-10-12 | C |
+| components/files/syntax-palette.ts | @getpaseo/highlight colors.ts (style vocabulary; Pie palette) | 2025-10-12 | B |
+| components/layout/app-shell.tsx | desktop-sidebar-layout + workspace-tabs (three-pane concept; Pie implementation) | 2025-10-12 | C |
+| components/layout/explorer-pane.tsx | file-explorer/ + panels/files-panel (lazy tree nav concept) | 2025-10-12 | C |
+| components/panels/diff-model.ts + diff-view.tsx | git/diff-document (dual-number/intra-word concepts; RN-text implementation, Skia renderer deferred) | 2025-10-12 | C |
+| stores/tabs-store.ts | stores/panel-store + workspace-tabs/model (tab-target model scaled to 4 kinds) | 2025-10-12 | C |
+| components/panels/resources-panel.tsx | no direct asset (Pi resources surfaces via daemon commands) | 2025-10-12 | — |
+| components/chat/message-row.tsx | message block dispatch concept; tool-card/heuristic shapes are Pie-specific | 2025-10-12 | C |
+| components/widgets/widget-view.tsx | §6.5 line-set → shape heuristics (architecture doc); no paseo asset | 2025-10-12 | — |
+| Wave-1 desktop shell (sidebar/session-list/tabs) | screens/sessions-screen.tsx + components/agent-list.tsx + screens/workspace/workspace-desktop-tabs-row.tsx (structure & date buckets; data = pie session.list) | 2025-10-12 | C/Wave-1 |
+| message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |
+
+Type per docs/paseo-ui-reuse.md: A = direct port, B = port with source swap,
+C = design/pattern reference only.
+
+[getpaseo/paseo]: https://github.com/getpaseo/paseo

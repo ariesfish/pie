@@ -1,0 +1,30 @@
+{
+	"name": "@pie/desktop",
+	"type": "module",
+	"version": "0.1.0",
+	"description": "Electron shell for Pie (sidecar daemon lifecycle + window)",
+	"license": "MIT",
+	"private": true,
+	"main": "electron/main.mjs",
+	"scripts": {
+		"build:sidecar": "tsc -p tsconfig.build.json",
+		"dev": "npm run build:sidecar && electron .",
+		"smoke": "npm run build:sidecar && node scripts/smoke.mjs",
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"test": "vitest run --root .",
+		"pack": "npm run build:sidecar && node scripts/pack.mjs",
+		"pack:smoke": "node scripts/pack-smoke.mjs",
+		"smoke:packaged": "npm run pack && npm run pack:smoke"
+	},
+	"dependencies": {
+		"@pie/protocol": "*"
+	},
+	"devDependencies": {
+		"electron-builder": "^26.15.3",
+		"typescript": "^5.9.2",
+		"vitest": "^3.2.0"
+	},
+	"optionalDependencies": {
+		"electron": "^37.10.3"
+	}
+}

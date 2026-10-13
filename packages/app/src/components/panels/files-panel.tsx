@@ -1,0 +1,230 @@
+// Files panel (P2b-1): one-level directory navigation with the workspace
+// store as the single data source (fs.list on demand, invalidated by
+// workspace.fs.changed). File viewing is plain monospace text — CodeMirror
+// editing and markdown preview land in P2b-2 (paseo file-pane port).
+import { useEffect, useMemo, useState } from "react";
+import {
+	ActivityIndicator,
+	Pressable,
+	ScrollView,
+	Text,
+	View,
+} from "react-native";
+import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
+import { ArrowLeft, Check, FileText, Folder, Pencil } from "lucide-react-native";
+
+import { useWorkspaceStore } from "@/stores/workspace-store";
+import { CodeViewer } from "@/components/files/code-viewer";
+import { MdViewer } from "@/components/files/md-viewer";
+
+export function FilesPanel() {
+	const { t } = useTranslation();
+	const { theme } = useUnistyles();
+	const dir = useWorkspaceStore((s) => s.dir);
+	const node = useWorkspaceStore((s) => s.dirs[s.dir]);
+	const listDir = useWorkspaceStore((s) => s.listDir);
+	const openPath = useWorkspaceStore((s) => s.openPath);
+	const openFile = useWorkspaceStore((s) => s.openFile);
+	const openFilePath = useWorkspaceStore((s) => s.openFilePath);
+	const fileLoading = useWorkspaceStore((s) => s.fileLoading);
+	const closeFile = useWorkspaceStore((s) => s.closeFile);
+	const dirty = useWorkspaceStore((s) => s.dirty);
+	const saving = useWorkspaceStore((s) => s.saving);
+	const editedContent = useWorkspaceStore((s) => s.editedContent);
+	const setEdited = useWorkspaceStore((s) => s.setEdited);
+	const clearEdits = useWorkspaceStore((s) => s.clearEdits);
+	const saveFile = useWorkspaceStore((s) => s.saveFile);
+	const [editing, setEditing] = useState(false);
+
+	useEffect(() => {
+		if (!node || (node.fetchedAt === 0 && !node.loading)) void listDir(dir);
+	}, [node, dir, listDir]);
+
+	const isMarkdown = /\.(md|markdown|mdx)$/i.test(openFilePath ?? "");
+	const viewerText = editedContent ?? openFile?.text ?? "";
+
+	if (openFile && openFilePath) {
+		return (
+			<View style={styles.root}>
+				<View style={styles.headerRow}>
+					<Pressable style={styles.backBtn} onPress={closeFile} hitSlop={8}>
+						<ArrowLeft size={16} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
+					</Pressable>
+					<Text style={styles.pathText} numberOfLines={1}>
+						{openFilePath}
+						{openFile.truncated ? ` · ${t("files.truncated")}` : ""}
+						{dirty ? " · unsaved" : ""}
+					</Text>
+					{textBadge(openFile.binary, t)}
+					{openFile.text != null && !editing && (
+						<Pressable
+							style={styles.backBtn}
+							onPress={() => {
+								setEditing(true);
+								setEdited(openFile.text ?? "");
+							}}
+							hitSlop={8}
+						>
+							<Pencil size={15} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
+						</Pressable>
+					)}
+					{editing && (
+						<>
+							<Pressable
+								style={[styles.backBtn, dirty && styles.saveBtn]}
+								disabled={!dirty || saving}
+								onPress={() => {
+									if (editedContent != null) void saveFile(editedContent);
+								}}
+								hitSlop={8}
+							>
+								<Check
+									size={15}
+									color={dirty ? theme.colors.accentForeground : theme.colors.foregroundMuted}
+									strokeWidth={1.5}
+								/>
+							</Pressable>
+							<Pressable
+								style={styles.backBtn}
+								onPress={() => {
+									setEditing(false);
+									clearEdits();
+								}}
+								hitSlop={8}
+							>
+								<FileText size={15} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
+							</Pressable>
+						</>
+					)}
+				</View>
+				{openFile.binary ? (
+					<View style={styles.center}>
+						<Text style={styles.binaryText}>{t("files.binary")}</Text>
+					</View>
+				) : isMarkdown && !editing ? (
+					<ScrollView>
+						<MdViewer source={viewerText} />
+					</ScrollView>
+				) : (
+					<CodeViewer
+						content={viewerText}
+						filename={openFilePath}
+						editable={editing}
+						onChangeText={(text) => setEdited(text)}
+					/>
+				)}
+			</View>
+		);
+	}
+
+	return (
+		<View style={styles.root}>
+			<View style={styles.headerRow}>
+				<Pressable
+					style={styles.backBtn}
+					disabled={dir === ""}
+					onPress={() => {
+						const parent = dir.split("/").slice(0, -1).join("/");
+						void listDir(parent);
+						useWorkspaceStore.setState({ dir: parent });
+					}}
+					hitSlop={8}
+				>
+					<ArrowLeft
+						size={16}
+						color={dir === "" ? theme.colors.border : theme.colors.foreground}
+						strokeWidth={1.5}
+					/>
+				</Pressable>
+				<Text style={styles.pathText} numberOfLines={1}>
+					{dir === "" ? "/" : `${dir}/`}
+				</Text>
+				{fileLoading && <ActivityIndicator size="small" />}
+			</View>
+			<ScrollView contentContainerStyle={styles.list}>
+				{node?.error ? (
+					<Text style={styles.errorText}>{node.error}</Text>
+				) : (
+					(node?.entries ?? []).map((entry) => (
+						<Pressable
+							key={entry.path}
+							style={styles.row}
+							onPress={() => {
+								if (entry.kind === "dir") {
+									useWorkspaceStore.setState({ dir: entry.path });
+									void listDir(entry.path);
+								} else {
+									void openPath(entry.path);
+								}
+							}}
+						>
+							{entry.kind === "dir" ? (
+								<Folder size={16} color={theme.colors.accentBright} strokeWidth={1.5} />
+							) : (
+								<FileText size={16} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
+							)}
+							<Text style={styles.rowText} numberOfLines={1}>
+								{entry.name}
+							</Text>
+						</Pressable>
+					))
+				)}
+				{node?.loading && node.entries.length === 0 && (
+					<View style={styles.center}>
+						<ActivityIndicator />
+					</View>
+				)}
+				{!node?.loading && (node?.entries ?? []).length === 0 && !node?.error && (
+					<Text style={styles.emptyText}>{t("files.empty")}</Text>
+				)}
+			</ScrollView>
+		</View>
+	);
+}
+
+function textBadge(binary: boolean, t: (k: string) => string) {
+	if (!binary) return null;
+	return (
+		<View style={styles.badge}>
+			<Text style={styles.badgeText}>{t("files.binary")}</Text>
+		</View>
+	);
+}
+
+const styles = StyleSheet.create((theme) => ({
+	root: { flex: 1, backgroundColor: theme.colors.surface0 },
+	headerRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: theme.spacing[2],
+		paddingHorizontal: theme.spacing[3],
+		paddingVertical: theme.spacing[2],
+		borderBottomWidth: theme.borderWidth[1],
+		borderBottomColor: theme.colors.border,
+	},
+	backBtn: { padding: theme.spacing[1] },
+	pathText: { flex: 1, color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm },
+	list: { padding: theme.spacing[2], gap: theme.spacing[1] },
+	row: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: theme.spacing[2],
+		paddingVertical: theme.spacing[1.5],
+		paddingHorizontal: theme.spacing[2],
+		borderRadius: theme.borderRadius.md,
+	},
+	rowText: { color: theme.colors.foreground, fontSize: theme.fontSize.content },
+	errorText: { color: theme.colors.statusDanger, fontSize: theme.fontSize.sm },
+	emptyText: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm, alignSelf: "center", padding: theme.spacing[4] },
+	center: { padding: theme.spacing[4] },
+	binaryText: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.content },
+	saveBtn: { backgroundColor: theme.colors.accent, borderRadius: 6 },
+	badge: {
+		backgroundColor: theme.colors.surface2,
+		borderRadius: theme.borderRadius.full,
+		paddingHorizontal: theme.spacing[2],
+		paddingVertical: theme.spacing[0.5],
+	},
+	badgeText: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm },
+}));

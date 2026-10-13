@@ -1,0 +1,27 @@
+{
+	"expo": {
+		"name": "Pie",
+		"slug": "pie",
+		"scheme": "pie",
+		"version": "0.1.0",
+		"orientation": "portrait",
+		"userInterfaceStyle": "automatic",
+		"backgroundColor": "#101216",
+		"platforms": ["ios", "android", "web"],
+		"ios": {
+			"supportsTablet": true,
+			"bundleIdentifier": "dev.pie.app"
+		},
+		"android": {
+			"package": "dev.pie.app"
+		},
+		"web": {
+			"bundler": "metro",
+			"output": "single",
+			"favicon": "./assets/favicon.png"
+		},
+		"experiments": {
+			"typedRoutes": true
+		}
+	}
+}

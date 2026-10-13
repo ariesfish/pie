@@ -1,0 +1,17 @@
+{
+	appId: "dev.pie.app",
+	productName: "Pie",
+	directories: { output: "dist-out" },
+	files: ["electron/**", "dist/sidecar-manager.js", "package.json"],
+	extraResources: [
+		{ from: "dist/pie-runtime.tgz", to: "pie-runtime.tgz" },
+		{ from: "dist/app-web", to: "app-web" },
+	],
+	mac: {
+		category: "public.app-category.developer-tools",
+		target: [{ target: "default", arch: ["arm64"] }],
+		identity: null,
+	},
+	asar: true,
+	electronVersion: "37.10.3",
+}

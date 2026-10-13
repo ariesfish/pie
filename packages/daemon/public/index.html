@@ -1,0 +1,949 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pie</title>
+<style>
+	:root {
+		--bg: #101216;
+		--bg2: #16191f;
+		--bg3: #1d212a;
+		--fg: #e6e9ef;
+		--muted: #8b93a7;
+		--accent: #6ea8fe;
+		--user: #243b5e;
+		--assistant: #1d212a;
+		--tool: #171a21;
+		--ok: #4ade80;
+		--warn: #fbbf24;
+		--err: #f87171;
+		--radius: 12px;
+	}
+	* { box-sizing: border-box; }
+	html, body { height: 100%; }
+	body {
+		margin: 0;
+		background: var(--bg);
+		color: var(--fg);
+		font: 14px/1.55 ui-sans-serif, system-ui, "SF Pro Text", "PingFang SC", sans-serif;
+		display: flex;
+		flex-direction: column;
+	}
+	header {
+		display: flex; align-items: center; gap: 12px;
+		padding: 10px 16px;
+		background: var(--bg2);
+		border-bottom: 1px solid #262b36;
+	}
+	header .logo { font-weight: 700; letter-spacing: .3px; }
+	header .logo span { color: var(--accent); }
+	conn-state { margin-left: auto; font-size: 12px; color: var(--muted); }
+	main { flex: 1; display: flex; min-height: 0; }
+	#sidebar {
+		width: 280px; flex-shrink: 0;
+		background: var(--bg2);
+		border-right: 1px solid #262b36;
+		display: flex; flex-direction: column;
+		padding: 12px;
+		gap: 10px;
+		overflow-y: auto;
+	}
+	#sidebar details { border: 1px solid #262b36; border-radius: var(--radius); padding: 8px 10px; }
+	#sidebar summary { cursor: pointer; color: var(--muted); font-size: 12px; user-select: none; }
+	input, select, button, textarea {
+		font: inherit; color: var(--fg);
+		background: var(--bg3);
+		border: 1px solid #2b3240; border-radius: 8px;
+		padding: 7px 10px; outline: none;
+	}
+	input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+	button { cursor: pointer; }
+	button.primary { background: #2b4c7e; border-color: #35619e; }
+	button.ghost { background: transparent; }
+	button.danger { background: #6e2b2b; border-color: #943939; }
+	button:disabled { opacity: .45; cursor: not-allowed; }
+	#stream {
+		flex: 1; overflow-y: auto; padding: 20px 22px 6px;
+		display: flex; flex-direction: column; gap: 10px;
+	}
+	.msg { max-width: 860px; width: 100%; margin: 0 auto; }
+	.msg .who { font-size: 11px; color: var(--muted); margin: 0 0 3px 4px; text-transform: uppercase; letter-spacing: .8px; }
+	.msg .bubble {
+		border-radius: var(--radius); padding: 10px 14px;
+		white-space: pre-wrap; word-break: break-word;
+	}
+	.msg.user .bubble { background: var(--user); }
+	.msg.assistant .bubble { background: var(--assistant); }
+	.msg.thinking .bubble { background: #191c23; color: var(--muted); font-style: italic; font-size: 13px; }
+	.toolcard {
+		max-width: 860px; width: 100%; margin: 0 auto;
+		background: var(--tool); border: 1px solid #262b36; border-radius: var(--radius);
+		overflow: hidden;
+	}
+	.toolcard .head {
+		display: flex; align-items: center; gap: 8px;
+		padding: 8px 12px; cursor: pointer; user-select: none;
+	}
+	.toolcard .head .name { font-family: ui-monospace, monospace; font-size: 13px; }
+	.toolcard .head .status { margin-left: auto; font-size: 11px; color: var(--muted); }
+	.toolcard.running .head .status { color: var(--warn); }
+	.toolcard.error .head .status { color: var(--err); }
+	.toolcard.done .head .status { color: var(--ok); }
+	.toolcard pre {
+		margin: 0; padding: 10px 12px; border-top: 1px solid #262b36;
+		max-height: 320px; overflow: auto;
+		font: 12px/1.5 ui-monospace, monospace; color: #aab3c5;
+		white-space: pre-wrap; word-break: break-word;
+	}
+	.deltas { color: var(--muted); }
+	.entry-label { max-width: 860px; margin: 2px auto; font-size: 11px; color: #5b626f; padding-left: 8px; }
+	footer {
+		border-top: 1px solid #262b36; background: var(--bg2);
+		padding: 10px 16px 14px;
+	}
+	#widgets { display: flex; flex-direction: column; gap: 6px; max-width: 860px; margin: 0 auto 8px; }
+	.widget {
+		background: var(--bg3); border: 1px dashed #323a4b; border-radius: 8px;
+		padding: 4px 10px; font: 12px/1.5 ui-monospace, monospace; color: #b7c0d4;
+		white-space: pre-wrap;
+	}
+	#statusline { max-width: 860px; margin: 0 auto 6px; font-size: 11px; color: var(--muted); min-height: 15px; font-family: ui-monospace, monospace; }
+	bar {
+		display: flex; gap: 8px; max-width: 860px; margin: 0 auto;
+	}
+	bar textarea { flex: 1; resize: none; min-height: 46px; max-height: 200px; }
+	bar .col { display: flex; flex-direction: column; gap: 6px; justify-content: flex-end; }
+	.queue { max-width: 860px; margin: 6px auto 0; display: flex; gap: 6px; flex-wrap: wrap; }
+	.queue .q {
+		font-size: 12px; border-radius: 999px; padding: 2px 10px;
+		background: var(--bg3); border: 1px solid #2b3240; color: var(--muted);
+	}
+	.queue .q.steer { border-color: #7e5b2b; color: #e8c37b; }
+	.queue .q.follow { border-color: #2b527e; color: #7bb0e8; cursor: pointer; }
+	#toasts { position: fixed; right: 16px; top: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 50; }
+	.toast {
+		background: var(--bg3); border: 1px solid #2b3240; border-left: 3px solid var(--accent);
+		border-radius: 8px; padding: 9px 14px; box-shadow: 0 6px 24px #0009; max-width: 380px;
+	}
+	.toast.warn { border-left-color: var(--warn); }
+	.toast.err { border-left-color: var(--err); }
+	dialog {
+		background: var(--bg3); border: 1px solid #374050; color: var(--fg);
+		border-radius: 14px; padding: 0; min-width: 340px; max-width: 560px;
+	}
+	dialog::backdrop { background: #000a; }
+	dialog .inner { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+	dialog h3 { margin: 0; font-size: 15px; }
+	dialog .actions { display: flex; gap: 8px; justify-content: flex-end; }
+	#wsChips { display: flex; flex-wrap: wrap; gap: 6px; }
+	.chip {
+		font-size: 12px; border-radius: 999px; padding: 4px 12px; cursor: pointer;
+		background: var(--bg3); border: 1px solid #2b3240; color: var(--muted);
+		user-select: none; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+	}
+	.chip.active { border-color: var(--accent); color: var(--fg); background: #24304a; }
+	.chip:hover { border-color: var(--accent); }
+	.chip .x { margin-left: 6px; color: var(--muted); }
+	.chip .x:hover { color: var(--err); }
+	.row { display: flex; gap: 6px; align-items: center; }
+	.row label { font-size: 12px; color: var(--muted); width: 52px; }
+	.session-item {
+		border: 1px solid #262b36; border-radius: 10px; padding: 8px 10px;
+		margin-bottom: 6px; cursor: pointer; background: var(--bg3);
+	}
+	.session-item:hover { border-color: var(--accent); }
+	.session-item .t { font-size: 12px; margin: 2px 0 0; color: var(--muted);
+		overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.sess-meta { font-size: 11px; color: var(--muted); display: flex; gap: 8px; margin-top: 3px; flex-wrap: wrap;}
+	.empty { color: var(--muted); text-align: center; margin-top: 40%; }
+	code { background: #0d1014; padding: 1px 5px; border-radius: 5px; font-size: .92em; }
+	@media (max-width: 760px) {
+		#sidebar { display: none; }
+	}
+</style>
+</head>
+<body>
+	<header>
+		<div class="logo"><span>π</span>ie <small id="daemonVer" style="color:var(--muted)"></small></div>
+		<div id="sessionBadge" style="font-size:12px;color:var(--muted)"></div>
+		<conn-state id="connState">disconnected</conn-state>
+	</header>
+
+	<main>
+		<aside id="sidebar">
+			<div id="wsChips"></div>
+			<div class="row"><input id="wsPath" placeholder="/repo/path" /><button class="primary" id="openWs">添加</button></div>
+			<details open>
+				<summary>会话（workspace）</summary>
+				<div id="sessionList" style="margin-top:8px"><div class="empty" style="margin-top:0">先打开 workspace</div></div>
+				<div class="row" style="margin-top:8px">
+					<button class="ghost" id="newSession" style="flex:1">+ 新会话</button>
+					<button class="ghost" id="refreshSessions" title="刷新">⟳</button>
+				</div>
+			</details>
+			<details open>
+				<summary>模型</summary>
+				<div class="row" style="margin-top:8px"><select id="modelSelect" style="flex:1"></select></div>
+				<div class="row" id="usageRow" style="display:none;margin-top:6px;font-size:12px;color:var(--muted)"></div>
+			</details>
+		</aside>
+
+		<section id="stream">
+			<div class="empty" id="emptyHint">连接 daemon → 打开 workspace → 新建或选择会话</div>
+		</section>
+	</main>
+
+	<footer>
+		<div id="branchbar"></div>
+		<div id="widgets"></div>
+		<div id="statusline"></div>
+		<bar>
+			<textarea id="composer" placeholder="给 Pi 发消息…（流式时可用 ⚡Steer 或 ⏱Follow）" disabled></textarea>
+			<div class="col">
+				<button class="primary" id="sendBtn" disabled>发送 ⏎</button>
+			</div>
+		</bar>
+		<div class="queue" id="queueBar"></div>
+	</footer>
+
+	<div id="toasts"></div>
+	<dialog id="dlgModal"><div class="inner"></div></dialog>
+	<dialog id="branchModal"><div class="inner"></div></dialog>
+
+<script>
+"use strict";
+// --- tiny helpers -----------------------------------------------------------
+const $ = (id) => document.getElementById(id);
+function el(tag, cls, text) {
+	const n = document.createElement(tag);
+	if (cls) n.className = cls;
+	if (text !== undefined) n.textContent = text;
+	return n;
+}
+function toast(message, type) {
+	const t = el("div", `toast ${type || ""}`, message);
+	$("toasts").appendChild(t);
+	setTimeout(() => t.remove(), 4500);
+}
+function fmtBytes(json) {
+	try { return JSON.stringify(json, null, 2); } catch { return String(json); }
+}
+
+// --- connection state ---------------------------------------------------------
+let ws = null;
+let nextId = 0;
+let pending = new Map();
+let seq = -1;
+let session = null;          // { id, presentation, model, ... }
+let streaming = false;
+let currentBubble = null;    // streaming assistant bubble
+let currentDeltaText = "";
+let queue = { steering: [], followUp: [] };
+let modelsCache = [];
+// multi-workspace state (persisted)
+let workspaces = loadWorkspaces();
+let activeWs = localStorage.getItem("pie-ws-active") || null;
+function loadWorkspaces() {
+	try { return JSON.parse(localStorage.getItem("pie-ws-list") || "[]"); } catch { return []; }
+}
+function saveWorkspaces() { localStorage.setItem("pie-ws-list", JSON.stringify(workspaces)); }
+// session tree mirror (client-side TreeStore-lite; see client package for full store)
+let treeMap = new Map();          // id -> {parentId, type, label?, timestamp?}
+let entryPreview = new Map();     // id -> {role, text} for messages on known paths
+let currentLeaf = null;
+let permCards = new Map();        // requestId -> DOM node
+let connectionReady = false;
+
+function send(packet) {
+	if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(packet) + "\n");
+}
+function request(cmd, args) {
+	return new Promise((resolve, reject) => {
+		const id = `c-${++nextId}`;
+		pending.set(id, { resolve, reject });
+		send({ id, cmd, args });
+	});
+}
+
+function connect(url) {
+	$("connState").textContent = "connecting…";
+	ws = new WebSocket(url);
+	ws.onopen = () => {
+		const token = new URLSearchParams(location.search).get("token") || $("tokenInput")?.value || "";
+		const payload = {
+			hello: {
+				v: 1,
+				client: { kind: "web", version: "0.1.0", platform: "browser" },
+				caps: ["treeSync", "extWidgets"],
+				auth: { method: "token", token },
+			},
+		};
+		ws.send(JSON.stringify(payload) + "\n");
+	};
+	ws.onmessage = (m) => {
+		for (const line of String(m.data).split("\n")) {
+			if (!line.trim()) continue;
+			handle(JSON.parse(line));
+		}
+	};
+	ws.onclose = () => {
+		$("connState").textContent = "disconnected";
+		setComposerEnabled(false);
+	};
+	ws.onerror = () => $("connState").textContent = "error";
+}
+
+function handle(pkt) {
+	if (pkt.helloAck) {
+		seq = pkt.helloAck.eventSeq - 1;
+		$("connState").textContent = "connected ✓";
+		$("daemonVer").textContent = `· daemon ${pkt.helloAck.daemon.version} · pi ${pkt.helloAck.pi.version}`;
+		request("daemon.status", {}).then((s) => {
+			$("connState").textContent = `connected ✓ (${s.attachedClients} client${s.attachedClients > 1 ? "s" : ""})`;
+		});
+		return;
+	}
+	if (pkt.fatal) { toast(pkt.fatal.message, "err"); return; }
+	if (pkt.ev !== undefined) {
+		if (pkt.seq <= seq) return; // dedupe replay
+		seq = pkt.seq;
+		onEvent(pkt.ev, pkt.data);
+		return;
+	}
+	if (pkt.ok) {
+		const p = pending.get(pkt.id); if (p) { pending.delete(pkt.id); p.resolve(pkt.data); }
+	} else {
+		const p = pending.get(pkt.id); if (p) { pending.delete(pkt.id); p.reject(new Error(pkt.error.message)); }
+		toast(`${pkt.error.code}: ${pkt.error.message}`, "err");
+	}
+}
+
+// --- events -------------------------------------------------------------------
+function onEvent(ev, data) {
+	switch (ev) {
+		case "session.snapshot": return onSnapshot(data.snapshot);
+		case "session.entry.appended": {
+			treeMap.set(data.entry.id, { parentId: data.entry.parentId, type: data.entry.type, timestamp: data.entry.timestamp });
+			rememberEntry(data.entry);
+			if (data.leafId) currentLeaf = data.leafId;
+			renderBranchBar();
+			return onEntry(data.entry);
+		}
+		case "session.leaf.changed":
+			currentLeaf = data.leafId;
+			renderBranchBar();
+			return;
+		case "session.partial.delta": return onDelta(data);
+		case "session.run.started": streaming = true; setComposerEnabled(true); return showStreaming();
+		case "session.run.ended": return;
+		case "session.settled": streaming = false; finishStreaming(); setComposerEnabled(true); refreshUsage(); return;
+		case "session.queue.changed": queue = { steering: data.steering, followUp: data.followUp }; renderQueue(); return;
+		case "session.tool.started": return onToolStart(data);
+		case "session.tool.updated": return;
+		case "session.tool.ended": return onToolEnd(data);
+		case "session.tool.bashDelta": return appendDeltaCard(data);
+		case "session.state.changed":
+			if (!data.isStreaming && streaming) { streaming = false; finishStreaming(); }
+			else if (data.isStreaming) streaming = true;
+			setComposerEnabled(true);
+			return;
+		case "session.compaction.started": return toast("上下文压缩中…", "warn");
+		case "session.compaction.ended": return toast(data.aborted ? "压缩已中止" : "压缩完成");
+		case "session.renamed": return $("sessionBadge").textContent = data.name || session?.id;
+		case "session.thinking.changed": return;
+		case "session.model.changed": return $("sessionBadge").textContent = modelLabel(data.model);
+		case "session.ext.dialog": return showDialog(data);
+		case "session.ext.notify": return toast(data.message, data.notifyType);
+		case "session.ext.status": return setStatusLine(data.key, data.text);
+		case "session.ext.widget": return setWidget(data.key, data.lines, data.clear);
+		case "session.ext.title": return (document.title = data.title);
+		case "session.permission.request": return showPermissionCard(data);
+		case "session.contextUsage.changed": return setUsageBadge(data.usage?.percent);
+		case "session.model.changed": return; // badge updated on next snapshot
+		case "session.ext.editorText":
+			if (!streaming) $("composer").value = data.text;
+			return;
+		case "daemon.sessions.changed": return refreshSessions();
+		default: return;
+	}
+}
+
+// --- snapshot/timeline ----------------------------------------------------------
+function rememberEntry(entry) {
+	if (entry.type !== "message" || !entry.message) return;
+	const msg = entry.message;
+	let text = "";
+	if (typeof msg.content === "string") text = msg.content;
+	else if (Array.isArray(msg.content)) for (const b of msg.content) if (b.text) text += b.text;
+	entryPreview.set(entry.id, { role: msg.role, text: text.slice(0, 80) });
+}
+
+function onSnapshot(snap) {
+	$("emptyHint")?.remove();
+	session = { id: snap.sessionId, name: snap.name, model: snap.state.model };
+	$("sessionBadge").textContent = (snap.name || snap.sessionId.slice(0, 8)) + (snap.state.model ? ` · ${modelLabel(snap.state.model)}` : "");
+	streaming = snap.state.isStreaming;
+	if (snap.sessionId !== session.id) { /* new session selected below */ }
+	// Rebuild the tree mirror from this snapshot.
+	treeMap = new Map(snap.tree.map((n) => [n.id, n]));
+	entryPreview.clear();
+	for (const entry of snap.entries) rememberEntry(entry);
+	currentLeaf = snap.leafId;
+	setUsageBadge(snap.contextUsage?.percent);
+	renderBranchBar();
+	$("stream").innerHTML = "";
+	currentBubble = null;
+	const notes = new Set(["model_change", "thinking_level_change", "thinking_level_change"]);
+	for (const entry of snap.entries) {
+		if (entry.type === "message") onEntry(entry, true);
+		else if (!notes.has(entry.type)) appendNote(entry);
+	}
+	if (streaming) showStreaming();
+	setComposerEnabled(true);
+	renderQueue({ steering: snap.queues.steering, followUp: snap.queues.followUp });
+}
+
+function onEntry(entry, quiet) {
+	if (entry.type !== "message") { appendNote(entry); return; }
+	const msg = entry.message;
+	if (!msg || msg.role === undefined) return;
+	if (msg.role === "user") {
+		appendUser(typeof msg.content === "string" ? msg.content : (msg.content || []).map((b) => b.text || "[image]").join(""));
+	} else if (msg.role === "assistant") {
+		finishStreaming();
+		const blocks = msg.content || [];
+		for (const b of blocks) {
+			if (b.type === "thinking") appendMessage("thinking", b.thinking || "");
+			else if (b.type === "text") appendMessage("assistant", b.text || "");
+			else if (b.type === "toolCall") onToolStart({ toolCallId: b.id, toolName: b.name, args: b.arguments });
+		}
+	} else if (msg.role === "toolResult") {
+		onToolEnd({
+			toolCallId: msg.toolCallId,
+			toolName: msg.toolName,
+			result: msg.content,
+			isError: msg.isError,
+			durationMs: msg.durationMs,
+		});
+	}
+}
+
+let toolCards = new Map();
+function toolCardFor(toolCallId, name) {
+	let card = toolCards.get(toolCallId);
+	if (card) return card;
+	card = el("div", "toolcard running");
+	const head = el("div", "head");
+	head.appendChild(el("span", "name", name));
+	const st = el("span", "status", "运行中…");
+	head.appendChild(st);
+	const pre = el("pre");
+	card.appendChild(head);
+	card.appendChild(pre);
+	head.onclick = () => (pre.style.display = pre.style.display === "none" ? "" : "none");
+	$("stream").appendChild(card);
+	toolCards.set(toolCallId, card);
+	scrollDown();
+	return card;
+}
+function onToolStart(d) {
+	const card = toolCardFor(d.toolCallId, d.toolName);
+	card.querySelector("pre").textContent = fmtBytes(d.args || {});
+	scrollDown();
+}
+function onToolEnd(d) {
+	const card = toolCardFor(d.toolCallId, d.toolName);
+	card.className = `toolcard ${d.isError ? "error" : "done"}`;
+	card.querySelector(".status").textContent = d.isError ? "失败" : `完成 ${d.durationMs ? (d.durationMs / 1000).toFixed(1) + "s" : ""}`;
+	let resultText;
+	if (Array.isArray(d.result)) resultText = d.result.map((b) => b.text || (b.image ? "[image]" : "")).join("");
+	else if (d.result && typeof d.result === "object") resultText = fmtBytes(d.result);
+	else resultText = String(d.result ?? "");
+	card.querySelector("pre").textContent = resultText || "(空)";
+	scrollDown();
+}
+let bashCard = null;
+function appendDeltaCard(d) {
+	if (!bashCard) bashCard = toolCardFor(d.messageId || "bash", "bash");
+	bashCard.querySelector("pre").textContent += d.delta;
+	scrollDown();
+}
+
+function appendMessage(kind, text) {
+	const wrap = el("div", `msg ${kind}`);
+	wrap.appendChild(el("div", "who", kind === "assistant" ? "pi" : ""));
+	const bubble = el("div", "bubble", text);
+	wrap.appendChild(bubble);
+	$("stream").appendChild(wrap);
+	scrollDown();
+	return bubble;
+}
+function appendUser(text) { appendMessage("user", text); }
+function appendNote(entry) {
+	if (entry.type === "compaction") {
+		const n = el("div", "entry-label", "── 上下文压缩处（历史已概括，可展开见 JSONL）──");
+		$("stream").appendChild(n);
+	} else if (entry.type === "usage" || entry.type === "model_change" || entry.type === "thinking_level_change" || entry.type === "session_info" || entry.type === "label") {
+		// quiet
+	} else {
+		const n = el("div", "entry-label", `[${entry.type}]`);
+		$("stream").appendChild(n);
+	}
+}
+
+// --- streaming -------------------------------------------------------------------
+function showStreaming() {
+	finishStreaming();
+	const bubble = appendMessage("assistant", "");
+	const d = el("div", "deltas");
+	d.textContent = "";
+	bubble.appendChild(d);
+	currentBubble = bubble;
+	currentDeltaText = "";
+}
+function onDelta(d) {
+	if (!currentBubble) showStreaming();
+	if (d.kind === "text") {
+		currentDeltaText += d.delta;
+		currentBubble.firstChild.textContent = currentDeltaText;
+	} else if (d.kind === "thinking" && currentBubble) {
+		const t = currentBubble.querySelector(".deltas");
+		t.textContent = (t.textContent || "") + d.delta;
+	}
+	scrollDown(true);
+}
+function finishStreaming() {
+	if (currentBubble) currentBubble.querySelector(".deltas")?.remove();
+	currentBubble = null;
+	currentDeltaText = "";
+	bashCard = null;
+	if (toolCards.size) { for (const c of toolCards.values()) if (c.className.includes("running")) c.className = "toolcard done"; }
+}
+
+// --- queue & composer ---------------------------------------------------------------
+function renderQueue(q) {
+	queue = q || queue;
+	const bar = $("queueBar");
+	bar.innerHTML = "";
+	for (const s of queue.steering) { const n = el("span", "q steer", "⚡ steer: " + s); bar.appendChild(n); }
+	for (const f of queue.followUp) {
+		const n = el("span", "q follow", "⏱ follow: " + f);
+		n.title = "点击从队列移除";
+		n.onclick = () => request("session.queue.clear", { sessionId: session.id }).then(renderQueue);
+		bar.appendChild(n);
+	}
+	setStreamButtons();
+}
+function setComposerEnabled(on) {
+	const can = on && ws?.readyState === WebSocket.OPEN && session;
+	$("composer").disabled = !can;
+	$("sendBtn").disabled = !can || $("composer").value.trim() === "";
+	setStreamButtons();
+}
+function setStreamButtons() {
+	$('sendBtn').textContent = streaming ? "⚡ Steer ⏎" : "发送 ⏎";
+	$("sendBtn").className = streaming ? "primary" : "primary";
+}
+function sendPrompt(delivery) {
+	if (!session) return;
+	const msg = $("composer").value.trim();
+	if (!msg) return;
+	request("session.prompt", {
+		sessionId: session.id,
+		message: msg,
+		delivery: delivery || "auto",
+	}).then((r) => {
+		if (r.disposition === "queued") toast("已入队");
+		$("composer").value = "";
+		setComposerEnabled(true);
+	}).catch((e) => {
+		if (String(e.message).includes("steer_or_follow")) {
+			const pick = confirm("会话正在输出。确定 = ⚡Steer（打断并接管）\n取消 = ⏱Follow（排队跟进）");
+			sendPrompt(pick ? "steer" : "followUp");
+			$("composer").value = "";
+		} else toast(e.message, "err");
+	});
+}
+$("sendBtn").onclick = () => sendPrompt(streaming ? "steer" : "auto");
+$("composer").addEventListener("keydown", (e) => {
+	if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendPrompt(streaming ? "steer" : "auto"); }
+	if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); sendPrompt(streaming ? "followUp" : "auto"); }
+});
+$("composer").addEventListener("input", () => setComposerEnabled(true));
+
+// --- dialogs (ExtensionUIContext bridge) --------------------------------------------
+function showDialog(d) {
+	const modal = $("dlgModal");
+	const inner = modal.querySelector(".inner");
+	inner.innerHTML = "";
+	let resolveAndClose;
+	if (d.kind === "select") {
+		inner.appendChild(el("h3", "", d.select.title));
+		const list = el("div");
+		for (const opt of d.select.options) {
+			const b = el("div", "session-item", opt);
+			b.onclick = () => resolveAndClose({ value: opt });
+			list.appendChild(b);
+		}
+		inner.appendChild(list);
+	} else if (d.kind === "confirm") {
+		inner.appendChild(el("h3", "", d.confirm.title));
+		inner.appendChild(el("div", "", d.confirm.message));
+		const actions = el("div", "actions");
+		const no = el("button", "ghost", "取消");
+		const yes = el("button", "primary", "确认");
+		no.onclick = () => resolveAndClose({ confirmed: false });
+		yes.onclick = () => resolveAndClose({ confirmed: true });
+		actions.append(no, yes);
+		inner.appendChild(actions);
+	} else if (d.kind === "input") {
+		inner.appendChild(el("h3", "", d.input.title));
+		const inp = el("input");
+		inp.placeholder = d.input.placeholder || "";
+		inner.appendChild(inp);
+		const actions = el("div", "actions");
+		const no = el("button", "ghost", "取消");
+		const ok = el("button", "primary", "提交");
+		no.onclick = () => resolveAndClose({ cancelled: true });
+		ok.onclick = () => resolveAndClose({ value: inp.value });
+		actions.append(no, ok);
+		inner.appendChild(actions);
+		setTimeout(() => inp.focus(), 60);
+	} else if (d.kind === "editor") {
+		inner.appendChild(el("h3", "", d.editor.title));
+		const ta = el("textarea");
+		ta.style.minHeight = "220px";
+		ta.value = d.editor.prefill || "";
+		inner.appendChild(ta);
+		const actions = el("div", "actions");
+		const no = el("button", "ghost", "取消");
+		const ok = el("button", "primary", "完成");
+		no.onclick = () => resolveAndClose({ cancelled: true });
+		ok.onclick = () => resolveAndClose({ value: ta.value });
+		actions.append(no, ok);
+		inner.appendChild(actions);
+		setTimeout(() => ta.focus(), 60);
+	}
+	resolveAndClose = (answer) => {
+		modal.close();
+		request("ext.dialog.respond", { requestId: d.requestId, ...answer });
+	};
+	modal.oncancel = (e) => { e.preventDefault(); modal.close(); request("ext.dialog.respond", { requestId: d.requestId, cancelled: true }); };
+	modal.showModal();
+}
+
+// --- status line & widgets ---------------------------------------------------------
+const statusParts = new Map();
+function setStatusLine(key, text) {
+	if (text === undefined || text === null || text === "") statusParts.delete(key);
+	else statusParts.set(key, text);
+	$("statusline").textContent = [...statusParts.entries()].map(([k, v]) => `${k}: ${v}`).join("   ·   ");
+}
+function setWidget(key, lines, clear) {
+	const existing = document.getElementById("w-" + CSS.escape(key));
+	if (clear || !lines) { existing?.remove(); return; }
+	let w = existing;
+	if (!w) {
+		w = el("div", "widget");
+		w.id = "w-" + key;
+		$("widgets").appendChild(w);
+	}
+	w.textContent = lines.join("\n");
+}
+
+// --- workspace & sessions ----------------------------------------------------------
+function renderWorkspaceChips() {
+	const box = $("wsChips");
+	box.innerHTML = "";
+	for (const ws of workspaces) {
+		const chip = el("span", "chip" + (ws === activeWs ? " active" : ""), ws.split("/").filter(Boolean).pop() || ws);
+		chip.title = ws;
+		if (ws === activeWs) {
+			const x = el("span", "x", "×");
+			x.title = "从列表移除";
+			x.onclick = (e) => { e.stopPropagation(); removeWorkspace(ws); };
+			chip.appendChild(x);
+		}
+		chip.onclick = () => switchWorkspace(ws);
+		box.appendChild(chip);
+	}
+}
+
+async function openWorkspace() {
+	const path = $("wsPath").value.trim();
+	if (!path) return toast("填写 workspace 路径", "warn");
+	await request("workspace.open", { path });
+	if (!workspaces.includes(path)) { workspaces.push(path); saveWorkspaces(); }
+	await switchWorkspace(path);
+	$("wsPath").value = "";
+}
+
+async function switchWorkspace(path) {
+	activeWs = path;
+	localStorage.setItem("pie-ws-active", path);
+	renderWorkspaceChips();
+	await request("workspace.open", { path });
+	await refreshSessions();
+	await refreshModels();
+}
+
+function removeWorkspace(path) {
+	workspaces = workspaces.filter((w) => w !== path);
+	saveWorkspaces();
+	if (activeWs === path) {
+		activeWs = workspaces[0] ?? null;
+		if (activeWs) switchWorkspace(activeWs);
+		else renderWorkspaceChips();
+	} else renderWorkspaceChips();
+}
+async function refreshSessions() {
+	const path = activeWs;
+	if (!path) return;
+	const res = await request("session.list", { workspaceId: path });
+	const list = $("sessionList");
+	list.innerHTML = "";
+	if (!res.sessions.length) {
+		list.appendChild(el("div", "t", "（暂无历史会话）"));
+		return;
+	}
+	for (const s of [...res.sessions].sort((a, b) => (a.modified < b.modified ? 1 : -1)).slice(0, 25)) {
+		const item = el("div", "session-item");
+		item.appendChild(el("div", "", s.name || s.sessionId.slice(0, 14) + (s.parentSessionPath ? " ⎇" : "")));
+		item.appendChild(el("div", "t", s.firstMessage || "(空)"));
+		const meta = el("div", "sess-meta");
+		meta.appendChild(el("span", "", `${s.messageCount} msg`));
+		meta.appendChild(el("span", "", new Date(s.modified).toLocaleString()));
+		if (s.pending) meta.appendChild(el("span", "", "● streaming"));
+		item.appendChild(meta);
+		item.onclick = () => attach(s);
+		list.appendChild(item);
+	}
+}
+async function newSession() {
+	const path = activeWs;
+	if (!path) return toast("先添加 workspace", "warn");
+	const res = await request("session.create", { workspaceId: path });
+	toolCards = new Map();
+	finishStreaming();
+	session = { id: res.sessionId };
+	await attach({ sessionId: res.sessionId, path: res.sessionFile });
+	refreshSessions();
+}
+async function attach(s) {
+	$("stream").innerHTML = "";
+	toolCards = new Map();
+	queue = { steering: [], followUp: [] };
+	let sid = s.sessionId;
+	if (!sid && s.path) sid = "";
+	const res = await request("session.attach", { sessionId: s.sessionId, path: s.path, as: "readwrite" });
+	session = { id: res.sessionId, presentation: res.presentation };
+	$("sessionBadge").textContent = res.sessionId.slice(0, 12) + (res.presentation === "readonly" ? " （只读）" : "");
+}
+async function refreshModels() {
+	const path = activeWs;
+	if (!path || !session) return;
+	const res = await request("models.list", { workspaceId: path, sessionId: session?.id });
+	modelsCache = res.models || [];
+	const sel = $("modelSelect");
+	sel.innerHTML = "";
+	for (const m of modelsCache) {
+		const opt = el("option", "", modelLabel(m));
+		opt.value = `${m.provider}\u0000${m.id}`;
+		sel.appendChild(opt);
+	}
+	sel.onchange = () => {
+		const [provider, id] = sel.value.split("\u0000");
+		request("model.set", { sessionId: session.id, model: { provider, id } })
+			.then((r) => { toast("模型已切换: " + modelLabel(r.model)); refreshUsage(); })
+			.catch((e) => toast(e.message, "err"));
+	};
+}
+function modelLabel(m) {
+	return `${m.provider}/${m.id}${m.reasoning ? " ✦" : ""}`;
+}
+async function refreshUsage() {
+	if (!session) return;
+	try {
+		const s = await request("session.stats", { sessionId: session.id });
+		if (s.contextUsage && s.contextUsage.percent != null) {
+			$("usageRow").style.display = "flex";
+			$("usageRow").textContent = `上下文 ${s.contextUsage.percent}% · ${(s.tokens.input / 1000).toFixed(1)}k in / ${s.tokens.output} out`;
+		}
+	} catch {}
+}
+
+// --- branch timeline -----------------------------------------------------
+function childrenOfNode(id) {
+	const out = [];
+	for (const [nid, n] of treeMap) if ((n.parentId ?? null) === id) out.push(nid);
+	return out.sort((a, b) => {
+		const ta = treeMap.get(a)?.timestamp ?? "";
+		const tb = treeMap.get(b)?.timestamp ?? "";
+		return ta !== tb ? (ta < tb ? -1 : 1) : a < b ? -1 : 1;
+	});
+}
+
+function renderBranchBar() {
+	const bar = $("branchbar");
+	bar.innerHTML = "";
+	if (!treeMap.size) return;
+	// Walk active path root -> leaf; mark entries that have siblings.
+	const path = [];
+	let cursor = currentLeaf;
+	while (cursor) {
+		path.push(cursor);
+		cursor = treeMap.get(cursor)?.parentId ?? null;
+	}
+	path.reverse();
+	for (const id of path) {
+		const node = treeMap.get(id);
+		if (!node) continue;
+		const siblings = childrenOfNode(node.parentId ?? null);
+		if (siblings.length > 1) {
+			const pill = el("span", "branchpill", `⎇ ${siblings.length} 分支`);
+			pill.title = "查看 / 切换分支 / 从此处分叉";
+			pill.onclick = () => openBranchMenu(node.parentId ?? null, siblings);
+			bar.appendChild(pill);
+		}
+	}
+}
+
+function openBranchMenu(parentId, siblings) {
+	const modal = $("branchModal");
+	const inner = modal.querySelector(".inner");
+	inner.innerHTML = "";
+	inner.appendChild(el("h3", "", "分支选择"));
+	for (const sib of siblings) {
+		const node = treeMap.get(sib);
+		const preview = entryPreview.get(sib);
+		const item = el("div", "session-item");
+		let label = `#${String(sib).slice(0, 8)}`;
+		if (node?.label) label += ` 「${node.label}」`;
+		if (sib === currentLeaf) label += " ●（当前）";
+		item.appendChild(el("div", "", label));
+		if (preview) item.appendChild(el("div", "t", `${preview.role}: ${preview.text}`));
+		else item.appendChild(el("div", "t", node?.type ?? ""));
+		const lazyText = el("div", "t", "载入中…");
+		item.appendChild(lazyText);
+		// 预览 sibling 路径
+		request("session.entries", { sessionId: session.id, leafId: sib }).then((r) => {
+			const msgs = (r.entries || []).filter((e) => e.type === "message" && e.message && e.message.role === "user");
+			const last = msgs[msgs.length - 1];
+			lazyText.textContent = `${r.entries.length} entries · 最近用户消息: ${last ? String(typeof last.message.content === "string" ? last.message.content : (last.message.content[0]?.text ?? "")).slice(0, 50) : "—"}`;
+		}).catch(() => (lazyText.textContent = ""));
+		item.onclick = () => {
+			// 打开两个选项
+			inner.innerHTML = "";
+			inner.appendChild(el("h3", "", `在 #${String(sib).slice(0, 8)} 处`));
+			const b1 = el("button", "primary", "// 切换观察到此分支 (navigate)");
+			const b2 = el("button", "ghost", "⎇ 从这里分叉新会话 (fork)");
+			const b3 = el("button", "ghost", "返回");
+			b1.onclick = async () => {
+				modal.close();
+				try { await request("session.navigate", { sessionId: session.id, entryId: sib }); }
+				catch (e) { toast(e.message, "err"); }
+			};
+			b2.onclick = async () => {
+				modal.close();
+				try {
+					const forked = await request("session.forkAt", { sessionId: session.id, entryId: sib, position: "at" });
+					toast("已创建分叉会话");
+					await attach({ sessionId: forked.sessionId, path: forked.sessionFile });
+					refreshSessions();
+				} catch (e) { toast(e.message, "err"); }
+			};
+			b3.onclick = () => { inner.innerHTML = ""; openBranchMenu(parentId, siblings); };
+			const wrap = el("div", "actions");
+			wrap.style.justifyContent = "flex-start";
+			wrap.append(b1, b2, b3);
+			inner.appendChild(wrap);
+		};
+		inner.appendChild(item);
+	}
+	const close = el("button", "ghost", "关闭");
+	close.onclick = () => modal.close();
+	const actions = el("div", "actions");
+	actions.appendChild(close);
+	inner.appendChild(actions);
+	modal.showModal();
+}
+
+// --- permission cards ------------------------------------------------------
+function showPermissionCard(d) {
+	const card = el("div", "permcard");
+	const title = el("div", "ptitle");
+	title.appendChild(el("b", "", "🛡 待审批"));
+	const name = el("b", "", d.toolName);
+	title.appendChild(name);
+	if (d.annotations) {
+		if (d.annotations.readOnlyHint) title.appendChild(el("span", "badge ro", "read-only"));
+		if (d.annotations.destructiveHint) title.appendChild(el("span", "badge destr", "destructive"));
+	}
+	card.appendChild(title);
+	const pre = el("pre");
+	pre.textContent = safeJson(d.argsPreview);
+	card.appendChild(pre);
+	const actions = el("div", "actions");
+	const deny = el("button", "danger", "拒绝");
+	const once = el("button", "ghost", "本次允许");
+	const always = el("button", "primary", "本会话始终允许");
+	const respond = (decision) => {
+		card.remove();
+		permCards.delete(d.requestId);
+		request("permission.respond", { requestId: d.requestId, decision });
+	};
+	deny.onclick = () => respond("deny");
+	once.onclick = () => respond("allow");
+	always.onclick = () => respond("allowSession");
+	actions.append(deny, once, always);
+	card.appendChild(actions);
+	$("widgets").appendChild(card);
+	permCards.set(d.requestId, card);
+	scrollDown();
+}
+function safeJson(v) {
+	try { return JSON.stringify(v, null, 2); } catch { return String(v); }
+}
+
+function setUsageBadge(percent) {
+	if (percent == null) { $("usageRow").style.display = "none"; return; }
+	$("usageRow").style.display = "flex";
+	$("usageRow").textContent = `上下文 ${Math.round(percent)}%`;
+}
+
+function scrollDown(duringStream) {
+	const s = $("stream");
+	if (duringStream) {
+		if (s.scrollHeight - s.scrollTop - s.clientHeight < 240) s.scrollTop = s.scrollHeight;
+	} else s.scrollTop = s.scrollHeight;
+}
+
+$("openWs").onclick = openWorkspace;
+$("newSession").onclick = newSession;
+$("refreshSessions").onclick = refreshSessions;
+
+// --- boot: auto-connect to this origin --------------------------------------------
+(async function boot() {
+	const qs = new URLSearchParams(location.search);
+	const wsFromUrl = qs.get("ws");
+	if (wsFromUrl && !workspaces.includes(wsFromUrl)) { workspaces.push(wsFromUrl); saveWorkspaces(); }
+	renderWorkspaceChips();
+	const proto = location.protocol === "https:" ? "wss" : "ws";
+	// The daemon serves this page and the WebSocket endpoint on the same port.
+	connect(`${proto}://${location.host}`);
+	if (!activeWs && workspaces.length) activeWs = workspaces[0];
+	if (activeWs) {
+		// Wait for the hello handshake before issuing wire commands.
+		const wait = setInterval(() => {
+			if (connectionReady) {
+				clearInterval(wait);
+				switchWorkspace(activeWs);
+			}
+		}, 100);
+		setTimeout(() => clearInterval(wait), 5000);
+	}
+})();
+</script>
+</body>
+</html>

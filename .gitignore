@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-out/
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Env
+.env
+.env.*
+
+# Test coverage
+coverage/
+
+# Tooling caches
+.vite/
+.expo/
+
+# Temp/debug scripts
+*.temp.mts

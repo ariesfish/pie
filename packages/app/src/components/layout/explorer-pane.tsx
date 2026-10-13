@@ -1,0 +1,245 @@
+// Explorer pane (P2b-3, desktop): lazy file tree (one fs.list per expanded
+// directory) or a compact changes list. Navigation writes shared workspace
+// state so the active tab in the main pane follows instantly.
+import { useEffect } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
+import { ChevronDown, ChevronRight, FileText, Folder } from "lucide-react-native";
+
+import { statusKindOf, useWorkspaceStore } from "@/stores/workspace-store";
+import { useResourcesStore } from "@/stores/resources-store";
+import { useConnectionStore } from "@/stores/connection-store";
+import { useTabsStore } from "@/stores/tabs-store";
+import { useSessionListStore } from "@/stores/session-list-store";
+import type { FsEntryInfo, GitStatusEntry, SkillInfo } from "@pie/protocol";
+
+export function ExplorerPane() {
+	const mode = useTabsStore((s) => s.explorerMode);
+	if (mode === "files") return <FileTree />;
+	if (mode === "changes") return <ChangesList />;
+	if (mode === "resources") return <ResourcesList />;
+	return null;
+}
+
+function ResourcesList() {
+	const { theme } = useUnistyles();
+	const handle = useConnectionStore.getState();
+	const packages = useResourcesStore((s) => s.packages);
+	const skills = useResourcesStore((s) => s.skills);
+	const sessionId = useConnectionStore((s) => s.sessionId);
+
+	useEffect(() => {
+		const ws = useWorkspaceStore.getState().workspaceId;
+		if (ws) void useResourcesStore.getState().refreshPackages();
+		if (sessionId) void useResourcesStore.getState().refreshSkills(sessionId);
+		void useSessionListStore.getState().refresh();
+		void ws;
+		void handle;
+	}, [sessionId]);
+
+	return (
+		<ScrollView style={styles.root} contentContainerStyle={styles.list}>
+			<Text style={styles.head}>{tShim("resources.packages")}</Text>
+			{packages.length === 0 ? (
+				<Text style={styles.dim}>—</Text>
+			) : (
+				packages.map((p) => (
+					<Text key={`${p.scope}:${p.source}`} style={styles.row} numberOfLines={1}>
+						{p.scope === "project" ? "◆ " : "◇ "}
+						{p.source}
+					</Text>
+				))
+			)}
+			<Text style={styles.head}>{tShim("resources.skills")}</Text>
+			{skills.map((s: SkillInfo) => (
+				<Text key={s.filePath} style={styles.row} numberOfLines={1}>
+					{s.name}
+				</Text>
+			))}
+			{skills.length === 0 && <Text style={styles.dim}>—</Text>}
+		</ScrollView>
+	);
+}
+
+function tShim(k: string): string {
+	const m = k.split(".");
+	return m[m.length - 1] ?? k;
+}
+
+function FileTree() {
+	const { theme } = useUnistyles();
+	const treeExpanded = useTabsStore((s) => s.treeExpanded);
+	const toggleExpanded = useTabsStore((s) => s.toggleExpanded);
+	const dirs = useWorkspaceStore((s) => s.dirs);
+	const listDir = useWorkspaceStore((s) => s.listDir);
+	const openPath = useWorkspaceStore((s) => s.openPath);
+
+	// Lazy load the root on mount.
+	useEffect(() => {
+		const node = dirs[""];
+		if (!node || (node.fetchedAt === 0 && !node.loading)) void listDir("");
+	}, [dirs, listDir]);
+
+	const renderLevel = (dir: string, depth: number) => {
+		const node = dirs[dir];
+		const entries = node?.entries ?? [];
+		return entries.map((entry) => (
+			<TreeRow
+				key={entry.path}
+				entry={entry}
+				depth={depth}
+				expanded={!!treeExpanded[entry.path]}
+				children_={
+					entry.kind === "dir" && treeExpanded[entry.path] ? renderLevel(entry.path, depth + 1) : null
+				}
+				onPress={() => {
+					if (entry.kind === "dir") {
+						toggleExpanded(entry.path);
+						const child = dirs[entry.path];
+						if (!child || (child.fetchedAt === 0 && !child.loading)) void listDir(entry.path);
+					} else {
+						void openPath(entry.name.endsWith(".md") ? entry.path : entry.path);
+						useWorkspaceStore.setState({ dir: "" });
+					}
+				}}
+				accent={theme.colors.accentBright}
+				fgMuted={theme.colors.foregroundExtraMuted}
+			/>
+		));
+	};
+
+	return (
+		<ScrollView style={styles.root} contentContainerStyle={styles.list}>
+			{renderLevel("", 0)}
+		</ScrollView>
+	);
+}
+
+function TreeRow({
+	entry,
+	depth,
+	expanded,
+	children_,
+	onPress,
+	accent,
+	fgMuted,
+}: {
+	entry: FsEntryInfo;
+	depth: number;
+	expanded: boolean;
+	children_: React.ReactNode;
+	onPress: () => void;
+	accent: string;
+	fgMuted: string;
+}) {
+	return (
+		<View>
+			<Pressable
+				style={[styles.row, { paddingLeft: 8 + depth * 12 }]}
+				onPress={onPress}
+			>
+				{entry.kind === "dir" ? (
+					expanded ? (
+						<ChevronDown size={13} color={fgMuted} strokeWidth={1.5} />
+					) : (
+						<ChevronRight size={13} color={fgMuted} strokeWidth={1.5} />
+					)
+				) : (
+					<Text style={styles.rowSpacer}> </Text>
+				)}
+				{entry.kind === "dir" ? (
+					<Folder size={14} color={accent} strokeWidth={1.5} />
+				) : (
+					<FileText size={14} color={fgMuted} strokeWidth={1.5} />
+				)}
+				<Text style={styles.rowText} numberOfLines={1}>
+					{entry.name}
+				</Text>
+				{entry.kind === "file" && entry.modifiedAt == null && (
+					<Text style={styles.rowMeta}>?</Text>
+				)}
+			</Pressable>
+			{children_}
+		</View>
+	);
+}
+
+function ChangesList() {
+	const { t } = useTranslation();
+	const { theme } = useUnistyles();
+	const status = useWorkspaceStore((s) => s.gitStatus);
+	const loading = useWorkspaceStore((s) => s.gitLoading);
+	const refresh = useWorkspaceStore((s) => s.refreshStatus);
+
+	useEffect(() => {
+		if (!status && !loading) void refresh();
+	}, [status, loading, refresh]);
+
+	const changeColor = (entry: GitStatusEntry): string => {
+		const kind = statusKindOf(entry);
+		if (kind === "added") return theme.colors.statusSuccess;
+		if (kind === "deleted") return theme.colors.statusDanger;
+		if (kind === "renamed" || kind === "copied") return theme.colors.statusMerged;
+		if (kind === "untracked") return theme.colors.statusWarning;
+		return theme.colors.accentBright;
+	};
+
+	return (
+		<ScrollView style={styles.root} contentContainerStyle={styles.list}>
+			{!status ? (
+				<Text style={styles.empty}>{loading ? t("common.connecting") : t("changes.clean")}</Text>
+			) : (
+				status.entries.map((entry) => (
+					<Pressable
+						key={entry.path}
+						style={styles.row}
+						onPress={() => {
+							useWorkspaceStore.setState({ diffPath: entry.path });
+							void useWorkspaceStore.getState().loadDiff(entry.path);
+						}}
+					>
+						<View style={[styles.dot, { backgroundColor: changeColor(entry) }]} />
+						<Text style={styles.rowText} numberOfLines={1}>
+							{entry.origPath ? `${entry.origPath} → ${entry.path}` : entry.path}
+						</Text>
+					</Pressable>
+				))
+			)}
+		</ScrollView>
+	);
+}
+
+const styles = StyleSheet.create((theme) => ({
+	root: {
+		width: 240,
+		backgroundColor: theme.colors.surface1,
+		borderRightWidth: theme.borderWidth[1],
+		borderRightColor: theme.colors.border,
+	},
+	list: { paddingVertical: theme.spacing[2], gap: 0 },
+	row: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 6,
+		paddingVertical: 4,
+		paddingRight: theme.spacing[2],
+		borderRadius: theme.borderRadius.sm,
+	},
+	rowSpacer: { width: 13 },
+	rowText: { color: theme.colors.foreground, fontSize: theme.fontSize.sm, flexShrink: 1 },
+	rowMeta: { color: theme.colors.foregroundExtraMuted, fontSize: 11 },
+	dot: { width: 7, height: 7, borderRadius: 4, marginLeft: 13 + 8 },
+	empty: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm, padding: theme.spacing[3] },
+	head: {
+		color: theme.colors.foregroundExtraMuted,
+		fontSize: 10,
+		fontWeight: "600",
+		textTransform: "uppercase",
+		letterSpacing: 0.5,
+		paddingHorizontal: theme.spacing[2],
+		paddingTop: theme.spacing[2],
+		paddingBottom: 2,
+	},
+	dim: { color: theme.colors.border, fontSize: theme.fontSize.sm, paddingHorizontal: theme.spacing[2] },
+}));

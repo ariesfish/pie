@@ -1,0 +1,40 @@
+{
+	"name": "pie",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Pie \u2014 dedicated cross-device app for the Pi coding agent (desktop + mobile + web)",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/example/pie"
+	},
+	"engines": {
+		"node": ">=22.19.0"
+	},
+	"workspaces": [
+		"packages/protocol",
+		"packages/client",
+		"packages/daemon",
+		"packages/app",
+		"packages/desktop"
+	],
+	"scripts": {
+		"build": "npm run build --workspaces --if-present",
+		"typecheck": "npm run typecheck --workspaces --if-present",
+		"test": "vitest run",
+		"dev:daemon": "tsx watch packages/daemon/src/index.ts --listen 127.0.0.1:8760",
+		"dev": "npm run dev:daemon",
+		"daemon": "tsx packages/daemon/src/index.ts",
+		"smoke": "tsx scripts/pie-smoke.mts",
+		"check": "npm run typecheck && npm run test",
+		"app": "npm run start -w @pie/app",
+		"app:web": "npm run start -w @pie/app -- --web",
+		"app:build:web": "npm run export:web -w @pie/app"
+	},
+	"devDependencies": {
+		"@types/node": "^22.10.0",
+		"tsx": "^4.20.0",
+		"typescript": "^5.9.2",
+		"vitest": "^3.2.0"
+	}
+}

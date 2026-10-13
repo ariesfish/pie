@@ -27,3 +27,6 @@ coverage/
 
 # Temp/debug scripts
 *.temp.mts
+
+# UI walkthrough screenshots (npm run ui-walkthrough)
+/ui-walkthrough-shots/

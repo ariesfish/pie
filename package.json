@@ -2,7 +2,7 @@
 	"name": "pie",
 	"version": "0.1.0",
 	"private": true,
-	"description": "Pie \u2014 dedicated cross-device app for the Pi coding agent (desktop + mobile + web)",
+	"description": "Pie — dedicated cross-device app for the Pi coding agent (desktop + mobile + web)",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
@@ -26,6 +26,7 @@
 		"dev": "npm run dev:daemon",
 		"daemon": "tsx packages/daemon/src/index.ts",
 		"smoke": "tsx scripts/pie-smoke.mts",
+		"ui-walkthrough": "node scripts/ui-walkthrough.mjs",
 		"check": "npm run typecheck && npm run test",
 		"app": "npm run start -w @pie/app",
 		"app:web": "npm run start -w @pie/app -- --web",
@@ -33,6 +34,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "^22.10.0",
+		"playwright-core": "^1.64.0",
 		"tsx": "^4.20.0",
 		"typescript": "^5.9.2",
 		"vitest": "^3.2.0"

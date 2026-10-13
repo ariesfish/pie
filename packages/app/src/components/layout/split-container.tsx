@@ -169,8 +169,13 @@ function SplitPaneView({ pane, compact = false }: { pane: SplitPane; compact?: b
 				style={styles.paneHeaderHit}
 				accessibilityLabel={`focus pane ${pane.id}`}
 			>
-				<View style={styles.paneHeaderRow}>
-					<PaneTabsRow pane={pane} compact={compact} />
+				<View
+					style={[
+						styles.paneHeaderRow,
+						isActivePane && styles.paneHeaderRowFocused,
+					]}
+				>
+					<PaneTabsRow pane={pane} compact={compact} dimmed={!isActivePane} />
 					{!compact ? (
 						<View style={styles.paneActions}>
 							<PaneAction
@@ -223,7 +228,15 @@ function PaneAction({
 }
 
 /** Tab strip scoped to one pane. */
-function PaneTabsRow({ pane, compact }: { pane: SplitPane; compact: boolean }) {
+function PaneTabsRow({
+	pane,
+	compact,
+	dimmed = false,
+}: {
+	pane: SplitPane;
+	compact: boolean;
+	dimmed?: boolean;
+}) {
 	const { t } = useTranslation();
 	const { theme } = useUnistyles();
 	const tabs = useTabsStore((s) => s.tabs);
@@ -280,13 +293,23 @@ function PaneTabsRow({ pane, compact }: { pane: SplitPane; compact: boolean }) {
 					const Icon = label.icon;
 					return (
 						<DraggableTabChip key={tabId} tabId={tabId} paneId={pane.id}>
-							<Pressable style={[styles.tab, on && styles.tabOn]} onPress={() => setActive(tabId)}>
+							<Pressable
+								style={[styles.tab, on && (dimmed ? styles.tabOnDim : styles.tabOn)]}
+								onPress={() => setActive(tabId)}
+							>
 								<Icon
 									size={11}
-									color={on ? theme.colors.foreground : theme.colors.foregroundExtraMuted}
+									color={
+										on && !dimmed
+											? theme.colors.foreground
+											: theme.colors.foregroundExtraMuted
+									}
 									strokeWidth={1.75}
 								/>
-								<Text style={[styles.tabText, on && styles.tabTextOn]} numberOfLines={1}>
+								<Text
+									style={[styles.tabText, on && !dimmed && styles.tabTextOn]}
+									numberOfLines={1}
+								>
 									{label.title}
 								</Text>
 								{label.closable && !compact ? (
@@ -360,6 +383,14 @@ const styles = StyleSheet.create((theme) => ({
 		flexDirection: "row",
 		alignItems: "center",
 		paddingRight: theme.spacing[1],
+		backgroundColor: theme.colors.surface1,
+		borderBottomWidth: 2,
+		borderBottomColor: theme.colors.border,
+	},
+	paneHeaderRowFocused: {
+		backgroundColor: theme.colors.surface2,
+		borderBottomWidth: 2,
+		borderBottomColor: theme.colors.accentBright,
 	},
 	paneActions: { flexDirection: "row", alignItems: "center", gap: 2 },
 	paneAction: {
@@ -377,14 +408,16 @@ const styles = StyleSheet.create((theme) => ({
 		alignSelf: "stretch",
 		marginHorizontal: 2,
 		borderRadius: 2,
-		backgroundColor: "transparent",
+		backgroundColor: theme.colors.foregroundExtraMuted,
+		opacity: 0.55,
 	},
 	dividerBarColumn: {
 		height: 2,
 		alignSelf: "stretch",
 		marginVertical: 2,
 		borderRadius: 2,
-		backgroundColor: "transparent",
+		backgroundColor: theme.colors.foregroundExtraMuted,
+		opacity: 0.55,
 	},
 	tabsScroll: { flexGrow: 0, flexShrink: 0 },
 	tabsRow: { paddingHorizontal: theme.spacing[2], paddingVertical: theme.spacing[1], gap: theme.spacing[1] },
@@ -400,6 +433,7 @@ const styles = StyleSheet.create((theme) => ({
 		maxWidth: 200,
 	},
 	tabOn: { backgroundColor: theme.colors.surface2, borderColor: theme.colors.border },
+	tabOnDim: { backgroundColor: theme.colors.surface1 },
 	tabText: { color: theme.colors.foregroundMuted, fontSize: 11, maxWidth: 150 },
 	tabTextOn: { color: theme.colors.foreground },
 	tabClose: { padding: 1 },

@@ -61,6 +61,9 @@ App 输入 daemon 的 `ws://<host>:8760` + token 即可连接（与演示页相�
 ```bash
 npm run check             # 五个包 typecheck + 101 个 vitest 用例
 npm run smoke             # 无 LLM 的端到端烟测（临时 agent dir，不写 ~/.pi/agent）
+npm run ui-walkthrough    # UI 交互验收：daemon + fixture 仓库 + web 导出，浏览器驱动
+                          # 13 项断言（rail/文件/diff/会话/分栏/拖拽/双抽屉手势），
+                          # 截图落 ./ui-walkthrough-shots 供人工/vision 复核
 npm run daemon            # 前台启动 daemon（首次运行会打印浏览器入口 URL）
 ```
 

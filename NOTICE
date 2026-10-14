@@ -110,6 +110,7 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | file-pane/preview-lifecycle/{model,hook}.ts + model.test.ts | counterparts (attachments image path deferred to W4+ — pie fs.read carries no binary payload; prepared-key = read object identity) | 2026-10-14 | A (adapted) |
 | file-pane/markdown-preview/{document,index}.tsx/ts + document.test.ts | counterparts (verbatim; markdown front-matter table + reading frame) | 2026-10-14 | A |
 | components/files/code-viewer.{ts,platform}.ts | platform hub pattern (paseo dnd-surface shape) replacing the W2b runtime dispatch (which had silently shipped both viewers on both platforms) | 2026-10-14 | B |
+| components/panels/files-panel.tsx (md branch) | renders FileMarkdownPreview (front-matter table + reading frame) replacing the bare MarkdownRenderer call | 2026-10-14 | B (call-site swap) |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

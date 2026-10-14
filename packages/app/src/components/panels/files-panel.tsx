@@ -18,7 +18,7 @@ import { useWorkspaceStore } from "@/stores/workspace-store";
 import { CodeViewer } from "@/components/files/code-viewer";
 import { FileSourceView } from "@/file-pane/source/view";
 import { editorVisualTheme } from "@/file-pane/visual-theme";
-import { MarkdownRenderer } from "@/components/markdown/renderer";
+import { FileMarkdownPreview } from "@/file-pane/markdown-preview";
 
 export function FilesPanel() {
 	const { t } = useTranslation();
@@ -105,8 +105,9 @@ export function FilesPanel() {
 						<Text style={styles.binaryText}>{t("files.binary")}</Text>
 					</View>
 				) : isMarkdown && !editing ? (
+					// [W3b-3] ported markdown preview: front-matter table + reading frame.
 					<ScrollView>
-						<MarkdownRenderer text={viewerText} />
+						<FileMarkdownPreview source={viewerText} />
 					</ScrollView>
 				) : editing ? (
 					// [W3b] editing still runs on the P2b-2 viewer; the ported

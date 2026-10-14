@@ -79,6 +79,9 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | composer/native-pasted-image.ts | composer/native-pasted-image.ts (type + error surface only; normalize deferred to W4) | 2026-10-13 | A (subset) |
 | constants/platform.ts (getIsElectron/getIsElectronMac) | constants/platform.ts (adapted: UA-based, desktop-host bridge absent) | 2026-10-13 | B |
 | packages/app/vitest.setup.ts | vitest.setup.ts (verbatim; RN/expo global shims) | 2026-10-13 | A |
+| components/ui/{combobox-trigger,search-field,select-field,toolbar-label-trigger,scroll-view.web,scrollable-code-surface,pane-content-toolbar}.tsx + tests | components/ui/* counterparts (verbatim; missed in W2c-1/-2 batches) | 2026-10-13 | A |
+| constants/layout.ts (WORKSPACE_SECONDARY_HEADER_HEIGHT) | constants/layout.ts (verbatim addition) | 2026-10-13 | A |
+| test-stubs/{gorhom-bottom-sheet,react-native-safe-area-context}.ts | test-stubs/* counterparts (verbatim; Flow sources stubbed for node tests) | 2026-10-13 | A |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

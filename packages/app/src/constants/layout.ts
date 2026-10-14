@@ -4,6 +4,9 @@ import { useWindowDimensions } from "react-native";
 
 export const COMPACT_BREAKPOINT = 720;
 
+/** Secondary row under the workspace header (content toolbars). Ported from getpaseo/paseo (Apache-2.0). */
+export const WORKSPACE_SECONDARY_HEADER_HEIGHT = 36;
+
 /** Electron runtime detection re-exports. Ported from getpaseo/paseo (Apache-2.0). */
 export {
 	getIsElectron as getIsElectronRuntime,

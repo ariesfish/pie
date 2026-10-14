@@ -12,16 +12,27 @@ const APP_STUBS = resolve(__dirname, "packages/app/test-stubs");
 
 export default defineConfig({
 	resolve: {
-		alias: {
+		alias: [
 			// The app package's tsconfig paths ("@/*" → "packages/app/src/*");
 			// inert for protocol/client/daemon/desktop, which never use "@/…".
-			"@": resolve(__dirname, "packages/app/src"),
-			react: resolve(__dirname, "node_modules/react"),
-			"react-dom": resolve(__dirname, "node_modules/react-dom"),
-			"react-native": RN_WEB,
-			"react-native-unistyles": resolve(APP_STUBS, "react-native-unistyles.ts"),
-			"lucide-react-native": resolve(APP_STUBS, "lucide-react-native.ts"),
-		},
+			{ find: /^@\//, replacement: resolve(__dirname, "packages/app/src") + "/" },
+			{ find: "react-dom", replacement: resolve(__dirname, "node_modules/react-dom") },
+			{ find: "react", replacement: resolve(__dirname, "node_modules/react") },
+			{ find: "react-native-unistyles", replacement: resolve(APP_STUBS, "react-native-unistyles.ts") },
+			{ find: "lucide-react-native", replacement: resolve(APP_STUBS, "lucide-react-native.ts") },
+			{ find: /^react-native$/, replacement: RN_WEB },
+			// Gorhem ships untranspiled Flow the node project cannot parse
+			// (paseo test-stubs/gorhom-bottom-sheet.ts swap).
+			{
+				find: /^@gorhom\/bottom-sheet$/,
+				replacement: resolve(APP_STUBS, "gorhom-bottom-sheet.ts"),
+			},
+			// safe-area-context ships untranspiled Flow too (paseo stub swap).
+			{
+				find: /^react-native-safe-area-context$/,
+				replacement: resolve(APP_STUBS, "react-native-safe-area-context.ts"),
+			},
+		],
 		// Web-first platform resolution (mirrors paseo): forked imports like
 		// "./markdown-text" must land on .web.tsx in the node test environment.
 		extensions: [

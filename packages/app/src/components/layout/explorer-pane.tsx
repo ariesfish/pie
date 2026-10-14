@@ -9,6 +9,11 @@ import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronRight, FileText, Folder } from "lucide-react-native";
 
 import { statusKindOf, useWorkspaceStore } from "@/stores/workspace-store";
+import {
+	EXPLORER_ROOT_PATH,
+	type ExplorerDirectory,
+} from "@/file-explorer/types";
+import { flattenExplorerTree } from "@/file-explorer/tree";
 import { useResourcesStore } from "@/stores/resources-store";
 import { useConnectionStore } from "@/stores/connection-store";
 import { useTabsStore } from "@/stores/tabs-store";
@@ -91,39 +96,49 @@ function FileTree() {
 		if (!node || (node.fetchedAt === 0 && !node.loading)) void listDir("");
 	}, [dirs, listDir]);
 
-	const renderLevel = (dir: string, depth: number) => {
-		const node = dirs[dir];
-		const entries = node?.entries ?? [];
-		return entries.map((entry) => (
-			<TreeRow
-				key={entry.path}
-				entry={entry}
-				depth={depth}
-				expanded={!!treeExpanded[entry.path]}
-				children_={
-					entry.kind === "dir" && treeExpanded[entry.path] ? renderLevel(entry.path, depth + 1) : null
-				}
-				onPress={() => {
-					if (entry.kind === "dir") {
-						toggleExpanded(entry.path);
-						const child = dirs[entry.path];
-						if (!child || (child.fetchedAt === 0 && !child.loading)) void listDir(entry.path);
-					} else {
-						// Open the shared files tab; the viewer renders from
-						// the workspace store's openFile (tab = data).
-						useTabsStore.getState().openFiles();
-						void openPath(entry.path);
-					}
-				}}
-				accent={theme.colors.accentBright}
-				fgMuted={theme.colors.foregroundExtraMuted}
-			/>
-		));
-	};
+	// [W3a] the ported explorer tree engine: pagination-free flatten of the
+	// expanded dirs (depth-capped, no call-stack consumption), name-sorted,
+	// dot-files hidden. Rewrites renderLevel's recursion wholesale.
+	const directories = new Map<string, ExplorerDirectory>();
+	for (const [path, node] of Object.entries(dirs)) {
+		if (node) directories.set(path || EXPLORER_ROOT_PATH, { path: path || EXPLORER_ROOT_PATH, entries: node.entries });
+	}
+	const rows = flattenExplorerTree({
+		directories,
+		expandedPaths: new Set(
+			Object.entries(treeExpanded)
+				.filter(([, expanded]) => expanded)
+				.map(([path]) => path),
+		),
+		sortOption: "name",
+		showHiddenFiles: false,
+	});
 
 	return (
 		<ScrollView style={styles.root} contentContainerStyle={styles.list}>
-			{renderLevel("", 0)}
+			{rows.map((row) => (
+				<TreeRow
+					key={row.entry.path}
+					entry={row.entry}
+					depth={row.depth}
+					expanded={!!treeExpanded[row.entry.path]}
+					children_={null}
+					onPress={() => {
+						if (row.entry.kind === "dir") {
+							toggleExpanded(row.entry.path);
+							const child = dirs[row.entry.path];
+							if (!child || (child.fetchedAt === 0 && !child.loading)) void listDir(row.entry.path);
+						} else {
+							// Open the shared files tab; the viewer renders from
+							// the workspace store's openFile (tab = data).
+							useTabsStore.getState().openFiles();
+							void openPath(row.entry.path);
+						}
+					}}
+					accent={theme.colors.accentBright}
+					fgMuted={theme.colors.foregroundExtraMuted}
+				/>
+			))}
 		</ScrollView>
 	);
 }

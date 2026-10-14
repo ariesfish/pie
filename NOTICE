@@ -83,6 +83,13 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | constants/layout.ts (WORKSPACE_SECONDARY_HEADER_HEIGHT) | constants/layout.ts (verbatim addition) | 2026-10-13 | A |
 | test-stubs/{gorhom-bottom-sheet,react-native-safe-area-context}.ts | test-stubs/* counterparts (verbatim; Flow sources stubbed for node tests) | 2026-10-13 | A |
 | components/markdown/fence/mermaid/index.tsx + mermaid.test.tsx | no paseo asset: paseo's fence/mermaid (iframe runtime + zoomable-viewport) was clipped in W2a; pie builds on beautiful-mermaid (github.com/lukilabs/beautiful-mermaid, MIT) — SVG on web, ASCII while streaming/native | 2026-10-14 | — (new dependency) |
+<!-- W3a: file-explorer engine (data lives in pie protocol types; tree logic
+     ported, session-store type coupling retargeted to file-explorer/types.ts;
+     root key "" instead of paseo's "."). -->
+| file-explorer/{tree,visibility,preview-target,read-result}.ts + tests | file-explorer/* counterparts (tree: kind "dir" + nullable size/mtime adapted, root key ""; read-result reshaped around FsReadResult) | 2026-10-14 | A (adapted) |
+| file-explorer/types.ts | no paseo asset: the type surface paseo keeps in stores/session-store (ExplorerEntry/Directory/SortOption), retargeted to @pie/protocol FsEntryInfo | 2026-10-14 | B (type surface) |
+| utils/path.ts | utils/path.ts (verbatim) | 2026-10-14 | A |
+| components/layout/explorer-pane.tsx (FileTree) | renders via flattenExplorerTree (name-sorted, dotfiles hidden, depth-capped flatten) replacing hand recursion | 2026-10-14 | B (call-site swap) |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

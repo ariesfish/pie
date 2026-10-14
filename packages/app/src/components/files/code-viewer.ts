@@ -1,14 +1,9 @@
-// Platform dispatcher: runtime selection (Platform.OS). Metro's extension
-// resolution cannot express this hub as an import (an explicit .native path
-// binds web to the native viewer; a bare ".platform" gets captured by the
-// nearest .ts) — so both implementations load and the pick happens at
-// runtime. Bundle cost: the native viewer rides along on web (~KBs, tokens
-// renderer only).
-import { Platform } from "react-native";
-import { CodeViewer as CodeViewerNative } from "./code-viewer.platform.native";
-import { CodeViewer as CodeViewerWeb } from "./code-viewer.platform.web";
-import type { CodeViewerProps } from "./code-viewer.platform.native";
+// Platform hub (paseo dnd-surface pattern): tsc reads code-viewer.platform.ts
+// (native re-export) as the type source; Metro resolves the platform sibling
+// (code-viewer.platform.web.tsx / .native.tsx) per target. First attempt was
+// a runtime Platform.OS dispatch, which silently shipped both implementations
+// on BOTH platforms (iOS bundle +4.6MB of CodeMirror).
+import { CodeViewer, type CodeViewerProps } from "./code-viewer.platform";
 
+export { CodeViewer };
 export type { CodeViewerProps };
-
-export const CodeViewer = Platform.OS === "web" ? CodeViewerWeb : CodeViewerNative;

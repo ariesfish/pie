@@ -101,6 +101,15 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | panels/pane-focus.tsx | panels/pane-context.tsx (focus slice only; full pane-context lands with the pane rewiring) | 2026-10-14 | A (subset) |
 | file-pane/visual-theme.ts | no paseo asset: bridges pie's unistyles theme into EditorVisualTheme | 2026-10-14 | — |
 | components/panels/files-panel.tsx (view branch) | renders FileSourceView (CM6 full: too-large budgets, plain/highlighted, line jump); editing branch stays on the P2b-2 viewer until the editor batch | 2026-10-14 | B (call-site swap) |
+<!-- W3b-2: live-file / preview-lifecycle models (pie session adapters; the
+     pane.tsx hub + bar + editor + conflict-alert move as one batch — W3b-4 —
+     because the pane's dependency cone is the editor itself). -->
+| file-pane/live-file/{model,model.test}.ts | counterparts (verbatim; FileVersion → pie LiveFileVersion (bare change boundary), FsReadResult shapes, readyVersion de-meta'd, observation errors de-path'd) | 2026-10-14 | A (adapted) |
+| file-pane/live-file/version.ts | no paseo asset: pie's version shapes for batched workspace.fs.changed | 2026-10-14 | — |
+| file-pane/live-file/hook.ts | rewritten against PieConnection (fs.read + onEvent path filter + idempotent fs.watch) | 2026-10-14 | B (adapter) |
+| file-pane/preview-lifecycle/{model,hook}.ts + model.test.ts | counterparts (attachments image path deferred to W4+ — pie fs.read carries no binary payload; prepared-key = read object identity) | 2026-10-14 | A (adapted) |
+| file-pane/markdown-preview/{document,index}.tsx/ts + document.test.ts | counterparts (verbatim; markdown front-matter table + reading frame) | 2026-10-14 | A |
+| components/files/code-viewer.{ts,platform}.ts | platform hub pattern (paseo dnd-surface shape) replacing the W2b runtime dispatch (which had silently shipped both viewers on both platforms) | 2026-10-14 | B |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

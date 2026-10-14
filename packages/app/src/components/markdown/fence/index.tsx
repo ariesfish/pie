@@ -8,10 +8,13 @@ export interface MarkdownFenceBlockProps extends MarkdownFenceRendererProps {
   info: string | null | undefined;
 }
 
-// [pie] mermaid diagram fences are not ported yet (zoomable-viewport +
-// mermaid runtime excluded from W2a); diagrams fall through to the
-// highlighted code block like any other language.
-const diagramFences: Partial<Record<string, ComponentType<MarkdownFenceRendererProps>>> = {};
+import { MermaidFence } from "./mermaid";
+
+const diagramFences: Partial<Record<string, ComponentType<MarkdownFenceRendererProps>>> = {
+	// [pie] mermaid runs through beautiful-mermaid (MIT, DOM-free) instead of
+	// paseo's iframe runtime; see fence/mermaid/index.tsx.
+	mermaid: MermaidFence,
+};
 
 export function MarkdownFenceBlock({
   code,

@@ -82,6 +82,7 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | components/ui/{combobox-trigger,search-field,select-field,toolbar-label-trigger,scroll-view.web,scrollable-code-surface,pane-content-toolbar}.tsx + tests | components/ui/* counterparts (verbatim; missed in W2c-1/-2 batches) | 2026-10-13 | A |
 | constants/layout.ts (WORKSPACE_SECONDARY_HEADER_HEIGHT) | constants/layout.ts (verbatim addition) | 2026-10-13 | A |
 | test-stubs/{gorhom-bottom-sheet,react-native-safe-area-context}.ts | test-stubs/* counterparts (verbatim; Flow sources stubbed for node tests) | 2026-10-13 | A |
+| components/markdown/fence/mermaid/index.tsx + mermaid.test.tsx | no paseo asset: paseo's fence/mermaid (iframe runtime + zoomable-viewport) was clipped in W2a; pie builds on beautiful-mermaid (github.com/lukilabs/beautiful-mermaid, MIT) — SVG on web, ASCII while streaming/native | 2026-10-14 | — (new dependency) |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

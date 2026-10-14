@@ -30,6 +30,7 @@
 		"@pie/protocol": "*",
 		"@shopify/react-native-skia": "^2.2.12",
 		"@tanstack/react-query": "^5.104.2",
+		"beautiful-mermaid": "^1.1.3",
 		"expo": "~54.0.0",
 		"expo-clipboard": "~8.0.7",
 		"expo-constants": "~18.0.9",

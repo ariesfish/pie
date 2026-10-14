@@ -66,7 +66,7 @@ async function main() {
 	write(
 		workspace,
 		"README.md",
-		"# Walkthrough Fixture\n\nA tiny repo for exercising the files tree, changes panel and diff view.\n\n## Rendering\n\nMarkdown preview goes through the ported renderer:\n\n```ts\nconst answer = 42;\n```\n",
+		"# Walkthrough Fixture\n\nA tiny repo for exercising the files tree, changes panel and diff view.\n\n## Rendering\n\nMarkdown preview goes through the ported renderer:\n\n```ts\nconst answer = 42;\n```\n\n```mermaid\ngraph LR\n  Explore[Explore] --> Render[Render]\n  Render --> Ship[Ship]\n```\n",
 	);
 	run("git", ["init", "-q", "."], { cwd: workspace });
 	run("git", ["add", "-A"], { cwd: workspace });
@@ -271,7 +271,12 @@ async function runAssertions(appUrl) {
 		.getByLabel("Copy code")
 		.count()
 		.catch(() => 0);
-	check("03b README.md → markdown renderer + copy button", mdHeading && copyBtn > 0, `heading=${mdHeading} copyBtn=${copyBtn}`);
+	const mermaidSvg = await page.locator("svg[viewBox][style*='--fg']").count().catch(() => 0);
+	check(
+		"03b README.md → markdown renderer + copy button + mermaid svg",
+		mdHeading && copyBtn > 0 && mermaidSvg > 0,
+		`heading=${mdHeading} copyBtn=${copyBtn} svg=${mermaidSvg}`,
+	);
 	await shot(page, "03b-md-preview");
 	await page.mouse.move(10, 10);
 	await sleep(300);

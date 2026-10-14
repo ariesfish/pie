@@ -24,6 +24,8 @@
 		"@floating-ui/react-native": "^0.10.10",
 		"@getpaseo/highlight": "^0.11.2",
 		"@gorhom/bottom-sheet": "^5.2.14",
+		"@gorhom/portal": "^1.0.14",
+		"@mattermost/react-native-paste-input": "^2.0.1",
 		"@pie/client": "*",
 		"@pie/protocol": "*",
 		"@shopify/react-native-skia": "^2.2.12",

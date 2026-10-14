@@ -63,6 +63,22 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | lib/overlay-root.ts + test | lib/overlay-root.ts + test (verbatim; browser project test excluded) | 2026-10-13 | A |
 | protocol/src/search/text-match.ts + test | protocol/src/search/text-match.ts + test (verbatim + noUncheckedIndexedAccess fallbacks) | 2026-10-13 | A |
 | constants/layout.ts (isCompactBreakpoint) | constants/layout.ts (verbatim addition) | 2026-10-13 | A |
+<!-- W2c-2: menu / text-input / bottom-sheet family (pulls @gorhom/* + the
+     keyboard/ subsystem). Unported on purpose: composer/native-pasted-image's
+     normalize step (W4+ attachments), highlighted-text.browser.test (browser
+     project), desktop-host-backed Electron getters (UA-based until the
+     Electron shell lands). -->
+| components/ui/menu/* | components/ui/menu/* (verbatim; text-match import retargeted to @pie/protocol) | 2026-10-13 | A |
+| components/ui/text-input/* | components/ui/text-input/* (verbatim; native paste-image runtime deferred to W4) | 2026-10-13 | A |
+| components/ui/{combobox,combobox-options,dropdown-menu,dropdown-trigger,context-menu,hover-card,form-field,scroll-view,shortcut,pane-content-toolbar,floating-panel-portal,autocomplete,autocomplete-popover,autocomplete-utils,highlighted-text,highlighted-text-segments}.tsx/ts + tests | components/ui/* counterparts (verbatim) | 2026-10-13 | A |
+| components/ui/isolated-bottom-sheet-modal/* + overlay-scrollbar/* | counterparts (verbatim) | 2026-10-13 | A |
+| components/{adaptive-modal-sheet,adaptive-modal-sheet-layout,adaptive-text-input,tree-primitives}.tsx/ts | counterparts (verbatim) | 2026-10-13 | A |
+| keyboard/{actions,availability,shift/*}.ts | keyboard/* counterparts (verbatim; only the shift/ subset menu/shortcut need) | 2026-10-13 | A (subset) |
+| hooks/{use-keyboard-visibility,use-hover-safe-zone,hover-safe-zone-tracker}.ts | hooks/* counterparts (verbatim) | 2026-10-13 | A |
+| utils/{shortcut-platform,mac-user-agent}.ts | utils/* counterparts (verbatim) | 2026-10-13 | A |
+| composer/native-pasted-image.ts | composer/native-pasted-image.ts (type + error surface only; normalize deferred to W4) | 2026-10-13 | A (subset) |
+| constants/platform.ts (getIsElectron/getIsElectronMac) | constants/platform.ts (adapted: UA-based, desktop-host bridge absent) | 2026-10-13 | B |
+| packages/app/vitest.setup.ts | vitest.setup.ts (verbatim; RN/expo global shims) | 2026-10-13 | A |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

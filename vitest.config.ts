@@ -42,5 +42,14 @@ export default defineConfig({
 	},
 	test: {
 		exclude: [...configDefaults.exclude, "**/dist/**"],
+		// React Native bundler globals (paseo vitest.config.ts define block).
+		define: {
+			__DEV__: "false",
+			"process.env.JEST_WORKER_ID": "undefined",
+		},
+		// Global shims for RN/expo/env globals in node tests (paseo setup):
+		// __DEV__, matchMedia, expo modules, rAF. The setup file runs before the
+		// module graph, so reanimated's top-level reads see __DEV__ === false.
+		setupFiles: [resolve(__dirname, "packages/app/vitest.setup.ts")],
 	},
 });

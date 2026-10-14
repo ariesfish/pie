@@ -4,6 +4,12 @@ import { useWindowDimensions } from "react-native";
 
 export const COMPACT_BREAKPOINT = 720;
 
+/** Electron runtime detection re-exports. Ported from getpaseo/paseo (Apache-2.0). */
+export {
+	getIsElectron as getIsElectronRuntime,
+	getIsElectronMac as getIsElectronRuntimeMac,
+} from "./platform";
+
 /** Compact layouts are the breakpoints below `md`. Ported from getpaseo/paseo (Apache-2.0). */
 export function isCompactBreakpoint(breakpoint: string | undefined): boolean {
 	return breakpoint === "xs" || breakpoint === "sm";

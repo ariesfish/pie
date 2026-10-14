@@ -308,7 +308,12 @@ export class DaemonServer {
 			const workspaceId = requiredString(args, "workspaceId");
 			const path = requiredString(args, "path");
 			const content = requiredString(args, "content");
-			return self.fsService.write(workspaceId, path, content);
+			const expectedModifiedAt = optString(args, "expectedModifiedAt");
+			const expectedRevision = optString(args, "expectedRevision");
+			return self.fsService.write(workspaceId, path, content, {
+				modifiedAt: expectedModifiedAt,
+				revision: expectedRevision,
+			});
 		});
 		r.register("fs.watch", async (args, ctx) => {
 			const workspaceId = requiredString(args, "workspaceId");
@@ -719,6 +724,11 @@ function isPageRequest(url: string): boolean {
 function optionalString(args: Record<string, unknown>, key: string): string | undefined {
 	const v = args[key];
 	return typeof v === "string" ? v : undefined;
+}
+
+function optString(args: Record<string, unknown>, key: string): string | undefined {
+	const value = args[key];
+	return typeof value === "string" && value.length > 0 ? value : undefined;
 }
 
 function requiredString(args: Record<string, unknown>, key: string): string {

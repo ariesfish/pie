@@ -9,10 +9,11 @@
 import { watch, type FSWatcher } from "node:fs";
 import { rename, rm, writeFile } from "node:fs/promises";
 import { readdir, readFile, stat } from "node:fs/promises";
+import type { BigIntStats } from "node:fs";
 import { join, relative, sep } from "node:path";
 
 import type { Broadcaster } from "../server/commands.js";
-import type { FsEntryInfo, FsReadResult } from "@pie/protocol";
+import type { FileVersionInfo, FsEntryInfo, FsReadResult, FsWriteResult } from "@pie/protocol";
 
 const DEFAULT_MAX_READ_BYTES = 256 * 1024;
 const READ_HARD_CAP = 2 * 1024 * 1024;
@@ -36,6 +37,33 @@ interface WatchHandle {
 	timer: ReturnType<typeof setTimeout> | null;
 	pending: Set<string>;
 	closed: boolean;
+}
+
+/** Daemon-composed file identity (ADR-0006): stable within a daemon session. */
+function versionInfo(st: BigIntStats): FileVersionInfo {
+	return {
+		modifiedAt: new Date(Number(st.mtimeMs)).toISOString(),
+		size: Number(st.size),
+		revision: `${st.dev}:${st.ino}:${st.size}:${st.mtimeNs}`,
+	};
+}
+
+/**
+ * CAS token match: the revision string (preferred — includes mtimeNs, no
+ * same-millisecond TOCTOU) or the degraded ISO-mtime comparison, mirroring
+ * paseo's file-explorer service.
+ */
+function matchesExpectedVersion(
+	st: BigIntStats,
+	expected: { modifiedAt?: string; revision?: string },
+): boolean {
+	if (expected.revision != null) {
+		return versionInfo(st).revision === expected.revision;
+	}
+	if (expected.modifiedAt != null) {
+		return versionInfo(st).modifiedAt === expected.modifiedAt;
+	}
+	return false;
 }
 
 export class FsService {
@@ -95,7 +123,7 @@ export class FsService {
 		root: string,
 		relPath: string,
 		maxBytes: number | undefined,
-	): Promise<FsReadResult> {
+	): Promise<FsReadResult & { version: FileVersionInfo }> {
 		const file = join(root, relPath);
 		const cap = Math.min(maxBytes ?? DEFAULT_MAX_READ_BYTES, READ_HARD_CAP);
 		const st = await stat(file).catch(() => {
@@ -116,17 +144,44 @@ export class FsService {
 			bytes: buf.byteLength,
 			truncated,
 			binary,
+			version: versionInfo(await stat(file, { bigint: true })),
 		};
 	}
 
-	/** Whole-file text write (atomic tmp+rename, size-capped, workspace paths only). */
-	async write(root: string, relPath: string, content: string): Promise<{ path: string; bytes: number }> {
-		const file = join(root, relPath);
+	/**
+	 * Whole-file text write (atomic tmp+rename, size-capped, workspace paths
+	 * only). Optimistic concurrency per ADR-0006: when an expected token is
+	 * supplied the write only lands if the file still matches, else the caller
+	 * gets a conflict with the current on-disk version (null = deleted).
+	 */
+	async write(
+		root: string,
+		relPath: string,
+		content: string,
+		expected?: { modifiedAt?: string; revision?: string },
+	): Promise<FsWriteResult> {
+		const posixPath = toPosix(relPath);
 		if (relPath.includes("..") || relPath.startsWith("/"))
 			throw new FsError("forbidden", "path must be workspace-relative");
 		const buf = Buffer.from(content, "utf8");
 		if (buf.byteLength > WRITE_HARD_CAP)
 			throw new FsError("too_large", `write exceeds ${WRITE_HARD_CAP} byte cap`);
+		const file = join(root, relPath);
+
+		if (expected?.modifiedAt != null || expected?.revision != null) {
+			const current = await stat(file, { bigint: true }).catch(() => null);
+			if (current == null || !current.isFile()) {
+				return { status: "conflict", path: posixPath, version: null };
+			}
+			if (!matchesExpectedVersion(current, expected)) {
+				return {
+					status: "conflict",
+					path: posixPath,
+					version: versionInfo(current),
+				};
+			}
+		}
+
 		const tmp = `${file}.pie-tmp-${process.pid}-${Date.now().toString(36)}`;
 		await writeFile(tmp, buf).catch((err: NodeJS.ErrnoException) => {
 			if (err.code === "EACCES" || err.code === "ENOENT")
@@ -137,7 +192,13 @@ export class FsService {
 			await rmFile(tmp).catch(() => undefined);
 			throw new FsError("forbidden", `cannot write: ${relPath} (${err.code ?? "unknown"})`);
 		});
-		return { path: toPosix(relPath), bytes: buf.byteLength };
+		const written = await stat(file, { bigint: true });
+		return {
+			status: "written",
+			path: posixPath,
+			bytes: buf.byteLength,
+			version: versionInfo(written),
+		};
 	}
 
 	/** Start (or return the existing) recursive watch for a workspace. */

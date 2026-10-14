@@ -170,6 +170,24 @@ export interface FsReadResult {
 	binary: boolean;
 }
 
+/**
+ * Per-file version snapshot for optimistic concurrency (ADR-0006): `revision`
+ * is the daemon-composed identity string (`dev:ino:size:mtimeNs`), preferred
+ * as a CAS token (no same-millisecond TOCTOU); `modifiedAt` (ISO mtime) is
+ * the degradation path for callers without a revision.
+ */
+export interface FileVersionInfo {
+	modifiedAt: string;
+	size: number;
+	revision: string;
+}
+
+/** Result of `fs.write` (ADR-0006 CAS): unconditional success or a declined conflict. */
+export type FsWriteResult =
+	| { status: "written"; path: string; bytes: number; version: FileVersionInfo }
+	/** `version` is the file's current state on disk, or null when it was deleted. */
+	| { status: "conflict"; path: string; version: FileVersionInfo | null };
+
 /** git status porcelain entry (v1) mapped to a stable shape. */
 export interface GitStatusEntry {
 	path: string;

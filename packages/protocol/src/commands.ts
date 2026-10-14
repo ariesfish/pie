@@ -9,20 +9,7 @@
 
 import type { EntryId, RequestId, SessionId, WorkspaceId } from "./ids.js";
 import type { SessionSnapshot } from "./tree.js";
-import type {
-	ContextUsage,
-	FsEntryInfo,
-	FsReadResult,
-	GitDiffFile,
-	GitStatusResult,
-	ModelCatalogItem,
-	ModelRef,
-	PackageInfo,
-	ScopedModel,
-	SessionEntry,
-	SkillInfo,
-	ThinkingLevel,
-} from "./values.js";
+import type { ContextUsage, FileVersionInfo, FsEntryInfo, FsReadResult, FsWriteResult, GitDiffFile, GitStatusResult, ModelCatalogItem, ModelRef, PackageInfo, ScopedModel, SessionEntry, SkillInfo, ThinkingLevel } from "./values.js";
 
 export interface CommandMap {
 	// --- daemon -------------------------------------------------------------------
@@ -62,15 +49,27 @@ export interface CommandMap {
 		args: { workspaceId: WorkspaceId; path?: string };
 		result: { entries: FsEntryInfo[] };
 	};
-	/** Read one text file (size-capped, binary-safe). */
+	/** Read one text file (size-capped, binary-safe) with its version (ADR-0006). */
 	"fs.read": {
 		args: { workspaceId: WorkspaceId; path: string; maxBytes?: number };
-		result: FsReadResult;
+		result: FsReadResult & { version: FileVersionInfo };
 	};
-	/** Write one text file (whole-file replace; size-capped, atomic write). */
+	/**
+	 * Write one text file (whole-file replace; size-capped, atomic write).
+	 * Optimistic concurrency (ADR-0006): when `expectedRevision` (or
+	 * `expectedModifiedAt` as the degraded token) is given, the write only
+	 * lands if the file still matches; otherwise `conflict` comes back with
+	 * the current on-disk version. Both omitted = unconditional write.
+	 */
 	"fs.write": {
-		args: { workspaceId: WorkspaceId; path: string; content: string };
-		result: { path: string; bytes: number };
+		args: {
+			workspaceId: WorkspaceId;
+			path: string;
+			content: string;
+			expectedModifiedAt?: string;
+			expectedRevision?: string;
+		};
+		result: FsWriteResult;
 	};
 	/** Start the workspace file watcher (idempotent per workspace). */
 	"fs.watch": {

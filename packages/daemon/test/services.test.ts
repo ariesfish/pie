@@ -107,7 +107,8 @@ describe("FsService.read", () => {
 describe("FsService.write", () => {
 	it("writes atomically and reports bytes", async () => {
 		const res = await fsService.write(root, "src/written.ts", "const w = 1;\n");
-		expect(res).toEqual({ path: "src/written.ts", bytes: 13 });
+		expect(res.status).toBe("written");
+		expect(res).toMatchObject({ status: "written", path: "src/written.ts", bytes: 13 });
 		const readBack = await fsService.read(root, "src/written.ts", undefined);
 		expect(readBack.text).toBe("const w = 1;\n");
 		// no tmp leftovers
@@ -122,6 +123,76 @@ describe("FsService.write", () => {
 		await expect(fsService.write(root, "/abs.txt", "x")).rejects.toMatchObject({
 			code: "forbidden",
 		});
+	});
+});
+
+// ADR-0006: optimistic concurrency (two-token CAS; conflicts carry the
+// current on-disk version, null for deleted).
+describe("FsService.write CAS (ADR-0006)", () => {
+	it("written returns the fresh on-disk version", async () => {
+		const res = await fsService.write(root, "src/cas-a.ts", "const a = 1;\n");
+		expect(res.status).toBe("written");
+		if (res.status !== "written") return;
+		expect(res.version.revision).toMatch(/^\d+:\d+:13:/);
+		expect(res.version.size).toBe(13);
+		expect(typeof res.version.modifiedAt).toBe("string");
+	});
+
+	it("matches by revision token (no same-ms TOCTOU)", async () => {
+		const read0 = await fsService.read(root, "src/cas-a.ts", undefined);
+		const res = await fsService.write(root, "src/cas-a.ts", "const a = 2;\n", {
+			revision: read0.version.revision,
+		});
+		expect(res.status).toBe("written");
+	});
+
+	it("conflicts when the revision drifted (outside edit)", async () => {
+		const read0 = await fsService.read(root, "src/cas-a.ts", undefined);
+		await fsService.write(root, "src/cas-a.ts", "const a = 3;\n"); // unconditional bump
+		const res = await fsService.write(root, "src/cas-a.ts", "const a = 4;\n", {
+			revision: read0.version.revision,
+		});
+		expect(res.status).toBe("conflict");
+		if (res.status !== "conflict") return;
+		expect(res.version).not.toBeNull();
+		expect(res.version?.size).toBe(13); // still the "a = 3" content
+	});
+
+	it("degrades to ISO-mtime matching when no revision is given", async () => {
+		const read0 = await fsService.read(root, "src/cas-a.ts", undefined);
+		const ok = await fsService.write(root, "src/cas-a.ts", "const a = 4;\n", {
+			modifiedAt: read0.version.modifiedAt,
+		});
+		expect(ok.status).toBe("written");
+		const stale = await fsService.write(root, "src/cas-a.ts", "const a = 5;\n", {
+			modifiedAt: "2000-01-01T00:00:00.000Z",
+		});
+		expect(stale.status).toBe("conflict");
+	});
+
+	it("conflicts with version null after the file was deleted", async () => {
+		const read0 = await fsService.read(root, "src/cas-a.ts", undefined);
+		await rm(join(root, "src/cas-a.ts"));
+		const res = await fsService.write(root, "src/cas-a.ts", "const a = 6;\n", {
+			revision: read0.version.revision,
+		});
+		expect(res.status).toBe("conflict");
+		if (res.status !== "conflict") return;
+		expect(res.version).toBeNull();
+	});
+
+	it("omitting both tokens writes unconditionally (legacy callers)", async () => {
+		await writeFile(join(root, "src/cas-b.ts"), "const b = 1;\n");
+		const res = await fsService.write(root, "src/cas-b.ts", "const b = 2;\n");
+		expect(res.status).toBe("written");
+		const readB = await fsService.read(root, "src/cas-b.ts", undefined);
+		expect(readB.text).toBe("const b = 2;\n");
+	});
+
+	it("read results carry the version for CAS callers", async () => {
+		const read0 = await fsService.read(root, "src/cas-b.ts", undefined);
+		expect(read0.version.revision).toMatch(/^\d+:\d+:13:/);
+		expect(typeof read0.version.modifiedAt).toBe("string");
 	});
 });
 

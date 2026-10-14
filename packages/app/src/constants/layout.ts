@@ -4,6 +4,11 @@ import { useWindowDimensions } from "react-native";
 
 export const COMPACT_BREAKPOINT = 720;
 
+/** Compact layouts are the breakpoints below `md`. Ported from getpaseo/paseo (Apache-2.0). */
+export function isCompactBreakpoint(breakpoint: string | undefined): boolean {
+	return breakpoint === "xs" || breakpoint === "sm";
+}
+
 export function useIsCompactFormFactor(): boolean {
 	const { width } = useWindowDimensions();
 	return width < COMPACT_BREAKPOINT;

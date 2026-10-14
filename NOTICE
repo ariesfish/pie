@@ -54,6 +54,15 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | test-stubs/{react-native-unistyles,lucide-react-native}.ts | test-stubs/* counterparts (verbatim; vitest.config gains web-first extensions + RN aliases) | 2026-10-13 | A |
 | files-panel / resources-panel / message-row / widget-view (MdViewer → MarkdownRenderer swap) | consumers rewritten against components/markdown/renderer (compact for chat/widget, default for previews) | 2026-10-13 | B (call-site swap) |
 | app/w/[workspaceId]/index.tsx + app-container.tsx RailMode | RailMode tab roles/labels (accessibility hardening for the walkthrough) | 2026-10-13 | C |
+<!-- W2c-1: components/ui self-contained control batch (excluded: menu/,
+     text-input/, scroll-view, combobox, form-field, hover-card, context-menu —
+     they pull @gorhom/* or the keyboard/ subsystem; W2c-2/W3 territory). -->
+| components/ui/{anchor,icon-button-chrome,icon-color,press-highlight.*,switch,segmented-control,status-badge,density-icon,horizontal-scroll-boundary,keyboard-dismiss,trailing-action-scrim,normalize-display-chord,combobox-frame-style,combobox-keyboard,floating-action-*,bottom-sheet-scope,floating,tooltip,external-link}.ts(x) + tests | components/ui/* counterparts (verbatim) | 2026-10-13 | A |
+| styles/{density,surface-backdrop,unistyles-inline-style,web-scrollbar}.ts | styles/* counterparts (verbatim) | 2026-10-13 | A |
+| utils/format-shortcut.ts | utils/format-shortcut.ts (verbatim) | 2026-10-13 | A |
+| lib/overlay-root.ts + test | lib/overlay-root.ts + test (verbatim; browser project test excluded) | 2026-10-13 | A |
+| protocol/src/search/text-match.ts + test | protocol/src/search/text-match.ts + test (verbatim + noUncheckedIndexedAccess fallbacks) | 2026-10-13 | A |
+| constants/layout.ts (isCompactBreakpoint) | constants/layout.ts (verbatim addition) | 2026-10-13 | A |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

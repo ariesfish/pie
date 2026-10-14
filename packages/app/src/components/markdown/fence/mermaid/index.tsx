@@ -7,6 +7,9 @@
 //     react-native-web hands us the DOM node)
 //   - native + streaming fences → the ASCII box-drawing output in a mono
 //     surface (stable, cheap, no flash while the fence is still open)
+//
+// Product call (2026-10-14): keep ASCII rendering on native. The elkjs layout
+// engine costs ~4.5MB in the iOS bundle; native diagrams are worth it.
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { ScrollView, Text, View, type TextStyle } from "react-native";
 import { renderMermaidASCII, renderMermaidSVG } from "beautiful-mermaid";

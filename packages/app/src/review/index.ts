@@ -14,3 +14,25 @@ export type {
 	ReviewDraftMode,
 	ReviewDraftSide,
 } from "./state";
+
+// [pie] placeholders until the W5 review batch: every render site in the
+// diff surfaces gates behind `reviewActions`, which pie callers never
+// provide, so these never paint — they exist to satisfy the import surface.
+import type { InlineReviewActions } from "./geometry";
+import type { ReviewableDiffTarget } from "@/utils/diff-layout";
+import type { StyleProp, ViewStyle } from "react-native";
+import type { PressableProps } from "react-native";
+
+export function InlineReviewAddButton(_props: PressableProps & { style?: StyleProp<ViewStyle> }) {
+	return null;
+}
+
+export function InlineReviewThread(_props: {
+	reviewTarget: ReviewableDiffTarget;
+	reviewActions: InlineReviewActions;
+	height: number;
+	viewportWidth: number;
+	pinToViewport: boolean;
+}) {
+	return null;
+}

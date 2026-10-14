@@ -120,6 +120,15 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | review/{state.ts,geometry.ts} + review/index.ts (pie subset) | review/state.ts + geometry.ts verbatim; index re-exports geometry+types only — comment store/sheet/feedback land with W5 review | 2026-10-14 | A (subset) |
 | git/{file-header-presentation,file-header-interaction}.ts + tests | counterparts (verbatim) | 2026-10-14 | A |
 | components/code-insets.ts | components/code-insets.ts (verbatim) | 2026-10-14 | A |
+<!-- W3c-3: diff-document render surfaces. Inline review threads/add buttons
+     are gated behind reviewActions (never provided by pie callers until W5);
+     typed null stubs satisfy the import surface meanwhile. -->
+| git/diff-document/{surface,surface.web,surface.native,document-file-header,index,viewport,pointer-gesture,review-paint,horhorizontal-scroll.web,horizontal-scroll.native,paint,paint.web,paint.native,text.native}.tsx/ts + tests | counterparts (verbatim; horizontal-scroll.native —— useExplorerCloseGestureRef rename; review components gated W5) | 2026-10-14 | A (adapted) |
+| git/file-header.tsx | git/file-header.tsx (verbatim; ParsedDiffFile redirect, workspace drag-source clipped to null until W4+) | 2026-10-14 | A (adapted) |
+| components/{diff-stat,file-change-icon,file-icon-svg,material-file-icons,material-file-icon,file-actions-menu,toast-host}.tsx/ts | counterparts (verbatim) | 2026-10-14 | A |
+| contexts/{toast-api-context,toast-context}.tsx | counterparts (verbatim; provider mounts with the W3c-4 wiring) | 2026-10-14 | A |
+| contexts/horizontal-scroll-context.tsx | paseo full registration protocol replaces the W1 minimal subset (gestures keep useHorizontalScrollOptional) | 2026-10-14 | A |
+| constants/layout.ts (HEADER_* heights) | constants/layout.ts (verbatim additions) | 2026-10-14 | A |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

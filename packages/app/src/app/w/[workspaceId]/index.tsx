@@ -5,7 +5,7 @@
 import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { Activity, FolderOpen, GitCompare, Package, X } from "lucide-react-native";
+import { Activity, FolderOpen, Gauge, GitCompare, Package, X } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { ToastProvider } from "@/contexts/toast-context";
 import { DiffDocumentWorkspaceCacheProvider } from "@/git/diff-document/workspace-cache";
@@ -125,6 +125,22 @@ export default function WorkspaceScreen() {
 							onPress={() => setExplorerMode("resources")}
 							label={t("workspace.rail.resources")}
 						>
+							<Package
+								size={14}
+								color={explorerMode === "resources" ? theme.colors.accentForeground : theme.colors.foregroundMuted}
+								strokeWidth={1.5}
+							/>
+						</RailMode>
+						<RailMode
+							on={explorerMode === "usage"}
+							onPress={() => setExplorerMode("usage")}
+							label={t("workspace.rail.usage")}
+						>
+							<Gauge
+								size={14}
+								color={explorerMode === "usage" ? theme.colors.accentForeground : theme.colors.foregroundMuted}
+								strokeWidth={1.5}
+							/>
 							<Package
 								size={14}
 								color={explorerMode === "resources" ? theme.colors.accentForeground : theme.colors.foregroundMuted}

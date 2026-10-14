@@ -133,6 +133,13 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | components/panels/changes-panel.tsx (rewritten) | renders DiffDocument branch row + idempotent full-tree diff; DiffView/diff-model (P2b) retired | 2026-10-14 | B (call-site swap) |
 | stores/workspace-store.ts (loadDiff optional path) | full-tree git.diff when path omitted (engine wants every changed file at once) | 2026-10-14 | B |
 | app/w/[workspaceId]/index.tsx (providers) | mounts ToastProvider + DiffDocumentWorkspaceCacheProvider (engine platform context) | 2026-10-14 | B |
+<!-- W3d: usage rail. pie-native surface — paseo's usage/ family is a
+     multi-host billing model (usage reports, balances) with no pie
+     equivalent; only its presentation vocabulary (meter + count rows) is
+     borrowed. Data: session.stats pull + the contextUsage stream the
+     connection store already taps. -->
+| components/workspace/usage-rail.tsx | vocabulary from usage/{meter,card}.tsx (ring + quartet grid + count rows); data model is pie's session.stats/contextUsage | 2026-10-14 | C (vocabulary) |
+| stores/tabs-store.ts (ExplorerMode "usage") + explorer-pane branch + rail Gauge button + i18n | wiring for the fourth rail mode | 2026-10-14 | — |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

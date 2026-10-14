@@ -19,6 +19,7 @@ import { useConnectionStore } from "@/stores/connection-store";
 import { useTabsStore } from "@/stores/tabs-store";
 import { useSessionListStore } from "@/stores/session-list-store";
 import { RightRail } from "@/components/workspace/right-rail";
+import { UsageRail } from "@/components/workspace/usage-rail";
 import type { FsEntryInfo, GitStatusEntry, SkillInfo } from "@pie/protocol";
 
 /** Timeline rail mode — the ported RightRail event stream (paseo's right
@@ -31,10 +32,11 @@ export function ExplorerPane({
 	mode,
 }: {
 	/** Which rail content to show; the parent owns the mode (rail tabs). */
-	mode: "files" | "changes" | "resources" | "activity" | null;
+	mode: "files" | "changes" | "resources" | "usage" | "activity" | null;
 }) {
 	if (mode === "changes") return <ChangesList />;
 	if (mode === "resources") return <ResourcesList />;
+	if (mode === "usage") return <UsageRail />;
 	if (mode === "activity") return <ActivityRail />;
 	// files is the default mode
 	return <FileTree />;

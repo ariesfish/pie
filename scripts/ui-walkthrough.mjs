@@ -303,6 +303,7 @@ async function runAssertions(appUrl) {
 	);
 	await shot(page, "04-changes-tab");
 
+
 	// 05 sticky creator → start session
 	const creator = page.getByLabel("New session", { exact: false }).first();
 	check("05a sticky creator + entry present", (await creator.count()) > 0);
@@ -323,6 +324,32 @@ async function runAssertions(appUrl) {
 			.catch(() => false);
 		check("05c session created → session tab + composer", composer && sessionTab, `composer=${composer}`);
 		await shot(page, "06-session");
+
+		// 05d usage rail: the session exists now, so the stats pull renders
+		// the token quartet + message count rows (all zeros, fresh session).
+		await page.getByRole("tab", { name: "Usage" }).click();
+		await page
+			.getByText("Cache read", { exact: true })
+			.first()
+			.waitFor({ state: "visible", timeout: 10_000 })
+			.catch(() => {});
+		await sleep(400);
+		const usageGrid = await page
+			.getByText("Cache read", { exact: true })
+			.first()
+			.isVisible()
+			.catch(() => false);
+		const usageCounts = await page
+			.getByText("Tool calls", { exact: true })
+			.first()
+			.isVisible()
+			.catch(() => false);
+		check("05d usage rail → token quartet + message stats", usageGrid && usageCounts, `tokens=${usageGrid} counts=${usageCounts}`);
+		await shot(page, "05d-usage-rail");
+		// 07's drag step reaches the app.ts node through the files tree — put
+		// the rail back on files mode before leaving.
+		await page.getByRole("tab", { name: "Files" }).click();
+		await sleep(600);
 	}
 
 	// 06 split the focused pane

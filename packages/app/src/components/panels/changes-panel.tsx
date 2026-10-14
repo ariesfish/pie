@@ -1,31 +1,16 @@
-// Changes panel (P2b-1): git.status listing + on-demand per-file diff via
-// git.diff (includeUntracked). Refresh invalidates come from
-// workspace.fs.changed (workspace store).
-import { useEffect, useState } from "react";
-import {
-	ActivityIndicator,
-	Pressable,
-	RefreshControl,
-	ScrollView,
-	Text,
-	View,
-} from "react-native";
+// Changes panel (W3c-4): git.status + the ported diff-document engine as one
+// pane-filling surface (the surface owns its scrolling; no outer ScrollView —
+// flex:1 under a RN content-flow ScrollView cannot resolve a height, which
+// stranded the canvas at viewport 0).
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, ChevronRight } from "lucide-react-native";
+import { RefreshCw } from "lucide-react-native";
 
-import { DiffView } from "@/components/panels/diff-view";
-import { statusKindOf, useWorkspaceStore } from "@/stores/workspace-store";
-import type { GitStatusEntry } from "@pie/protocol";
-
-const KIND_COLORS: Record<string, string> = {
-	added: "statusSuccess",
-	deleted: "statusDanger",
-	renamed: "statusMerged",
-	copied: "statusMerged",
-	untracked: "statusWarning",
-	modified: "accentBright",
-};
+import { useWorkspaceStore } from "@/stores/workspace-store";
+import { parseGitDiffFile } from "@/git/parsed-diff";
+import { DiffDocument } from "@/git/diff-document";
 
 export function ChangesPanel() {
 	const { t } = useTranslation();
@@ -35,138 +20,116 @@ export function ChangesPanel() {
 	const error = useWorkspaceStore((s) => s.gitError);
 	const refresh = useWorkspaceStore((s) => s.refreshStatus);
 	const diffPath = useWorkspaceStore((s) => s.diffPath);
-	const diffLoading = useWorkspaceStore((s) => s.diffLoading);
 	const gitFiles = useWorkspaceStore((s) => s.gitFiles);
 	const loadDiff = useWorkspaceStore((s) => s.loadDiff);
 
-	const [expanded, setExpanded] = useState<string | null>(null);
+	const [collapsedPaths, setCollapsedPaths] = useState<string[]>([]);
+	const [focusRequestId, setFocusRequestId] = useState(0);
 
 	useEffect(() => {
 		if (!status && !loading) void refresh();
 	}, [status, loading, refresh]);
 
-	// The explorer rail (and the shared changes tab) request a specific diff by
-	// setting diffPath — auto-expand it so the panel follows without waiting
-	// for a second press.
+	// The explorer rail (and this panel's shared tab) request a specific diff
+	// by setting diffPath — focus the document on it (expands + scrolls).
 	useEffect(() => {
-		if (diffPath) setExpanded(diffPath);
+		if (diffPath) setFocusRequestId((n) => n + 1);
 	}, [diffPath]);
 
-	const openDiff = gitFiles.find((f) => f.path === expanded && expanded === diffPath);
+	useEffect(() => {
+		if (status && gitFiles.length === 0 && status.entries.length > 0) void loadDiff();
+	}, [gitFiles.length, loadDiff, status]);
+
+	const files = useMemo(() => gitFiles.map(parseGitDiffFile), [gitFiles]);
+
+	if (error) {
+		return (
+			<View style={styles.root}>
+				<Text style={styles.errorText}>{error}</Text>
+			</View>
+		);
+	}
+
+	if (status == null) {
+		return (
+			<View style={styles.center}>
+				<ActivityIndicator />
+			</View>
+		);
+	}
 
 	return (
-		<ScrollView
-			style={styles.root}
-			contentContainerStyle={styles.list}
-			refreshControl={
-				<RefreshControl
-					tintColor={theme.colors.foregroundMuted}
-					refreshing={loading}
-					onRefresh={() => void refresh()}
-				/>
-			}
-		>
-			{error ? (
-				<Text style={styles.errorText}>{error}</Text>
-			) : status == null ? (
+		<View style={styles.root}>
+			<View style={styles.branchRow}>
+				<Text style={styles.branchText} numberOfLines={1}>
+					{status.branch ? `⑂ ${status.branch}` : t("changes.noBranch")}
+					{status.upstream ? ` ↑${status.upstream.ahead} ↓${status.upstream.behind}` : ""}
+					{status.entries.length > 0
+						? ` · ${t("changes.fileCount", { count: status.entries.length })}`
+						: ""}
+				</Text>
+				<Pressable hitSlop={8} onPress={() => void refresh()} style={styles.refreshBtn}>
+					<RefreshCw
+						size={13}
+						color={loading ? theme.colors.accent : theme.colors.foregroundMuted}
+						strokeWidth={1.75}
+					/>
+				</Pressable>
+			</View>
+			{status.entries.length === 0 && (
 				<View style={styles.center}>
-					<ActivityIndicator />
+					<Text style={styles.cleanText}>{t("changes.clean")}</Text>
 				</View>
-			) : (
-				<>
-					<View style={styles.branchRow}>
-						<Text style={styles.branchText}>
-							{status.branch ? `⑂ ${status.branch}` : t("changes.noBranch")}
-							{status.upstream ? ` ↑${status.upstream.ahead} ↓${status.upstream.behind}` : ""}
-						</Text>
-						<Text style={styles.countText}>
-							{t("changes.fileCount", { count: status.entries.length })}
-						</Text>
-					</View>
-					{status.entries.map((entry: GitStatusEntry) => {
-						const kind = statusKindOf(entry);
-						const isOpen = expanded === entry.path;
-						return (
-							<View key={entry.path} style={styles.entryCard}>
-								<Pressable
-									style={styles.entryRow}
-									onPress={() => {
-										if (isOpen) {
-											setExpanded(null);
-										} else {
-											setExpanded(entry.path);
-											void loadDiff(entry.path).then(() => setExpanded(entry.path));
-										}
-									}}
-								>
-									{isOpen ? (
-										<ChevronDown size={14} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
-									) : (
-										<ChevronRight size={14} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
-									)}
-									<Text style={styles.pathText} numberOfLines={1}>
-										{entry.origPath ? `${entry.origPath} → ${entry.path}` : entry.path}
-									</Text>
-									<View style={[styles.kindBadge, { backgroundColor: theme.colors[KIND_COLORS[kind] as keyof typeof theme.colors] as string, opacity: 0.25 }]} />
-									<Text style={[styles.kindText, { color: theme.colors[KIND_COLORS[kind] as keyof typeof theme.colors] as string }]}>
-										{kind}
-									</Text>
-								</Pressable>
-								{isOpen && (
-									<View style={styles.diffWrap}>
-										{diffLoading && !openDiff ? (
-											<ActivityIndicator style={styles.center} />
-										) : openDiff ? (
-											<DiffView patch={openDiff.patch} binary={openDiff.binary} />
-										) : (
-											<Text style={styles.emptyDiff}>{t("changes.noDiff")}</Text>
-										)}
-									</View>
-								)}
-							</View>
-						);
-					})}
-					{status.entries.length === 0 && (
-						<Text style={styles.cleanText}>{t("changes.clean")}</Text>
-					)}
-				</>
 			)}
-		</ScrollView>
+			{files.length > 0 && (
+				<DiffDocument
+					files={files}
+					displayPreferences={{
+						layout: "unified",
+						wrapLines: true,
+						codeFontSize: theme.fontSize.code,
+						monoFontFamily: theme.fontFamily.mono,
+					}}
+					mode={{
+						kind: "working",
+						focusPath: diffPath ?? undefined,
+						focusRequestId,
+					}}
+					collapseState={{
+						paths: collapsedPaths,
+						onChange: setCollapsedPaths,
+					}}
+				/>
+			)}
+		</View>
 	);
 }
 
 const styles = StyleSheet.create((theme) => ({
 	root: { flex: 1, backgroundColor: theme.colors.surface0 },
-	list: { padding: theme.spacing[2], gap: theme.spacing[1.5] },
-	center: { padding: theme.spacing[4], alignSelf: "center" },
+	center: { flex: 1, alignItems: "center", justifyContent: "center" },
 	branchRow: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-		paddingHorizontal: theme.spacing[2],
-		paddingBottom: theme.spacing[1],
-	},
-	branchText: { color: theme.colors.foreground, fontSize: theme.fontSize.sm, fontWeight: "600" },
-	countText: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
-	entryCard: {
-		backgroundColor: theme.colors.surface1,
-		borderRadius: theme.borderRadius.lg,
-		borderWidth: theme.borderWidth[1],
-		borderColor: theme.colors.border,
-		overflow: "hidden",
-	},
-	entryRow: {
 		flexDirection: "row",
 		alignItems: "center",
 		gap: theme.spacing[2],
-		paddingHorizontal: theme.spacing[2] + 2,
+		paddingHorizontal: theme.spacing[3],
 		paddingVertical: theme.spacing[2],
+		borderBottomWidth: theme.borderWidth[1],
+		borderBottomColor: theme.colors.border,
 	},
-	pathText: { flex: 1, color: theme.colors.foreground, fontSize: theme.fontSize.sm },
-	kindBadge: { width: 8, height: 8, borderRadius: theme.borderRadius.full },
-	kindText: { fontSize: theme.fontSize.sm, textTransform: "capitalize" },
-	diffWrap: { borderTopWidth: theme.borderWidth[1], borderTopColor: theme.colors.border },
-	emptyDiff: { padding: theme.spacing[3], color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
-	errorText: { color: theme.colors.statusDanger, fontSize: theme.fontSize.sm, padding: theme.spacing[3] },
-	cleanText: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm, alignSelf: "center", padding: theme.spacing[4] },
+	branchText: {
+		flex: 1,
+		color: theme.colors.foregroundMuted,
+		fontSize: theme.fontSize.sm,
+	},
+	refreshBtn: { padding: 4 },
+	errorText: {
+		color: theme.colors.statusDanger,
+		fontSize: theme.fontSize.sm,
+		padding: theme.spacing[3],
+	},
+	cleanText: {
+		color: theme.colors.foregroundExtraMuted,
+		fontSize: theme.fontSize.sm,
+	},
 }));

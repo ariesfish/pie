@@ -286,8 +286,21 @@ async function runAssertions(appUrl) {
 	await page.getByRole("tab", { name: "Changes" }).click();
 	await sleep(400);
 	await page.getByText("src/app.ts", { exact: false }).first().click();
-	await sleep(900);
-	check("04 changes tab → diff renders (+dirty line)", await page.getByText("dirty line").first().isVisible().catch(() => false));
+	await page
+		.locator("[data-diff-sticky-header-path], canvas")
+		.first()
+		.waitFor({ state: "visible", timeout: 15_000 })
+		.catch(() => {});
+	await sleep(600);
+	// The W3c diff engine paints lines on canvas — DOM text assertions are
+	// gone; assert the document + canvas surfaces + the header path instead.
+	const diffDoc = await page.locator("[data-diff-sticky-header-path]").count();
+	const diffCanvas = await page.locator("canvas").count();
+	check(
+		"04 changes tab → diff document renders (canvas + sticky headers)",
+		diffDoc > 0 && diffCanvas > 0,
+		`headers=${diffDoc} canvas=${diffCanvas}`,
+	);
 	await shot(page, "04-changes-tab");
 
 	// 05 sticky creator → start session

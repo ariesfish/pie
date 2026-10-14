@@ -52,7 +52,7 @@ interface WorkspaceState {
 	setEdited: (content: string) => void;
 	clearEdits: () => void;
 	refreshStatus: () => Promise<void>;
-	loadDiff: (path: string) => Promise<void>;
+	loadDiff: (path?: string) => Promise<void>;
 	/** Handle one fs watcher event batch. */
 	applyFsChanged: (payload: { workspaceId: string; paths: string[] }) => void;
 }
@@ -161,7 +161,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 		try {
 			const res = await conn.request("git.diff", {
 				workspaceId,
-				path,
+				...(path ? { path } : {}),
 				includeUntracked: true,
 			});
 			set({ gitFiles: res.files, diffLoading: false });

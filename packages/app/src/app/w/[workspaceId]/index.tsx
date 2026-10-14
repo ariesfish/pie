@@ -7,6 +7,8 @@ import { Pressable, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { Activity, FolderOpen, GitCompare, Package, X } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
+import { ToastProvider } from "@/contexts/toast-context";
+import { DiffDocumentWorkspaceCacheProvider } from "@/git/diff-document/workspace-cache";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
 import "@/panels/register-panels";
@@ -67,6 +69,8 @@ export default function WorkspaceScreen() {
 	const railVisible = !isCompact && explorerMode != null;
 
 	return (
+		<ToastProvider>
+		<DiffDocumentWorkspaceCacheProvider>
 		<View style={styles.desktopRow}>
 			<View style={styles.centerColumn}>
 				{/* workspace header (paseo: project row — name + actions) */}
@@ -137,6 +141,8 @@ export default function WorkspaceScreen() {
 				</View>
 			) : null}
 		</View>
+		</DiffDocumentWorkspaceCacheProvider>
+		</ToastProvider>
 	);
 }
 

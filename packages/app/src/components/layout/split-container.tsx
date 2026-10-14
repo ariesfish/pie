@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
 import { RetainedPanel } from "@/components/retained-panel";
+import { createPaneFocusContextValue, PaneFocusProvider } from "@/panels/pane-focus";
 import { DraggableTabChip } from "@/components/layout/draggable-tab-chip";
 import { SortableTabStrip } from "@/components/layout/sortable-tab-strip";
 import { SplitDropTarget } from "@/components/layout/split-drop-target";
@@ -162,7 +163,20 @@ function SplitPaneView({ pane, compact = false }: { pane: SplitPane; compact?: b
 	const isActivePane = useTabsStore((s) => s.layout.focusedPaneId === pane.id);
 	const closable = !compact && canClosePane(pane.id);
 
+	// [W3b] the ported file-pane surfaces (find bar) read pane focus through
+	// the pane-focus context rather than prop drilling.
+	const paneFocusValue = useMemo(
+		() =>
+			createPaneFocusContextValue({
+				isWorkspaceFocused: true,
+				isPaneFocused: isActivePane,
+				onFocusPane: () => focusPane(pane.id),
+			}),
+		[isActivePane, focusPane, pane.id],
+	);
+
 	return (
+		<PaneFocusProvider value={paneFocusValue}>
 		<View style={[styles.pane, isActivePane && styles.paneFocused]}>
 			<Pressable
 				onPress={() => focusPane(pane.id)}
@@ -198,6 +212,7 @@ function SplitPaneView({ pane, compact = false }: { pane: SplitPane; compact?: b
 			</Pressable>
 			<DraggablePaneBody pane={pane} />
 		</View>
+		</PaneFocusProvider>
 	);
 }
 

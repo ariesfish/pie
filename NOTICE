@@ -90,6 +90,17 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | file-explorer/types.ts | no paseo asset: the type surface paseo keeps in stores/session-store (ExplorerEntry/Directory/SortOption), retargeted to @pie/protocol FsEntryInfo | 2026-10-14 | B (type surface) |
 | utils/path.ts | utils/path.ts (verbatim) | 2026-10-14 | A |
 | components/layout/explorer-pane.tsx (FileTree) | renders via flattenExplorerTree (name-sorted, dotfiles hidden, depth-capped flatten) replacing hand recursion | 2026-10-14 | B (call-site swap) |
+<!-- W3b-1: file-pane source viewer (the origin of the P2b-2 B-level
+     code-viewer port) + web find bar. -->
+| file-pane/source/{view,view.web,view.native,presentation}.tsx/ts + presentation.test.ts | file-pane/source/* counterparts (verbatim; view.tsx hub stays native-explicit) | 2026-10-14 | A |
+| file-pane/editor/extensions.web.ts | file-pane/editor/extensions.web.ts (verbatim; CM6 theme + EditorVisualTheme) | 2026-10-14 | A |
+| file-pane/find/{index.web.tsx,model.web.ts} | counterparts (verbatim) | 2026-10-14 | A |
+| pane-find/{index.tsx,find-shortcut.ts} + find-shortcut.test.ts | counterparts (verbatim; pane-focus retargeted to the pie slice) | 2026-10-14 | A |
+| workspace/file-open/index.ts + test | workspace/file-open/index.ts + test (verbatim; location normalize/tab-target model) | 2026-10-14 | A |
+| utils/keyboard-ime.ts + test | utils/keyboard-ime.ts + test (verbatim) | 2026-10-14 | A |
+| panels/pane-focus.tsx | panels/pane-context.tsx (focus slice only; full pane-context lands with the pane rewiring) | 2026-10-14 | A (subset) |
+| file-pane/visual-theme.ts | no paseo asset: bridges pie's unistyles theme into EditorVisualTheme | 2026-10-14 | — |
+| components/panels/files-panel.tsx (view branch) | renders FileSourceView (CM6 full: too-large budgets, plain/highlighted, line jump); editing branch stays on the P2b-2 viewer until the editor batch | 2026-10-14 | B (call-site swap) |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

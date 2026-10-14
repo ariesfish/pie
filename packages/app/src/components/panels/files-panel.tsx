@@ -16,6 +16,8 @@ import { ArrowLeft, Check, FileText, Folder, Pencil } from "lucide-react-native"
 
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import { CodeViewer } from "@/components/files/code-viewer";
+import { FileSourceView } from "@/file-pane/source/view";
+import { editorVisualTheme } from "@/file-pane/visual-theme";
 import { MarkdownRenderer } from "@/components/markdown/renderer";
 
 export function FilesPanel() {
@@ -106,12 +108,24 @@ export function FilesPanel() {
 					<ScrollView>
 						<MarkdownRenderer text={viewerText} />
 					</ScrollView>
-				) : (
+				) : editing ? (
+					// [W3b] editing still runs on the P2b-2 viewer; the ported
+					// editor (file-pane/editor) lands in a later W3 batch.
 					<CodeViewer
 						content={viewerText}
 						filename={openFilePath}
-						editable={editing}
+						editable
 						onChangeText={(text) => setEdited(text)}
+					/>
+				) : (
+					<FileSourceView
+						content={viewerText}
+						filename={openFilePath}
+						location={{ path: openFilePath }}
+						navigationRevision={0}
+						size={openFile?.bytes ?? 0}
+						theme={editorVisualTheme(theme)}
+						tooLargeMessage={t("files.truncated")}
 					/>
 				)}
 			</View>

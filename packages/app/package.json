@@ -25,6 +25,7 @@
 		"@getpaseo/highlight": "^0.11.2",
 		"@gorhom/bottom-sheet": "^5.2.14",
 		"@gorhom/portal": "^1.0.14",
+		"@marijn/find-cluster-break": "1.0.2",
 		"@mattermost/react-native-paste-input": "^2.0.1",
 		"@pie/client": "*",
 		"@pie/protocol": "*",

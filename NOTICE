@@ -111,6 +111,15 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | file-pane/markdown-preview/{document,index}.tsx/ts + document.test.ts | counterparts (verbatim; markdown front-matter table + reading frame) | 2026-10-14 | A |
 | components/files/code-viewer.{ts,platform}.ts | platform hub pattern (paseo dnd-surface shape) replacing the W2b runtime dispatch (which had silently shipped both viewers on both platforms) | 2026-10-14 | B |
 | components/panels/files-panel.tsx (md branch) | renders FileMarkdownPreview (front-matter table + reading frame) replacing the bare MarkdownRenderer call | 2026-10-14 | B (call-site swap) |
+<!-- W3c-1/-2: parsed-diff (pie-native unified-patch parser) + the diff-document
+     pure-logic layer. Render surfaces (paint.*/surface.*/text.native) and the
+     changed-files wiring follow; inline review UI stays W5. -->
+| git/parsed-diff.ts + parsed-diff.test.ts | no paseo asset: pie's git.diff returns patch strings — derive paseo's ParsedDiffFile shape app-side | 2026-10-14 | — |
+| git/diff-document/{types,model,hit-testing,native-hit-testing,native-slabs,native-text-runs,text-measurement,palette,header-layout,workspace-cache,horizontal-offsets}.ts(x) + tests | counterparts (verbatim; ParsedDiffFile via @/git/parsed-diff, palette selection reads theme.colors.accent, no per-line tokens) | 2026-10-14 | A (adapted) |
+| utils/{diff-layout,diff-rendering,copy-to-clipboard,render-profiler}.ts(x) + tests | counterparts (diff-layout: ParsedDiffFile/DiffLine re-imported from @/git/parsed-diff) | 2026-10-14 | A (adapted) |
+| review/{state.ts,geometry.ts} + review/index.ts (pie subset) | review/state.ts + geometry.ts verbatim; index re-exports geometry+types only — comment store/sheet/feedback land with W5 review | 2026-10-14 | A (subset) |
+| git/{file-header-presentation,file-header-interaction}.ts + tests | counterparts (verbatim) | 2026-10-14 | A |
+| components/code-insets.ts | components/code-insets.ts (verbatim) | 2026-10-14 | A |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

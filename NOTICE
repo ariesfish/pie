@@ -167,6 +167,14 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | app/_layout.tsx (CommandCenterProvider) + app/w/[workspaceId]/index.tsx (registration, Cmd/Ctrl+K web listener, header palette button) | wiring | 2026-10-14 | — |
 | i18n commandCenter.* (en/zh) + openPanel interpolation fix | "{{panel}}" double braces (single braces never interpolate — caught live by the palette showing "Open {panel}") | 2026-10-14 | — |
 | scope note: root-contributions/root-registration, workspace-file-search.ts (host search pipeline), agent-control registration family, workspace-shortcuts (keyboard store) | not ported — no pie equivalents (root PR/mr flows) or they land with W4 keyboard/composer | 2026-10-14 | D (deferred) |
+<!-- W4a: agent-stream foundation (pure logic + tests). The platform
+     viewports (strategy-web/native, view.tsx) and the StreamItem
+     pipeline adapters land in W4b with the chat-list rewiring. -->
+| types/stream.ts | paseo StreamItem union narrowed to the kinds the foundation discriminates; tool-call payload open (ToolCallData) until W4b lifts tool calls out of message blocks | 2026-10-14 | C (narrowed) |
+| timeline/turn-time.ts + agent-stream/{turn-membership,turn-boundary,spacing,layout,strategy,history-window,web-virtualization,text-reveal,prompt-jump-settle,reading-anchor}.ts + bottom-anchor-controller.ts + model.ts | verbatim foundation (layout math, strategy core, anchor transport, history windowing, reveal scheduling) | 2026-10-14 | — |
+| agent-stream/{strategy-fallback.ts,strategy-resolver.ts} | [pie] W4a stand-ins: the exact paseo native/web configuration pairs through createStreamStrategy, renderers null until W4b | 2026-10-14 | D (W4b replaces) |
+| utils/assistant-message-height-estimate.ts + split-markdown-blocks.ts + assistant-image-source.ts (file resolution restored) | height estimation chain; W2's trimmed file line restored (paseo semantics via ported preview-target) since the anchor/estimate foundation keys on it | 2026-10-14 | B |
+| tests: turn-membership/turn-boundary/spacing/layout/render-strategy/web-virtualization/text-reveal/prompt-jump-settle/reading-anchor/bottom-anchor-controller/history-window (144 cases added) | ported (model/presentation/timeline-tail tests deferred with the pipeline adapters) | 2026-10-14 | — |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

@@ -23,6 +23,8 @@ export const en = {
 		noSession: "Start a session first",
 		startSession: "Start session",
 		streaming: "Streaming…",
+		thought: "Thought",
+		empty: "No messages yet",
 	},
 	connect: {
 		title: "Pie",

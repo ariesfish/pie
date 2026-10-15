@@ -175,6 +175,16 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | agent-stream/{strategy-fallback.ts,strategy-resolver.ts} | [pie] W4a stand-ins: the exact paseo native/web configuration pairs through createStreamStrategy, renderers null until W4b | 2026-10-14 | D (W4b replaces) |
 | utils/assistant-message-height-estimate.ts + split-markdown-blocks.ts + assistant-image-source.ts (file resolution restored) | height estimation chain; W2's trimmed file line restored (paseo semantics via ported preview-target) since the anchor/estimate foundation keys on it | 2026-10-14 | B |
 | tests: turn-membership/turn-boundary/spacing/layout/render-strategy/web-virtualization/text-reveal/prompt-jump-settle/reading-anchor/bottom-anchor-controller/history-window (144 cases added) | ported (model/presentation/timeline-tail tests deferred with the pipeline adapters) | 2026-10-14 | — |
+<!-- W4b: native stream viewport + SessionEntry adapter + chat-list
+     rewiring. The forward-stream web viewport (strategy-web.tsx) is the
+     remaining W4b-2 piece; both platforms run the inverted strategy. -->
+| agent-stream/strategy-native.tsx + supports (scroll-keyboard-dismiss family, history-row-revision, top-overlay, history-start-settle-scheduler, history-start-pagination) + tests | native viewport verbatim; FlatList `strictMode` typed around (RN 0.81 typings lack it, runtime honors it); keyboard/shift family stubbed (real reanimated shared values, stationary zero) | 2026-10-14 | B |
+| agent-stream/adapter.ts + adapter.test.ts | [pie] SessionEntry/ToolCallRecord/delta → StreamItem projection (user text join; assistant blocks lifted to message/thought/tool-call items; delta as live-head item) | 2026-10-14 | — |
+| components/chat/stream-row.tsx | [pie] per-item row face (user bubble / assistant markdown / collapsible thought / tool-call card) replacing block-in-row MessageRow rendering | 2026-10-14 | — |
+| components/chat/chat-list.tsx (rewritten) | ScrollView + manual bottom-anchor → buildAgentStreamRenderModel + resolveStreamRenderStrategy + inverted FlatList with the ported bottom-anchor transport; queue/widgets as live auxiliary | 2026-10-14 | B (call-site swap) |
+| keyboard/shift/ (stub index + internal/stream) | [pie] W4b stub family (shift store unported; stationary zero insets) | 2026-10-14 | D (W4 replace) |
+| agent-stream/strategy-fallback.ts + strategy-resolver.ts | native fallback now returns the real createNativeStreamStrategy; web stays config-shaped until the forward viewport lands | 2026-10-14 | — |
+| scope note: strategy-web.tsx (forward DOM viewport), view.tsx (fork/outline/tool-details weave), model.ts stream-state machinery (applyStreamEvent/hydrate) | W4b-2 and later batches | 2026-10-14 | D (deferred) |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

@@ -1,10 +1,8 @@
 // Ported from getpaseo/paseo (Apache-2.0) — agent-stream/strategy-resolver.ts.
-// [pie] W4a stub: the platform strategies (strategy-web.tsx /
-// strategy-native.tsx, ~2k lines each with their own test rigs) land in
-// W4b together with the chat-list rewiring. Until then the resolver
-// falls back to the native strategy, whose shape (FlatList inverted +
-// maintainVisibleContentPosition) the Web RN implementation of FlatList
-// also honors — the walkthrough runs the same assertions either way.
+// [pie] W4b: the forward-stream web viewport (paseo strategy-web.tsx,
+// ~1.4k lines of DOM overflow-anchor + virtualization) lands in a later
+// batch; until then the web platform resolves to the forward *config*
+// through the fallback pair so the ported test matrix stays honest.
 import type { ResolveStreamRenderStrategyInput, StreamStrategy } from "./strategy";
 import {
   createNativeStreamStrategyFallback,

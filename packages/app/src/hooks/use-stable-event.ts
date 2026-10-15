@@ -1,4 +1,4 @@
-// Ported from getpaseo/paseo (Apache-2.0)
+// Ported from getpaseo/paseo (Apache-2.0).
 import { useCallback, useRef } from "react";
 
 export function useStableEvent<TArgs extends unknown[], TResult>(

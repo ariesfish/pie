@@ -23,6 +23,8 @@ export const zhCN = {
 		noSession: "请先开始会话",
 		startSession: "开始会话",
 		streaming: "生成中…",
+		thought: "思考",
+		empty: "暂无消息",
 	},
 	connect: {
 		title: "Pie",

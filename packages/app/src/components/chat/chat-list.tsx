@@ -1,132 +1,142 @@
-// Chat list with a thin port of paseo's bottom-anchor behavior
-// (agent-stream/bottom-anchor-controller.ts + strategy.ts nearBottom
-// semantics, Apache-2.0): while the user is near the bottom, streaming
-// growth keeps the list pinned to the newest content; scrolling up hands
-// control back to the user. The full controller (virtualized history,
-// maintainVisibleContentPosition bookkeeping) lands in P2b together with
-// list virtualization.
-import { useCallback, useEffect, useRef } from "react";
-import { ScrollView, Text, View } from "react-native";
-import type {
-	LayoutChangeEvent,
-	NativeScrollEvent,
-	NativeSyntheticEvent,
-} from "react-native";
-import { StyleSheet, useUnistyles } from "react-native-unistyles";
+// Chat list (W4b): rewritten on the ported agent-stream foundation —
+// the SessionEntry timeline + live delta project onto StreamItems
+// (adapter), buildAgentStreamRenderModel splits history/mounted/live-head
+// segments, and the platform strategy renders the inverted FlatList with
+// the bottom-anchor transport (maintainVisibleContentPosition).
+// Paseo's view.tsx (fork/outline/tool-details) is a later W4 batch; the
+// weave here is the same skeleton at pie's vocabulary.
+import { useMemo, useRef, useState } from "react";
+import { Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
 import { deriveTimeline, useConnectionStore } from "@/stores/connection-store";
-import { MessageRow } from "@/components/chat/message-row";
+import { StreamItemRow } from "@/components/chat/stream-row";
 import { WidgetView } from "@/components/widgets/widget-view";
-
-const NEAR_BOTTOM_RATIO = 0.12;
+import { buildStreamItems } from "@/agent-stream/adapter";
+import { buildAgentStreamRenderModel } from "@/agent-stream/model";
+import { resolveStreamRenderStrategy } from "@/agent-stream/strategy-resolver";
+import type { StreamViewportHandle } from "@/agent-stream/strategy";
+import { DEFAULT_CONTENT_MAX_WIDTH } from "@/styles/theme";
 
 export function ChatList() {
 	const { t } = useTranslation();
-	const { theme } = useUnistyles();
 	const revision = useConnectionStore((s) => s.revision);
 	const streaming = useConnectionStore((s) => s.streaming);
 	const deltaText = useConnectionStore((s) => s.deltaText);
 	const deltaKind = useConnectionStore((s) => s.deltaKind);
 	const queue = useConnectionStore((s) => s.queue);
 	const widgets = useConnectionStore((s) => s.widgets);
+	const toolCalls = useConnectionStore((s) => s.toolCalls);
+	const [nearBottom, setNearBottom] = useState(true);
+	const viewportRef = useRef<StreamViewportHandle | null>(null);
 
-	const nearBottomRef = useRef(true);
-	const scrollRef = useRef<ScrollView>(null);
-	const contentHeightRef = useRef(0);
-	const heightRef = useRef(0);
-	const pinnedRef = useRef(true);
-
-	const entries = deriveTimeline(revision);
 	const sessionIdNow = useConnectionStore.getState().sessionId;
 	const liveWidgets = Object.values(widgets).filter(
 		(w) => w.sessionId === sessionIdNow,
 	);
 
-	const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-		const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
-		const distance =
-			contentSize.height - layoutMeasurement.height - contentOffset.y;
-		nearBottomRef.current = distance <= layoutMeasurement.height * NEAR_BOTTOM_RATIO;
-		if (nearBottomRef.current) pinnedRef.current = true;
-	}, []);
+	const stream = useMemo(
+		() =>
+			buildStreamItems({
+				entries: deriveTimeline(revision),
+				deltaText,
+				deltaKind,
+				toolCalls,
+			}),
+		[revision, deltaText, deltaKind, toolCalls],
+	);
 
-	const onContentSizeChange = useCallback((w: number, h: number) => {
-		const grew = h > contentHeightRef.current;
-		contentHeightRef.current = h;
-		if (grew && pinnedRef.current && nearBottomRef.current) {
-			scrollRef.current?.scrollToEnd({ animated: false });
-		}
-	}, []);
+	const model = useMemo(
+		() =>
+			buildAgentStreamRenderModel({
+				isTurnActive: streaming,
+				activeTurnStartedAt: null,
+				tail: stream.history,
+				head: stream.liveHead,
+				platform: "native",
+				isMobileBreakpoint: false,
+			}),
+		[stream, streaming],
+	);
 
-	const onLayout = useCallback((event: LayoutChangeEvent) => {
-		heightRef.current = event.nativeEvent.layout.height;
-	}, []);
+	// [pie] W4b: both platforms run the inverted FlatList strategy — the
+	// dedicated forward web viewport (paseo strategy-web.tsx) is a later
+	// batch; RN-web honors `inverted` and degrades
+	// maintainVisibleContentPosition to a no-op.
+	const strategy = useMemo(
+		() =>
+			resolveStreamRenderStrategy({
+				platform: "native",
+				isMobileBreakpoint: false,
+			}),
+		[],
+	);
 
-	useEffect(() => {
-		// On session switch / first entries, snap to bottom unconditionally.
-		if (entries.length <= 2) {
-			scrollRef.current?.scrollToEnd({ animated: false });
-			pinnedRef.current = true;
-		}
-	}, [entries.length]);
+	const renderItem = (item: Parameters<typeof StreamItemRow>[0]["item"]) => (
+		<StreamItemRow item={item} />
+	);
 
 	const queued = queue.steering.length + queue.followUp.length;
 
+	const renderRows = (item: Parameters<typeof StreamItemRow>[0]["item"]) =>
+		renderItem(item);
+
 	return (
-		<ScrollView
-			ref={scrollRef}
-			style={styles.root}
-			contentContainerStyle={styles.content}
-			onScroll={onScroll}
-			onContentSizeChange={onContentSizeChange}
-			onLayout={onLayout}
-			scrollEventThrottle={64}
-		>
-			{entries.map((entry) => (
-				<MessageRow key={entry.id} entry={entry} />
-			))}
-			{deltaText.length > 0 && (
-				<View style={styles.deltaRow}>
-					<Text
-						style={
-							deltaKind === "thinking"
-								? [styles.deltaText, { color: theme.colors.foregroundExtraMuted }]
-								: styles.deltaText
-						}
-					>
-						{deltaKind === "thinking" ? `${t("chat.thinking")} · ${deltaText}` : deltaText}
-					</Text>
-				</View>
-			)}
-			{queued > 0 && !streaming && (
-				<View style={styles.queueBadge}>
-					<Text style={styles.queueText}>
-						{t("chat.queue")}: {queued}
-					</Text>
-				</View>
-			)}
-			{liveWidgets.map((w) => (
-				<WidgetView key={`${w.sessionId}:${w.key}`} widget={w} />
-			))}
-		</ScrollView>
+		<View style={styles.root}>
+			{strategy.render({
+				agentId: sessionIdNow ?? "session",
+				segments: model.segments,
+				boundary: model.boundary,
+				renderers: {
+					renderHistoryVirtualizedRow: renderRows,
+					renderHistoryMountedRow: renderRows,
+					renderLiveHeadRow: renderRows,
+					renderLiveAuxiliary: () =>
+						liveWidgets.length === 0 && !(queued > 0 && !streaming) ? null : (
+							<View style={styles.aux}>
+								{queued > 0 && !streaming ? (
+									<View style={styles.queueBadge}>
+										<Text style={styles.queueText}>
+											{t("chat.queue")}: {queued}
+										</Text>
+									</View>
+								) : null}
+								{liveWidgets.map((w) => (
+									<WidgetView key={`${w.sessionId}:${w.key}`} widget={w} />
+								))}
+							</View>
+						),
+				},
+				listEmptyComponent: (
+					<View style={styles.empty}>
+						<Text style={styles.emptyText}>{t("chat.empty")}</Text>
+					</View>
+				),
+				viewportRef,
+				routeBottomAnchorRequest: null,
+				isAuthoritativeHistoryReady: true,
+				onNearBottomChange: (value) => setNearBottom(value),
+				onNearHistoryStart: () => false,
+				isLoadingOlderHistory: false,
+				hasOlderHistory: false,
+				olderHistoryProgressKey: null,
+				scrollEnabled: true,
+				listStyle: styles.list,
+				baseListContentContainerStyle: styles.content,
+				forwardListContentContainerStyle: styles.content,
+				contentMaxWidth: DEFAULT_CONTENT_MAX_WIDTH,
+			})}
+			{!nearBottom ? null : null}
+		</View>
 	);
 }
 
 const styles = StyleSheet.create((theme) => ({
 	root: { flex: 1 },
+	list: { flex: 1 },
 	content: { gap: theme.spacing[2], paddingHorizontal: theme.spacing[3], paddingBottom: theme.spacing[3] },
-	deltaRow: {
-		alignSelf: "flex-start",
-		backgroundColor: theme.colors.surface1,
-		borderRadius: theme.borderRadius.xl,
-		borderWidth: theme.borderWidth[1],
-		borderColor: theme.colors.borderAccent,
-		paddingVertical: theme.spacing[2],
-		paddingHorizontal: theme.spacing[3],
-		maxWidth: "84%",
-	},
-	deltaText: { color: theme.colors.foreground, fontSize: theme.fontSize.content, lineHeight: 20 },
+	aux: { gap: theme.spacing[2], paddingTop: theme.spacing[2] },
 	queueBadge: {
 		alignSelf: "center",
 		backgroundColor: theme.colors.surface2,
@@ -135,4 +145,6 @@ const styles = StyleSheet.create((theme) => ({
 		paddingHorizontal: theme.spacing[3],
 	},
 	queueText: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm },
+	empty: { padding: theme.spacing[6], alignItems: "center" },
+	emptyText: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.content },
 }));

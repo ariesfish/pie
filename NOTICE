@@ -199,6 +199,10 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | chats polish per vision: empty state centered (chat-list), composer card (grip bar + surface container) |  | 2026-10-14 | — |
 | deps: expo-image-picker@~17.0.11 (expo SDK 54 match) |  | 2026-10-14 | — |
 | scope note: paseo agent-controls mode-control, drag-to-resize composer dock remainder, chat-find cone, paste-to-attach channel, multi-session live pending permissions | no pie protocol equivalent yet or later batches | 2026-10-14 | D (deferred) |
+<!-- Dogfood first flight (real LLM stream, cfgpu/glm-5-3): two
+     first-flight bugs found and fixed. -->
+| components/chat/composer.tsx (Enter-to-send via DOM keydown) | [pie] fix #1: RN-web's multiline TextInput never fires onSubmitEditing (Enter is a newline; onKeyPress equally unreliable) — the composer could not send at all on web. Real-DOM textarea listener (Shift+Enter newline, IME respected) | 2026-10-15 | — |
+| daemon/core/host-session.ts (syncTreeEntries + diffUnemittedEntries) + test/entry-reconcile.test.ts | [pie] fix #2: pi's live stream reports message_end without a mirrored entry_appended for message-kind appends, so the wire never carried the transcript and the UI tree stayed empty. Host now diffs the session manager's tree after message_end/turn_end and emits the missing entry.appended (leafId authoritative); snapshot() pre-marks its entries so late reconciliation cannot replay history | 2026-10-15 | — |
 <!-- W4 closure ruling: the remaining clamp-point items get explicit
      destinations so "W4+" tags resolve. -->
 | scope ruling: git/file-header.tsx drag-source (diff file header → composer file-reference chip) + paste-to-attach channel | HTML5 dataTransfer + composer dropzone subsystem (~200 lines) with collision surface against the dnd-kit tab drag rails — deferred to the W5 attachments-II batch (text/file reference chips), where the W3c-3 placeholder (`dragSourceRef = null`) resolves | 2026-10-15 | D (ruled: W5) |

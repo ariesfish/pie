@@ -32,6 +32,8 @@ export function Composer() {
 	const abortRun = useConnectionStore((s) => s.abortRun);
 	const clearError = useConnectionStore((s) => s.clearError);
 
+	const inputRef = useRef<TextInput | null>(null);
+	const submitRef = useRef<((delivery: Delivery) => void) | null>(null);
 	const [draft, setDraft] = useState("");
 	const [images, setImages] = useState<
 		{ data: string; mimeType: string; preview: string }[]
@@ -70,6 +72,29 @@ export function Composer() {
 	useEffect(() => () => {
 		if (tipTimer.current) clearTimeout(tipTimer.current);
 	}, []);
+
+	// RN-web's multiline TextInput makes Enter a newline and never fires
+	// onSubmitEditing (onKeyPress is equally unreliable there) — the
+	// dogfood first flight caught a composer that could not send at all on
+	// web. Park the latest submit behind a ref and listen on the real DOM
+	// node; Shift+Enter keeps the newline, IME composition is respected.
+	submitRef.current = (delivery: Delivery) => {
+		void submit(delivery);
+	};
+	useEffect(() => {
+		if (typeof document === "undefined") return;
+		// RN component refs are not DOM nodes; on web the composer's
+		// multiline TextInput renders exactly one <textarea> — bind there.
+		const node = document.querySelector("textarea");
+		if (!node) return;
+		const onKeyDown = (event: KeyboardEvent) => {
+			if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
+			event.preventDefault();
+			submitRef.current?.(streaming ? "followUp" : "auto");
+		};
+		node.addEventListener("keydown", onKeyDown);
+		return () => node.removeEventListener("keydown", onKeyDown);
+	}, [streaming]);
 
 	const submit = async (delivery: Delivery) => {
 		const text = draft.trim();
@@ -124,6 +149,7 @@ export function Composer() {
 					value={draft}
 					onChangeText={setDraft}
 					style={[styles.input, { height }]}
+					ref={inputRef}
 					onSubmitEditing={() => {
 						void submit("auto");
 					}}

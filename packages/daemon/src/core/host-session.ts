@@ -78,6 +78,19 @@ export class HostSessionError extends Error {
 	}
 }
 
+/**
+ * Pure reconciliation (dogfood #1): entries present in the session manager
+ * but not yet on the wire — pi's live stream reports message_end without a
+ * mirrored entry_appended for message-kind appends, so the host diffs after
+ * append-ish events and the agent UI tree catches up.
+ */
+export function diffUnemittedEntries<T extends { id: string }>(
+	emittedIds: ReadonlySet<string>,
+	entries: readonly T[],
+): T[] {
+	return entries.filter((entry) => !emittedIds.has(entry.id));
+}
+
 export class HostSession {
 	readonly dialogs: DialogRegistry;
 	readonly permissionGate: PermissionGate;
@@ -85,6 +98,15 @@ export class HostSession {
 	private readonly partialCoalescer: PartialCoalescer;
 	private readonly bashCoalescer: PartialCoalescer;
 	private lastStateInfo: SessionStateInfo | undefined;
+	/**
+	 * Entry ids already visible on the wire (snapshot or emitted). Pi's live
+	 * event stream reports message_end without a mirrored entry_appended for
+	 * message-kind appends (the dogfood first flight caught a UI tree that
+	 * never rendered the transcript), so the host reconciles the wire against
+	 * the session manager's tree after append-ish events and emits what is
+	 * missing — the host is the wire authority either way.
+	 */
+	private emittedEntryIds = new Set<string>();
 	/** Connection holding write presentation; P0: first attach wins. */
 	writerConnection: string | null = null;
 
@@ -264,6 +286,11 @@ export class HostSession {
 			}
 		}
 		if (mapped.length > 0) this.emitOrdered(mapped);
+		// Reconcile message-kind appends that pi does not mirror as
+		// entry_appended on the live stream.
+		if (piEvent.type === "message_end" || piEvent.type === "turn_end") {
+			this.syncTreeEntries();
+		}
 		// Context usage moves with usage entries; refresh the gauge (§5.6-D).
 		if (piEvent.type === "entry_appended" && piEvent.entry.type === "usage") {
 			const usage = this.session.getContextUsage();
@@ -273,12 +300,30 @@ export class HostSession {
 		}
 	}
 
+	private syncTreeEntries(): void {
+		const mgr = this.session.sessionManager;
+		for (const entry of diffUnemittedEntries(this.emittedEntryIds, mgr.getEntries())) {
+			this.emittedEntryIds.add(entry.id);
+			this.emitDirect({
+				ev: "session.entry.appended",
+				data: {
+					sessionId: this.sessionId,
+					entry: mapSessionEntry(entry),
+					leafId: mgr.getLeafId(),
+				},
+			});
+		}
+	}
+
 	// ---------------------------------------------------------------------------
 	// Snapshot
 	// ---------------------------------------------------------------------------
 
 	snapshot(): SessionSnapshot {
 		const mgr = this.session.sessionManager;
+		// A fresh snapshot implies its entries reached the wire with it; late
+		// reconciliation must not replay them.
+		for (const entry of mgr.getEntries()) this.emittedEntryIds.add(entry.id);
 		const tree: TreeNodeMeta[] = mapTree(mgr.getTree());
 		const leafId = mgr.getLeafId();
 		// Entries along root -> leaf by walking parents.

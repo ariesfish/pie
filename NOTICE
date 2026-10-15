@@ -199,6 +199,10 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | chats polish per vision: empty state centered (chat-list), composer card (grip bar + surface container) |  | 2026-10-14 | — |
 | deps: expo-image-picker@~17.0.11 (expo SDK 54 match) |  | 2026-10-14 | — |
 | scope note: paseo agent-controls mode-control, drag-to-resize composer dock remainder, chat-find cone, paste-to-attach channel, multi-session live pending permissions | no pie protocol equivalent yet or later batches | 2026-10-14 | D (deferred) |
+<!-- W4 closure ruling: the remaining clamp-point items get explicit
+     destinations so "W4+" tags resolve. -->
+| scope ruling: git/file-header.tsx drag-source (diff file header → composer file-reference chip) + paste-to-attach channel | HTML5 dataTransfer + composer dropzone subsystem (~200 lines) with collision surface against the dnd-kit tab drag rails — deferred to the W5 attachments-II batch (text/file reference chips), where the W3c-3 placeholder (`dragSourceRef = null`) resolves | 2026-10-15 | D (ruled: W5) |
+| scope ruling: streaming-delta live rendering under a real LLM stream (maintainVisibleContentPosition live-update path) | structural e2e proven (viewport mount + empty state both platforms); live-stream verification needs an LLM key environment — single-owner follow-up at first dogfooding session | 2026-10-15 | D (ruled: dogfood) |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

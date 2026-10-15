@@ -14,11 +14,20 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, Check, FileText, Folder, Pencil } from "lucide-react-native";
 
+import { useSyncExternalStore } from "react";
+import { useConnectionStore } from "@/stores/connection-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import { CodeViewer } from "@/components/files/code-viewer";
 import { FileSourceView } from "@/file-pane/source/view";
 import { editorVisualTheme } from "@/file-pane/visual-theme";
 import { FileMarkdownPreview } from "@/file-pane/markdown-preview";
+import { FileEditorView } from "@/file-pane/editor/view";
+import { useFileEditor } from "@/file-pane/editor/session";
+import {
+	getFileConflictCallout,
+	type FileConflictCallout,
+} from "@/file-pane/editor/model";
+import { FileConflictAlert, type FileConflictAlertState } from "@/file-pane/conflict-alert";
 
 export function FilesPanel() {
 	const { t } = useTranslation();
@@ -38,6 +47,21 @@ export function FilesPanel() {
 	const clearEdits = useWorkspaceStore((s) => s.clearEdits);
 	const saveFile = useWorkspaceStore((s) => s.saveFile);
 	const [editing, setEditing] = useState(false);
+	const conn = useConnectionStore((s) => s.conn);
+	// W3b-4: while editing, the ported FileEditorModel owns the buffer —
+	// autosave, ADR-0006 CAS writes, conflict calls (native TextInput and
+	// web CodeMirror share the same state machine).
+	const editor = useFileEditor({
+		connection: conn,
+		workspaceId: useWorkspaceStore.getState().workspaceId,
+		path: openFilePath,
+		enabled: editing && openFile?.text != null && !openFile.binary,
+	});
+	const editorSnapshot = useSyncExternalStore(
+		editor.model ? editor.model.subscribe : noopSubscribe,
+		editor.model ? editor.model.getSnapshot : noopSnapshot,
+		editor.model ? editor.model.getSnapshot : noopSnapshot,
+	);
 
 	useEffect(() => {
 		if (!node || (node.fetchedAt === 0 && !node.loading)) void listDir(dir);
@@ -45,6 +69,10 @@ export function FilesPanel() {
 
 	const isMarkdown = /\.(md|markdown|mdx)$/i.test(openFilePath ?? "");
 	const viewerText = editedContent ?? openFile?.text ?? "";
+	// [W3b-4] while the ported editor owns the buffer, its snapshot drives
+	// the header chrome (dirty flag / save affordances).
+	const editorActive = editing && editor.model != null;
+	const headerDirty = editorActive ? editorSnapshot.modified : dirty;
 
 	if (openFile && openFilePath) {
 		return (
@@ -56,12 +84,14 @@ export function FilesPanel() {
 					<Text style={styles.pathText} numberOfLines={1}>
 						{openFilePath}
 						{openFile.truncated ? ` · ${t("files.truncated")}` : ""}
-						{dirty ? " · unsaved" : ""}
+						{headerDirty ? " · unsaved" : ""}
+						{editorActive && editorSnapshot.status === "saving" ? " · saving" : ""}
 					</Text>
 					{textBadge(openFile.binary, t)}
 					{openFile.text != null && !editing && (
 						<Pressable
 							style={styles.backBtn}
+							accessibilityLabel={t("files.editFile")}
 							onPress={() => {
 								setEditing(true);
 								setEdited(openFile.text ?? "");
@@ -74,21 +104,24 @@ export function FilesPanel() {
 					{editing && (
 						<>
 							<Pressable
-								style={[styles.backBtn, dirty && styles.saveBtn]}
-								disabled={!dirty || saving}
+								style={[styles.backBtn, headerDirty && styles.saveBtn]}
+								disabled={!headerDirty || saving}
+								accessibilityLabel={t("files.saveFile")}
 								onPress={() => {
-									if (editedContent != null) void saveFile(editedContent);
+									if (editorActive) void editor.model?.save();
+									else if (editedContent != null) void saveFile(editedContent);
 								}}
 								hitSlop={8}
 							>
 								<Check
 									size={15}
-									color={dirty ? theme.colors.accentForeground : theme.colors.foregroundMuted}
+									color={headerDirty ? theme.colors.accentForeground : theme.colors.foregroundMuted}
 									strokeWidth={1.5}
 								/>
 							</Pressable>
 							<Pressable
 								style={styles.backBtn}
+								accessibilityLabel={t("files.stopEditing")}
 								onPress={() => {
 									setEditing(false);
 									clearEdits();
@@ -109,9 +142,31 @@ export function FilesPanel() {
 					<ScrollView>
 						<FileMarkdownPreview source={viewerText} />
 					</ScrollView>
+				) : editing && editor.model ? (
+					// [W3b-4] ported editor: CAS write through fs.write
+					// (ADR-0006), autosave after 800ms of inactivity, conflict
+					// callouts with overwrite/reload on the live observation.
+					<>
+						{fileConflictAlertState(
+							getFileConflictCallout(editorSnapshot),
+							editor.model,
+						) ? (
+							<FileConflictAlert
+								state={fileConflictAlertState(
+									getFileConflictCallout(editorSnapshot),
+									editor.model,
+								)!}
+							/>
+						) : null}
+						<FileEditorView
+							model={editor.model}
+							filename={openFilePath}
+							location={{ path: openFilePath }}
+							navigationRevision={0}
+							theme={editorVisualTheme(theme)}
+						/>
+					</>
 				) : editing ? (
-					// [W3b] editing still runs on the P2b-2 viewer; the ported
-					// editor (file-pane/editor) lands in a later W3 batch.
 					<CodeViewer
 						content={viewerText}
 						filename={openFilePath}
@@ -196,6 +251,35 @@ export function FilesPanel() {
 			</ScrollView>
 		</View>
 	);
+}
+
+const noopSubscribe = () => () => undefined;
+const IDLE_EDITOR_SNAPSHOT = {
+	status: "clean",
+	content: "",
+	lineSeparator: "\n",
+	modified: false,
+	version: { status: "ready", version: { modifiedAt: "", size: 0, revision: "" } },
+	observedVersion: { status: "ready" },
+	error: null,
+} as const;
+const noopSnapshot = () => IDLE_EDITOR_SNAPSHOT;
+
+function fileConflictAlertState(
+	callout: FileConflictCallout | null,
+	model: NonNullable<ReturnType<typeof useFileEditor>["model"]>,
+): FileConflictAlertState | null {
+	if (!callout) return null;
+	if (callout.kind === "deleted") return { kind: "deleted" };
+	if (callout.kind === "checkFailed") {
+		return { kind: "checkFailed", retrying: false, onRetry: () => void model.reload() };
+	}
+	return {
+		kind: "changed",
+		canOverwrite: callout.canOverwrite,
+		onReload: () => void model.reload(),
+		onOverwrite: () => void model.overwrite(),
+	};
 }
 
 function textBadge(binary: boolean, t: (k: string) => string) {

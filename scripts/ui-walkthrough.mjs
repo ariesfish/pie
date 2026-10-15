@@ -129,7 +129,7 @@ async function main() {
 
 	const appUrl = `http://127.0.0.1:${STATIC_PORT}/?url=${encodeURIComponent(`ws://127.0.0.1:${DAEMON_PORT}`)}&token=${TOKEN}&workspace=${encodeURIComponent(workspace)}`;
 	try {
-		await runAssertions(appUrl);
+		await runAssertions(appUrl, workspace);
 	} catch (error) {
 		results.push(`CRASH ${String(error?.stack || error)}`);
 		process.exitCode = 1;
@@ -225,7 +225,7 @@ function loadPlaywright() {
 }
 
 // ---------------------------------------------------------------- assertions
-async function runAssertions(appUrl) {
+async function runAssertions(appUrl, workspacePath) {
 	const { chromium } = loadPlaywright();
 	let browser;
 	try {
@@ -281,6 +281,32 @@ async function runAssertions(appUrl) {
 	await shot(page, "03b-md-preview");
 	await page.mouse.move(10, 10);
 	await sleep(300);
+
+	// 03c edit file → CM editor takes over the buffer → the ported
+	// FileEditorModel autosaves a CAS write (ADR-0006) onto disk.
+	await page.getByLabel("Edit file").click();
+	await page
+		.locator('[data-testid="file-source-editor"] .cm-content')
+		.waitFor({ state: "visible", timeout: 10_000 });
+	const cmContent = page.locator('[data-testid="file-source-editor"] .cm-content');
+	await cmContent.click();
+	await page.keyboard.press("ControlOrMeta+ArrowDown");
+	await page.keyboard.type("\nwalkthrough autosave");
+	await sleep(1500); // 800ms autosave + settle
+	const editorMounted = await page
+		.locator('[data-testid="file-source-editor"]')
+		.isVisible()
+		.catch(() => false);
+	const readmeOnDisk = readFileSync(join(workspacePath, "README.md"), "utf8");
+	const diskPersisted = readmeOnDisk.includes("walkthrough autosave");
+	check(
+		"03c edit → autosave CAS write lands on disk",
+		editorMounted && diskPersisted,
+		`editor=${editorMounted} disk=${diskPersisted}`,
+	);
+	await shot(page, "03c-editor-autosave");
+	await page.getByLabel("Stop editing").click();
+	await sleep(600);
 
 	// 04 rail → changes; click the dirty file → diff view
 	await page.getByRole("tab", { name: "Changes" }).click();

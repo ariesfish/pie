@@ -52,7 +52,7 @@ export interface CommandMap {
 	/** Read one text file (size-capped, binary-safe) with its version (ADR-0006). */
 	"fs.read": {
 		args: { workspaceId: WorkspaceId; path: string; maxBytes?: number };
-		result: FsReadResult & { version: FileVersionInfo };
+		result: FsReadResult;
 	};
 	/**
 	 * Write one text file (whole-file replace; size-capped, atomic write).

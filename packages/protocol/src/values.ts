@@ -168,6 +168,8 @@ export interface FsReadResult {
 	truncated: boolean;
 	/** True when the file looked binary (NUL byte in the first 8 KiB). */
 	binary: boolean;
+	/** Current version snapshot (ADR-0006) for optimistic-concurrency writers. */
+	version: FileVersionInfo;
 }
 
 /**

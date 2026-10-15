@@ -123,7 +123,7 @@ export class FsService {
 		root: string,
 		relPath: string,
 		maxBytes: number | undefined,
-	): Promise<FsReadResult & { version: FileVersionInfo }> {
+	): Promise<FsReadResult> {
 		const file = join(root, relPath);
 		const cap = Math.min(maxBytes ?? DEFAULT_MAX_READ_BYTES, READ_HARD_CAP);
 		const st = await stat(file).catch(() => {

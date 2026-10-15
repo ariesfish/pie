@@ -99,6 +99,16 @@ export const en = {
 			usage: "Usage",
 		},
 	},
+	conflict: {
+		changedOnDisk: "File changed on disk",
+		deletedTitle: "File deleted on disk",
+		checkFailedTitle: "Unable to check the file",
+		preservedDescription: "Your changes are preserved in the editor.",
+		conflictDescription: "Reload to take the disk version, or overwrite it.",
+		overwrite: "Overwrite",
+		reload: "Reload",
+		retry: "Retry",
+	},
 	usage: {
 		title: "Usage",
 		tokens: "Tokens",
@@ -126,6 +136,9 @@ export const en = {
 		empty: "Empty directory",
 		binary: "binary",
 		truncated: "truncated",
+		editFile: "Edit file",
+		saveFile: "Save file",
+		stopEditing: "Stop editing",
 	},
 	changes: {
 		noBranch: "no branch",

@@ -33,6 +33,7 @@ function file(_revision = "revision-1", content = "one"): FsReadResult {
     bytes: content.length,
     truncated: false,
     binary: false,
+    version: { modifiedAt: "2026-01-01T00:00:00.000Z", size: 1, revision: "0:0:1:1" },
   };
 }
 

@@ -261,12 +261,12 @@ export class LiveFileModel {
 
 function readyVersion(
   target: LiveFileTarget,
-  _file: FsReadResult,
+  file: FsReadResult,
 ): Extract<LiveFileVersion, { status: "ready" }> {
-  // [pie] pie's watcher reports batched paths without per-file metadata, so a
-  // ready version carries no fields — it only marks a change boundary. The
-  // observation's freshly read file is what consumers render.
-  return { status: "ready" };
+  // [pie] ADR-0006: fs.read carries the daemon-composed version snapshot
+  // (modifiedAt/size/revision); ready observations expose it for CAS writers.
+  void target;
+  return { status: "ready", version: file.version };
 }
 
 function errorMessage(error: unknown): string {

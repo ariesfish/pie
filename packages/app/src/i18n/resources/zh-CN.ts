@@ -99,6 +99,16 @@ export const zhCN = {
 			usage: "用量",
 		},
 	},
+	conflict: {
+		changedOnDisk: "文件在磁盘上已更改",
+		deletedTitle: "文件已在磁盘上删除",
+		checkFailedTitle: "无法检查文件",
+		preservedDescription: "你的修改仍保留在编辑器中。",
+		conflictDescription: "重新加载以采用磁盘版本，或覆盖它。",
+		overwrite: "覆盖",
+		reload: "重新加载",
+		retry: "重试",
+	},
 	usage: {
 		title: "用量",
 		tokens: "Token",
@@ -126,6 +136,9 @@ export const zhCN = {
 		empty: "空目录",
 		binary: "二进制",
 		truncated: "已截断",
+		editFile: "编辑文件",
+		saveFile: "保存文件",
+		stopEditing: "停止编辑",
 	},
 	changes: {
 		noBranch: "无分支",

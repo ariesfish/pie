@@ -147,6 +147,15 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | packages/protocol/src/{values,commands}.ts (FileVersionInfo/FsWriteResult/fs.read+version) | token semantics mirror paseo's FileVersionSchema/FileWriteResultSchema (messages.ts 6013-6026) minus the error arm (pie uses its FsError→RPC channel); two-token matcher mirrors server/file-explorer/service.ts 104-114 | 2026-10-14 | B (semantics) |
 | packages/daemon/src/services/fs-service.ts (write CAS, read version) + server/server.ts (optString) + test/services.test.ts | stat-bigint matcher + conflict-with-version per ADR-0006 | 2026-10-14 | B (semantics) |
 | docs/adr/0006-fswrite-cas.md | design record (decision A: two-token; B: conflict{version:null}) | 2026-10-14 | — |
+<!-- W3b-4: the editor cone (state machine + faces + conflict callouts)
+     on the ADR-0006 CAS write. -->
+| file-pane/editor/model.ts + model.test.ts (29 cases) | FileEditorModel state machine (clean/dirty/saving/conflict/error, autosave 800ms, observedVersion stream, BOM/line-separator care); re-typed to FileVersion/FsWriteResult (errors throw via RPC; bare ready edges block saves) | 2026-10-14 | B (types) |
+| file-pane/editor/observation-source.ts + test | live-file → editor observation adapter; error arms carry no cwd/path | 2026-10-14 | B (types) |
+| file-pane/editor/{view.web.tsx,view.native.tsx,view.tsx} | view.web minus the vim channel (trimmed until a settings surface drives it; @replit/codemirror-vim stays out of deps); native face is a plain TextInput on the same model | 2026-10-14 | C (scope trim) |
+| file-pane/editor/session.ts | [pie] assembly hub (live-file + model + PieConnection CAS write); paseo composes this inside file-pane/pane.tsx | 2026-10-14 | — |
+| file-pane/conflict-alert.tsx | verbatim; i18n keys flattened to conflict.* | 2026-10-14 | B (i18n) |
+| live-file/version.ts (ready carries FileVersionInfo) + hook/model/read-result test fixtures | ADR-0006 type slot cashed in; watcher edges stay bare ready (boundary signal) | 2026-10-14 | — |
+| components/panels/files-panel.tsx (edit branch) | CodeViewer swap → FileEditorView + FileConflictAlert + header dirty/saving badges; pencil/save/stop affordances gained accessibilityLabels (files.* i18n) | 2026-10-14 | B (call-site swap) |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

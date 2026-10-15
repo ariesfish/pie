@@ -35,6 +35,8 @@ export function useLiveFile(input: {
 				return { initial: version, unsubscribe };
 			},
 			async read(target) {
+				// [pie] ADR-0006: fs.read returns the file's version snapshot
+				// alongside the content; ready observations carry it.
 				return connection.request("fs.read", {
 					workspaceId,
 					path: target.path,

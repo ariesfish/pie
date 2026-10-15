@@ -12,6 +12,7 @@ function readResult(overrides: Partial<FsReadResult>): FsReadResult {
 		bytes: 9,
 		truncated: false,
 		binary: false,
+		version: { modifiedAt: "2026-01-01T00:00:00.000Z", size: 9, revision: "0:0:9:1" },
 		...overrides,
 	};
 }

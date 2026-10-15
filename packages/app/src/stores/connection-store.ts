@@ -55,6 +55,15 @@ interface ConnectionState {
 	timeline: Array<{ ts: number; kind: string; text: string }>;
 	/** Tool calls keyed by toolCallId; nested calls link via parentToolCallId. */
 	toolCalls: Record<string, ToolCallRecord>;
+	/** Pending permission request for the active session (W4c). */
+	permission: {
+		sessionId: string;
+		requestId: string;
+		toolName: string;
+		argsPreview: Record<string, unknown>;
+		annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean };
+		reason: string;
+	} | null;
 
 	connect: (wsUrl: string, token: string) => Promise<void>;
 	startSession: (workspace: string, opts?: { model?: ModelRef; thinkingLevel?: ThinkingLevel }) => Promise<void>;
@@ -67,7 +76,16 @@ interface ConnectionState {
 	 * path when known so the daemon can open disk sessions (TUI/CLI-created)
 	 * the daemon does not already hold in memory. */
 	switchSession: (sessionId: string, sessionPath?: string) => Promise<void>;
-	sendPrompt: (text: string, delivery: "auto" | "steer" | "followUp") => Promise<SendDisposition>;
+	sendPrompt: (
+		text: string,
+		delivery: "auto" | "steer" | "followUp",
+		images?: { data: string; mimeType: string }[],
+	) => Promise<SendDisposition>;
+	abortRun: () => Promise<void>;
+	/** Answer the pending permission request (W4c). */
+	respondPermission: (
+		decision: "allow" | "allowSession" | "deny",
+	) => Promise<void>;
 	clearError: () => void;
 }
 
@@ -77,6 +95,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 	sessionId: null,
 	revision: 0,
 	streaming: false,
+	permission: null,
 	deltaText: "",
 	deltaKind: null,
 	queue: { steering: [], followUp: [] },
@@ -142,19 +161,46 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 		}
 	},
 
-	sendPrompt: async (text, delivery) => {
+	sendPrompt: async (text, delivery, images) => {
 		const { conn, sessionId } = get();
 		if (!conn || !sessionId) return "rejected";
 		try {
 			const res = await conn.request("session.prompt", {
 				sessionId,
 				message: text,
+				images: images && images.length > 0 ? images : undefined,
 				delivery,
 			});
 			return res.disposition === "queued" ? "queued" : "busy-confirmed";
 		} catch (err) {
 			set({ error: err instanceof Error ? err.message : String(err) });
 			return "rejected";
+		}
+	},
+
+	abortRun: async () => {
+		const { conn, sessionId } = get();
+		if (!conn || !sessionId) return;
+		try {
+			await conn.request("session.abort", { sessionId });
+		} catch (err) {
+			useConnectionStore.setState({
+				error: err instanceof Error ? err.message : String(err),
+			});
+		}
+	},
+
+	respondPermission: async (decision) => {
+		const { conn, permission } = get();
+		if (!conn || !permission) return;
+		const requestId = permission.requestId;
+		useConnectionStore.setState({ permission: null });
+		try {
+			await conn.request("permission.respond", { requestId, decision });
+		} catch (err) {
+			useConnectionStore.setState({
+				error: err instanceof Error ? err.message : String(err),
+			});
 		}
 	},
 
@@ -265,6 +311,16 @@ export function applyStoreEvent(
 		case "workspace.fs.changed":
 			workspaceApplyFsChanged(event.data);
 			break;
+		case "session.permission.request": {
+			const { sessionId, requestId, toolName, argsPreview, annotations, reason } = event.data;
+			// Only the active session's request surfaces (pie renders one chat at a time).
+			if (sessionId !== useConnectionStore.getState().sessionId) break;
+			timelineEvent("permission", `permission: ${toolName}`);
+			useConnectionStore.setState({
+				permission: { sessionId, requestId, toolName, argsPreview, annotations, reason },
+			});
+			break;
+		}
 		case "session.tool.started": { // timeline
 			timelineEvent("tool", `tool: ${event.data.toolName ?? "…"}`);
 			const { toolCallId, toolName, parentToolCallId, args } = event.data;

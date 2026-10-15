@@ -190,6 +190,15 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | agent-stream/use-scroll-to-message.web.ts + presentation-lite.ts | scroll-to-message controller; presentation narrowed to getStreamItemMessageId (the full presentation.ts — plugin projections, tool-call overview grouping, spoken-input envelope — lands with the view weave) | 2026-10-14 | C (narrowed) |
 | strategy-fallback / strategy-resolver / chat-list platform dispatch | both platforms now resolve to their real viewports (web → forward, native → inverted FlatList) | 2026-10-14 | — |
 | deps: @tanstack/react-virtual@3.13.21 (pinned, paseo lock) |  | 2026-10-14 | — |
+<!-- W4c/W4d: composer completion — permission answering, image
+     attachments (both platforms), abort surface, empty-state and card
+     polish. Terminal stays out per ADR-0004 (never ported). -->
+| stores/connection-store.ts (permission state + respondPermission; sendPrompt images passthrough; abortRun) | [pie] W4c wiring over the protocol's session.permission.request / permission.respond / session.prompt.images / session.abort | 2026-10-14 | — |
+| components/chat/permission-card.tsx + permission-store.test.ts | three-way answer card (deny / allow-session / allow-once) in the chat live auxiliary; active-session filter | 2026-10-14 | — |
+| components/chat/composer/attach.{web,native,traits,ts} + composer.tsx (attach/stop/card) | web: imperative DOM file input (JSX DOM tags don't render under RN-web's jsx runtime) + RN Image data-URL thumbnails; native: expo-image-picker (permission + multi-select + base64). Hub dispatches via Platform constant — metro's web resolver oddly routed the unsuffixed import through the hub (unlike the identical editor/view and split-dnd-shell hubs); follow-up in metro.config. stop button (session.abort) joins the streaming steer/followUp pair | 2026-10-14 | B |
+| chats polish per vision: empty state centered (chat-list), composer card (grip bar + surface container) |  | 2026-10-14 | — |
+| deps: expo-image-picker@~17.0.11 (expo SDK 54 match) |  | 2026-10-14 | — |
+| scope note: paseo agent-controls mode-control, drag-to-resize composer dock remainder, chat-find cone, paste-to-attach channel, multi-session live pending permissions | no pie protocol equivalent yet or later batches | 2026-10-14 | D (deferred) |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

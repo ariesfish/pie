@@ -25,6 +25,9 @@ export const en = {
 		streaming: "Streaming…",
 		thought: "Thought",
 		empty: "No messages yet",
+		attachImage: "Attach images",
+		removeImage: "Remove image",
+		stop: "Stop run",
 	},
 	connect: {
 		title: "Pie",
@@ -120,6 +123,12 @@ export const en = {
 		openPanel: "Open {{panel}}",
 		placeholder: "Type a command...",
 		empty: "No commands match",
+	},
+	permission: {
+		title: "{{tool}} asks for permission",
+		deny: "Deny",
+		allowSession: "Allow for session",
+		allow: "Allow once",
 	},
 	conflict: {
 		changedOnDisk: "File changed on disk",

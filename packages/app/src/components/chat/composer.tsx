@@ -9,7 +9,12 @@ import { Brain, ChevronDown, Cpu } from "lucide-react-native";
 import type { ModelCatalogItem, ThinkingLevel } from "@pie/protocol";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
-import { ArrowBigUp, CornerDownLeft, Layers, Zap } from "lucide-react-native";
+import { ArrowBigUp, CornerDownLeft, Layers, X, Zap } from "lucide-react-native";
+import {
+	AttachStrip,
+	AttachButton,
+	type ComposerAttachment,
+} from "./composer/attach";
 
 import {
 	useConnectionStore,
@@ -24,9 +29,13 @@ export function Composer() {
 	const streaming = useConnectionStore((s) => s.streaming);
 	const sessionId = useConnectionStore((s) => s.sessionId);
 	const sendPrompt = useConnectionStore((s) => s.sendPrompt);
+	const abortRun = useConnectionStore((s) => s.abortRun);
 	const clearError = useConnectionStore((s) => s.clearError);
 
 	const [draft, setDraft] = useState("");
+	const [images, setImages] = useState<
+		{ data: string; mimeType: string; preview: string }[]
+	>([]);
 	const [queuedTip, setQueuedTip] = useState(false);
 	const [height, setHeight] = useState(150);
 	const [modelMenu, setModelMenu] = useState(false);
@@ -64,13 +73,18 @@ export function Composer() {
 
 	const submit = async (delivery: Delivery) => {
 		const text = draft.trim();
-		if (!text || !sessionId) return;
+		if ((!text && images.length === 0) || !sessionId) return;
 		// Pi semantics: while streaming the daemon refuses "auto" — the UI must
 		// force an explicit steer vs followUp decision (refuse to guess).
 		if (streaming && delivery === "auto") return;
-		const disposition: SendDisposition = await sendPrompt(text, delivery);
+		const disposition: SendDisposition = await sendPrompt(
+			text,
+			delivery,
+			images.length > 0 ? images.map(({ data, mimeType }) => ({ data, mimeType })) : undefined,
+		);
 		if (disposition === "queued" || disposition === "busy-confirmed") {
 			setDraft("");
+			setImages([]);
 			clearError();
 			setQueuedTip(true);
 			if (tipTimer.current) clearTimeout(tipTimer.current);
@@ -89,12 +103,20 @@ export function Composer() {
 	return (
 		<View style={styles.root}>
 			{queuedTip && <Text style={styles.tip}>{t("chat.queue")} · ok</Text>}
+			<View style={styles.card}>
 			<View
 				{...gripResponder.panHandlers}
 				style={styles.grip}
 				accessibilityLabel="composer resize"
-			/>
+			>
+				<View style={styles.gripBar} />
+			</View>
+			<AttachStrip images={images} onRemove={(i) => setImages((prev) => prev.filter((_, j) => j !== i))} label={t("chat.removeImage")} />
 			<View style={styles.composerRow}>
+				<AttachButton
+					label={t("chat.attachImage")}
+					onAttach={(list) => setImages((prev) => [...prev, ...list])}
+				/>
 				<TextInput
 					placeholder={streaming ? t("chat.placeholderStreaming") : t("chat.placeholder")}
 					placeholderTextColor="#4b5262"
@@ -109,13 +131,22 @@ export function Composer() {
 				{streaming ? (
 					<View style={styles.choices}>
 						<Pressable
+							style={[styles.choice, styles.stop]}
+							accessibilityLabel={t("chat.stop")}
+							onPress={() => void abortRun()}
+						>
+							<X size={18} color="#e6e9ef" strokeWidth={1.75} />
+						</Pressable>
+						<Pressable
 							style={[styles.choice, styles.steer]}
+							accessibilityLabel={t("chat.steer")}
 							onPress={() => void submit("steer")}
 						>
 							<Zap size={18} color="#e6e9ef" strokeWidth={1.5} />
 						</Pressable>
 						<Pressable
 							style={[styles.choice]}
+							accessibilityLabel={t("chat.followUp")}
 							onPress={() => void submit("followUp")}
 						>
 							<Layers size={18} color="#8b93a7" strokeWidth={1.5} />
@@ -156,6 +187,7 @@ export function Composer() {
 					setModelMenu(false);
 				}}
 			/>
+			</View>
 		</View>
 	);
 }
@@ -239,6 +271,13 @@ function AgentControlsRow({
 
 const styles = StyleSheet.create((theme) => ({
 	root: { gap: theme.spacing[1] },
+	card: {
+		backgroundColor: theme.colors.surface0,
+		borderRadius: theme.borderRadius.lg,
+		borderWidth: theme.borderWidth[1],
+		borderColor: theme.colors.border,
+		paddingBottom: theme.spacing[1],
+	},
 	composerRow: { flexDirection: "row", gap: theme.spacing[2], alignItems: "flex-end" },
 	input: {
 		flex: 1,
@@ -252,6 +291,16 @@ const styles = StyleSheet.create((theme) => ({
 		fontSize: theme.fontSize.content,
 	},
 	choices: { flexDirection: "column", gap: theme.spacing[1] },
+	stop: {
+		backgroundColor: theme.colors.statusDanger,
+		borderColor: theme.colors.statusDanger,
+		borderWidth: 1,
+		borderRadius: 8,
+	},
+
+
+
+
 	choice: {
 		backgroundColor: theme.colors.surface2,
 		borderRadius: theme.borderRadius.lg,
@@ -273,9 +322,15 @@ const styles = StyleSheet.create((theme) => ({
 	tip: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm, alignSelf: "flex-end" },
 	limit: { color: theme.colors.statusWarning, fontSize: theme.fontSize.sm, alignSelf: "flex-end" },
 	grip: {
-		height: 10,
+		height: 12,
 		alignItems: "center",
 		justifyContent: "center",
+	},
+	gripBar: {
+		width: 36,
+		height: 3,
+		borderRadius: 2,
+		backgroundColor: "#3a3f4b",
 	},
 	controlsRow: {
 		flexDirection: "row",

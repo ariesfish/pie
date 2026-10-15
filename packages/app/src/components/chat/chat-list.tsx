@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 
 import { deriveTimeline, useConnectionStore } from "@/stores/connection-store";
 import { StreamItemRow } from "@/components/chat/stream-row";
+import { PermissionCard } from "@/components/chat/permission-card";
 import { WidgetView } from "@/components/widgets/widget-view";
 import { buildStreamItems } from "@/agent-stream/adapter";
 import { buildAgentStreamRenderModel } from "@/agent-stream/model";
@@ -29,6 +30,7 @@ export function ChatList() {
 	const queue = useConnectionStore((s) => s.queue);
 	const widgets = useConnectionStore((s) => s.widgets);
 	const toolCalls = useConnectionStore((s) => s.toolCalls);
+	const hasPermission = useConnectionStore((s) => s.permission != null);
 	const [nearBottom, setNearBottom] = useState(true);
 	const viewportRef = useRef<StreamViewportHandle | null>(null);
 
@@ -83,6 +85,22 @@ export function ChatList() {
 	const renderRows = (item: Parameters<typeof StreamItemRow>[0]["item"]) =>
 		renderItem(item);
 
+	// Empty stream (no history, no live head, not streaming): a centered
+	// empty state reads better than a sticky header line at the top edge.
+	const streamEmpty =
+		stream.history.length === 0 &&
+		stream.liveHead.length === 0 &&
+		liveWidgets.length === 0 &&
+		!hasPermission;
+
+	if (streamEmpty) {
+		return (
+			<View style={styles.emptyCenter} testID="chat-empty-state">
+				<Text style={styles.emptyText}>{t("chat.empty")}</Text>
+			</View>
+		);
+	}
+
 	return (
 		<View style={styles.root}>
 			{strategy.render({
@@ -94,8 +112,11 @@ export function ChatList() {
 					renderHistoryMountedRow: renderRows,
 					renderLiveHeadRow: renderRows,
 					renderLiveAuxiliary: () =>
-						liveWidgets.length === 0 && !(queued > 0 && !streaming) ? null : (
+						liveWidgets.length === 0 &&
+						!(queued > 0 && !streaming) &&
+						!hasPermission ? null : (
 							<View style={styles.aux}>
+								<PermissionCard />
 								{queued > 0 && !streaming ? (
 									<View style={styles.queueBadge}>
 										<Text style={styles.queueText}>
@@ -147,5 +168,10 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	queueText: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm },
 	empty: { padding: theme.spacing[6], alignItems: "center" },
+	emptyCenter: {
+		flex: 1,
+		alignItems: "center",
+		justifyContent: "center",
+	},
 	emptyText: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.content },
 }));

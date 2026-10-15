@@ -25,6 +25,9 @@ export const zhCN = {
 		streaming: "生成中…",
 		thought: "思考",
 		empty: "暂无消息",
+		attachImage: "附加图片",
+		removeImage: "移除图片",
+		stop: "停止运行",
 	},
 	connect: {
 		title: "Pie",
@@ -120,6 +123,12 @@ export const zhCN = {
 		openPanel: "打开 {{panel}}",
 		placeholder: "输入命令…",
 		empty: "没有匹配的命令",
+	},
+	permission: {
+		title: "{{tool}} 请求权限",
+		deny: "拒绝",
+		allowSession: "本会话允许",
+		allow: "允许一次",
 	},
 	conflict: {
 		changedOnDisk: "文件在磁盘上已更改",

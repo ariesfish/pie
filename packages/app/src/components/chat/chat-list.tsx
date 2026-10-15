@@ -15,6 +15,7 @@ import { StreamItemRow } from "@/components/chat/stream-row";
 import { WidgetView } from "@/components/widgets/widget-view";
 import { buildStreamItems } from "@/agent-stream/adapter";
 import { buildAgentStreamRenderModel } from "@/agent-stream/model";
+import { isWeb } from "@/constants/platform";
 import { resolveStreamRenderStrategy } from "@/agent-stream/strategy-resolver";
 import type { StreamViewportHandle } from "@/agent-stream/strategy";
 import { DEFAULT_CONTENT_MAX_WIDTH } from "@/styles/theme";
@@ -54,7 +55,7 @@ export function ChatList() {
 				activeTurnStartedAt: null,
 				tail: stream.history,
 				head: stream.liveHead,
-				platform: "native",
+				platform: isWeb ? "web" : "native",
 				isMobileBreakpoint: false,
 			}),
 		[stream, streaming],
@@ -67,7 +68,7 @@ export function ChatList() {
 	const strategy = useMemo(
 		() =>
 			resolveStreamRenderStrategy({
-				platform: "native",
+				platform: isWeb ? "web" : "native",
 				isMobileBreakpoint: false,
 			}),
 		[],

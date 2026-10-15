@@ -185,6 +185,11 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | keyboard/shift/ (stub index + internal/stream) | [pie] W4b stub family (shift store unported; stationary zero insets) | 2026-10-14 | D (W4 replace) |
 | agent-stream/strategy-fallback.ts + strategy-resolver.ts | native fallback now returns the real createNativeStreamStrategy; web stays config-shaped until the forward viewport lands | 2026-10-14 | — |
 | scope note: strategy-web.tsx (forward DOM viewport), view.tsx (fork/outline/tool-details weave), model.ts stream-state machinery (applyStreamEvent/hydrate) | W4b-2 and later batches | 2026-10-14 | D (deferred) |
+<!-- W4b-2: the forward-stream web viewport. -->
+| agent-stream/strategy-web.tsx + strategy-web.test.tsx (16 cases) | forward DOM viewport verbatim (overflow-anchor follow-output, @tanstack/react-virtual windowing, bottom-anchor transport, resize handling); chat-find bridge stubbed (chat-find-bridge.web.ts → null selected id) until the find cone lands | 2026-10-14 | B (stub) |
+| agent-stream/use-scroll-to-message.web.ts + presentation-lite.ts | scroll-to-message controller; presentation narrowed to getStreamItemMessageId (the full presentation.ts — plugin projections, tool-call overview grouping, spoken-input envelope — lands with the view weave) | 2026-10-14 | C (narrowed) |
+| strategy-fallback / strategy-resolver / chat-list platform dispatch | both platforms now resolve to their real viewports (web → forward, native → inverted FlatList) | 2026-10-14 | — |
+| deps: @tanstack/react-virtual@3.13.21 (pinned, paseo lock) |  | 2026-10-14 | — |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

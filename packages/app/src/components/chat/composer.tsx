@@ -218,7 +218,17 @@ export function Composer() {
 	);
 }
 
-const THINKING_LEVELS: ThinkingLevel[] = ["off", "low", "medium", "high"];
+// Full protocol vocabulary (user feedback: the first flight shipped only a
+// four-level subset). Order mirrors ThinkingLevel's ramp.
+const THINKING_LEVELS: ThinkingLevel[] = [
+	"off",
+	"minimal",
+	"low",
+	"medium",
+	"high",
+	"xhigh",
+	"max",
+];
 
 /** Paseo agent-controls row (subset): model picker + thinking level picker. */
 function AgentControlsRow({

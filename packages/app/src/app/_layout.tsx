@@ -1,7 +1,7 @@
 // Ported from getpaseo/paseo (Apache-2.0) — packages/app/src/app/_layout.tsx
 // (Pie subset: root layout = providers + AppContainer(sidebar | routed stack).
 // Host runtime bootstrap, keyboard, portals and command center are not ported.)
-import { View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import { Stack } from "expo-router";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider, onlineManager } from "@tanstack/react
 import "@/styles/unistyles";
 import { CommandCenterProvider } from "@/command-center/provider";
 import { AppErrorBoundary } from "@/components/error-boundary";
+import { DEFAULT_UI_FONT_STACK } from "@/styles/theme";
 import { UnistylesRuntime, StyleSheet } from "react-native-unistyles";
 
 // Order matters: unistyles must configure before any StyleSheet.create call.
@@ -87,10 +88,18 @@ function RootAppTree() {
 }
 
 export default function RootLayout() {
+	// User feedback first flight: unify the app-wide font family (browser
+	// defaults leaked serif in a few unlabeled spots). Text.defaultProps
+	// covers every descendant that does not opt into a mono face.
+	const textType = Text as unknown as { defaultProps: Record<string, unknown> };
+	const inputType = TextInput as unknown as { defaultProps: Record<string, unknown> };
+	textType.defaultProps = { ...textType.defaultProps, fontFamily: DEFAULT_UI_FONT_STACK };
+	inputType.defaultProps = { ...inputType.defaultProps, fontFamily: DEFAULT_UI_FONT_STACK };
+
 	// Belt-and-suspenders against a raced-away init; unconditionally re-assert
-	// the dark identity once the tree is up.
+	// the light identity once the tree is up (user feedback first flight).
 	useEffect(() => {
-		UnistylesRuntime.setTheme("dark");
+		UnistylesRuntime.setTheme("light");
 	}, []);
 	return <RootAppTree />;
 }

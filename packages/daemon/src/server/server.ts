@@ -24,6 +24,8 @@ import { FsService } from "../services/fs-service.js";
 import { GitService } from "../services/git-service.js";
 import { PackageService } from "../services/package-service.js";
 import { HostSession, HostSessionError } from "../core/host-session.js";
+import { ModelRuntime } from "@earendil-works/pi-coding-agent";
+import { mapModelCatalog } from "../pi/adapter.js";
 import { ClientConnection } from "./connection.js";
 import { CommandRouter, type CommandContext } from "./commands.js";
 
@@ -46,6 +48,8 @@ export interface DaemonServerOptions {
 export class DaemonServer {
 	readonly registry: SessionRegistry;
 	readonly router = new CommandRouter();
+	/** Lazy no-session catalog runtime (models.list P1 fallback). */
+	private catalogRuntime?: Promise<(() => ReturnType<HostSession["models"]>) | null>;
 	readonly fsService = new FsService();
 	readonly gitService = new GitService();
 	readonly packageService = new PackageService();
@@ -53,6 +57,29 @@ export class DaemonServer {
 	private wss?: WebSocketServer;
 	private startedAt = Date.now();
 	readonly serverId = `srv-${DAEMON_VERSION}-${Date.now().toString(36)}`;
+
+	/** Agent-dir-backed model catalog for callers with no open session. */
+	private async getCatalogRuntime(): Promise<(() => ReturnType<HostSession["models"]>) | null> {
+		const agentDir = this.opts.agentDir;
+		if (!agentDir) return null;
+		this.catalogRuntime ??= (async () => {
+			try {
+				const runtime = await ModelRuntime.create({
+					authPath: join(agentDir, "auth.json"),
+					modelsStorePath: join(agentDir, "models-store.json"),
+					refreshOnCreate: false,
+				});
+				return () =>
+					runtime.getAvailableSnapshot().map((m) =>
+						mapModelCatalog(m as unknown as Parameters<typeof mapModelCatalog>[0]),
+					);
+			} catch (err) {
+				console.error("[models.list] catalog runtime unavailable:", err);
+				return null;
+			}
+		})();
+		return this.catalogRuntime;
+	}
 
 	constructor(private readonly opts: DaemonServerOptions) {
 		this.registry = new SessionRegistry({
@@ -508,8 +535,10 @@ export class DaemonServer {
 		});
 
 		r.register("models.list", async (args) => {
-			// P0: the catalog rides on an open session's ModelRuntime. Prefer an
-			// explicit sessionId; else any open session in the requested workspace.
+			// Prefer an open session's ModelRuntime (fresh availability);
+			// P1 fallback (user feedback first flight: the creator screen
+			// asked for models before any session existed): a shared catalog
+			// runtime over the agent dir's auth + models-store, no refresh.
 			if (args["sessionId"]) {
 				const host = requireHost(args);
 				if (host instanceof HostSessionError) throw host;
@@ -517,7 +546,9 @@ export class DaemonServer {
 			}
 			const workspaceId = args["workspaceId"] as string | undefined;
 			const host = self.registry.open.find((h) => !workspaceId || h.cwd === workspaceId);
-			return { models: host ? host.models() : [] };
+			if (host) return { models: host.models() };
+			const catalog = await self.getCatalogRuntime();
+			return catalog ? { models: catalog() } : { models: [] };
 		});
 
 		r.register("model.set", async (args, ctx) => {

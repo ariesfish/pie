@@ -12,9 +12,10 @@ StyleSheet.configure({
 		xl: 1200,
 	},
 	settings: {
-		// Pie ships dark-first (paseo/pie visual identity); light flip is a
-		// settings-page option later, not an automatic OS-color-scheme gamble.
-		initialTheme: "dark",
+		// User feedback first flight: the dark surface read low-contrast to
+		// the primary user, so light ships as the default; dark stays
+		// registered behind a future settings toggle.
+		initialTheme: "light",
 	},
 });
 

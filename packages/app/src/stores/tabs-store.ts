@@ -64,6 +64,10 @@ interface TabsState {
 	closeTab: (tabId: string) => void;
 	setActive: (tabId: string) => void;
 	activeTarget: () => WorkspaceTabTarget | null;
+	/** [W3e] Cycle focus within the focused pane's tab strip (command palette). */
+	focusTabRelative: (delta: 1 | -1) => void;
+	/** [W3e] Close sibling tabs of the active tab in its pane (command palette). */
+	closeSiblingTabs: (which: "others" | "left" | "right") => void;
 
 	// Pane operations (W1c-3).
 	focusPane: (paneId: string) => void;
@@ -206,6 +210,37 @@ export const useTabsStore = create<TabsState>((set, get) => {
 
 		setActive: (tabId) => {
 			applyLayout(focusTabInLayout({ layout: get().layout, tabId }));
+		},
+
+		focusTabRelative: (delta) => {
+			const { layout } = get();
+			const pane = findPaneById(layout.root, layout.focusedPaneId);
+			if (!pane || pane.tabIds.length === 0) return;
+			const current = pane.tabIds.indexOf(pane.focusedTabId ?? "");
+			const index = current < 0 ? 0 : current;
+			const next = (index + delta + pane.tabIds.length) % pane.tabIds.length;
+			const tabId = pane.tabIds[next];
+			if (tabId) applyLayout(focusTabInLayout({ layout, tabId }));
+		},
+
+		closeSiblingTabs: (which) => {
+			const { layout } = get();
+			const pane = findPaneById(layout.root, layout.focusedPaneId);
+			const keep = pane?.focusedTabId ?? null;
+			if (!pane || !keep) return;
+			const index = pane.tabIds.indexOf(keep);
+			if (index < 0) return;
+			const closeIds =
+				which === "others"
+					? pane.tabIds.filter((id) => id !== keep)
+					: which === "left"
+						? pane.tabIds.slice(0, index)
+						: pane.tabIds.slice(index + 1);
+			let next = layout;
+			for (const id of closeIds) {
+				next = closeTabInLayout({ layout: next, tabId: id }) ?? next;
+			}
+			applyLayout(next);
 		},
 
 		activeTarget: () => {

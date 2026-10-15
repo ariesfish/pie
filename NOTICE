@@ -156,6 +156,17 @@ and are tracked via `[port]`-tagged commits (`git log --grep='[port]'`).
 | file-pane/conflict-alert.tsx | verbatim; i18n keys flattened to conflict.* | 2026-10-14 | B (i18n) |
 | live-file/version.ts (ready carries FileVersionInfo) + hook/model/read-result test fixtures | ADR-0006 type slot cashed in; watcher edges stay bare ready (boundary signal) | 2026-10-14 | — |
 | components/panels/files-panel.tsx (edit branch) | CodeViewer swap → FileEditorView + FileConflictAlert + header dirty/saving badges; pencil/save/stop affordances gained accessibilityLabels (files.* i18n) | 2026-10-14 | B (call-site swap) |
+<!-- W3e: command center. Logic layer ported; registration rebuilt on
+     pie's command vocabulary; UI simplified to a contribution-only
+     palette. -->
+| command-center/{contributions,registry,results,icon,workspace-search,workspace-file-search-model}.ts (+ registry/results/workspace-search/file-search-model tests, 44 cases) | logic verbatim except: results drops the agent variety (no aggregated-agent surface); icon generalized over any {size,color} icon; text-match from @pie/protocol | 2026-10-14 | B (types/trim) |
+| command-center/provider.tsx + utils/command-center-focus-restore.ts | verbatim; provider mounted at _layout root (paseo pattern) | 2026-10-14 | — |
+| command-center/workspace-contributions.ts | paseo shape, pie vocabulary: 13 commands (session/tabs/rail/panes/copy-path); git writes, labels, pin, browser/PR tabs and agent copies trimmed; KeyboardActionDefinition replaced by pie's own action union | 2026-10-14 | C (rebuilt) |
+| command-center/workspace-registration.tsx | rebuilt against pie stores (tabs-store new focusTabRelative + closeSiblingTabs); lucide icons via generalized getCommandCenterIcon | 2026-10-14 | C (rebuilt) |
+| command-center/{command-center-store,command-center}.tsx | [pie] palette UI: contribution-only, RN Modal + thirds of paseo's row/keyboard/scroll interactions retained via the ported results pipeline; visibility store (keyboard store arrives in W4) | 2026-10-14 | — |
+| app/_layout.tsx (CommandCenterProvider) + app/w/[workspaceId]/index.tsx (registration, Cmd/Ctrl+K web listener, header palette button) | wiring | 2026-10-14 | — |
+| i18n commandCenter.* (en/zh) + openPanel interpolation fix | "{{panel}}" double braces (single braces never interpolate — caught live by the palette showing "Open {panel}") | 2026-10-14 | — |
+| scope note: root-contributions/root-registration, workspace-file-search.ts (host search pipeline), agent-control registration family, workspace-shortcuts (keyboard store) | not ported — no pie equivalents (root PR/mr flows) or they land with W4 keyboard/composer | 2026-10-14 | D (deferred) |
 | components/files/md-viewer.tsx (RETIRED) | superseded by the W2a port of components/markdown/renderer.tsx | 2026-10-13 | — |
 | components/panels/tab-bar.tsx (RETIRED, orphan) | superseded by panels/panel-registry (P2) | 2026-10-13 | — |
 | message-row.tsx nested-call tree | paseo subagents/ reviewed: provider_subagent concept does not apply to Pi; Pi has no first-class subagent (nested tool calls only) | 2025-10-12 | — (not ported) |

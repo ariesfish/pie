@@ -5,7 +5,15 @@
 import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { Activity, FolderOpen, Gauge, GitCompare, Package, X } from "lucide-react-native";
+import {
+	Activity,
+	FolderOpen,
+	Gauge,
+	GitCompare,
+	Package,
+	Search,
+	X,
+} from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { ToastProvider } from "@/contexts/toast-context";
 import { DiffDocumentWorkspaceCacheProvider } from "@/git/diff-document/workspace-cache";
@@ -21,6 +29,12 @@ import { useSessionListStore } from "@/stores/session-list-store";
 import { useTabsStore } from "@/stores/tabs-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import { useIsCompactFormFactor } from "@/constants/layout";
+import { isWeb } from "@/constants/platform";
+import { CommandCenter } from "@/command-center/command-center";
+import { useCommandCenterStore } from "@/command-center/command-center-store";
+import {
+	useWorkspaceCommandCenterRegistration,
+} from "@/command-center/workspace-registration";
 
 export default function WorkspaceScreen() {
 	const { t } = useTranslation();
@@ -68,9 +82,26 @@ export default function WorkspaceScreen() {
 
 	const railVisible = !isCompact && explorerMode != null;
 
+	// W3e: register the palette's workspace rows + open affordances.
+	useWorkspaceCommandCenterRegistration({ workspaceId: routeWorkspaceId });
+	const openCommandCenter = useCommandCenterStore((s) => s.openCommandCenter);
+	const toggleCommandCenter = useCommandCenterStore((s) => s.toggleCommandCenter);
+	useEffect(() => {
+		if (!isWeb || routeWorkspaceId == null) return;
+		const onKeyDown = (event: KeyboardEvent) => {
+			if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+				event.preventDefault();
+				toggleCommandCenter();
+			}
+		};
+		window.addEventListener("keydown", onKeyDown);
+		return () => window.removeEventListener("keydown", onKeyDown);
+	}, [routeWorkspaceId, toggleCommandCenter]);
+
 	return (
 		<ToastProvider>
 		<DiffDocumentWorkspaceCacheProvider>
+		<CommandCenter />
 		<View style={styles.desktopRow}>
 			<View style={styles.centerColumn}>
 				{/* workspace header (paseo: project row — name + actions) */}
@@ -173,6 +204,7 @@ function WorkspaceHeaderRow({
 	isCompact: boolean;
 	railVisible: boolean;
 }) {
+	const openCommandCenter = useCommandCenterStore((s) => s.openCommandCenter);
 	const { theme } = useUnistyles();
 	const { t } = useTranslation();
 	const toggleRail = useTabsStore((s) => s.toggleRail);
@@ -184,6 +216,9 @@ function WorkspaceHeaderRow({
 			</Text>
 			<View style={styles.headerActions}>
 				{isCompact ? <MobileSessionsButton /> : null}
+				<HeaderIcon label={t("commandCenter.open")} onPress={openCommandCenter}>
+					<Search size={14} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
+				</HeaderIcon>
 				<HeaderIcon
 					label={t("panels.explorer")}
 					onPress={() => {

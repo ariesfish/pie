@@ -8,6 +8,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { QueryClient, QueryClientProvider, onlineManager } from "@tanstack/react-query";
+import { CommandCenterProvider } from "@/command-center/provider";
 import { UnistylesRuntime, StyleSheet } from "react-native-unistyles";
 
 // Order matters: unistyles must configure before any StyleSheet.create call.
@@ -67,7 +68,8 @@ function RootStack() {
 function RootAppTree() {
 	return (
 		<QueryClientProvider client={queryClient}>
-			<KeyboardProvider>
+			<CommandCenterProvider>
+				<KeyboardProvider>
 				<GestureHandlerRootView style={flexStyle}>
 					<SafeAreaProvider>
 						<View style={styles.surfaceFill}>
@@ -75,7 +77,8 @@ function RootAppTree() {
 						</View>
 					</SafeAreaProvider>
 				</GestureHandlerRootView>
-			</KeyboardProvider>
+				</KeyboardProvider>
+			</CommandCenterProvider>
 		</QueryClientProvider>
 	);
 }

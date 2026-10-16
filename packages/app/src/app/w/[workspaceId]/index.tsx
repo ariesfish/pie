@@ -215,11 +215,9 @@ function WorkspaceHeaderRow({
 
 	return (
 		<View style={styles.headerRow}>
-			<Text style={styles.workspace} numberOfLines={1}>
-				{workspaceName}
-			</Text>
-			<View style={styles.headerActions}>
-				{isCompact ? <MobileSessionsButton /> : null}
+			{/* Toolbar grammar (paseo desktop): each rail toggle hugs the edge
+			    it controls. Sidebar first, explorer last. */}
+			<View style={styles.headerLeft}>
 				<HeaderIcon label={t("panels.sidebar")} onPress={toggleSidebar} active={sidebarVisible}>
 					<PanelLeft
 						size={14}
@@ -229,6 +227,12 @@ function WorkspaceHeaderRow({
 						strokeWidth={1.5}
 					/>
 				</HeaderIcon>
+				<Text style={styles.workspace} numberOfLines={1}>
+					{workspaceName}
+				</Text>
+				{isCompact ? <MobileSessionsButton /> : null}
+			</View>
+			<View style={styles.headerActions}>
 				<HeaderIcon label={t("commandCenter.open")} onPress={openCommandCenter}>
 					<Search size={14} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 				</HeaderIcon>
@@ -317,10 +321,21 @@ const styles = StyleSheet.create((theme) => ({
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
-		paddingHorizontal: theme.spacing[3],
-		paddingVertical: theme.spacing[2],
+		gap: theme.spacing[2],
+		// Toolbar feel (paseo desktop titlebar rail): snug height, hairline
+		// bottom edge; buttons at the very ends hug their rails.
+		paddingHorizontal: theme.spacing[1],
+		paddingVertical: 4,
+		minHeight: 34,
 		borderBottomWidth: theme.borderWidth[1],
 		borderBottomColor: theme.colors.border,
+		backgroundColor: theme.colors.background,
+	},
+	headerLeft: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: theme.spacing[1],
+		flexShrink: 1,
 	},
 	workspace: {
 		color: theme.colors.foreground,

@@ -281,3 +281,13 @@ C = design/pattern reference only.
   (原"切换侧栏"语义误导左/右)
 - probe 实证:232px 固定 / toggle 隐藏与恢复 / 资源栏按钮均过
 
+## W5 (iteration 3b): 顶部工具栏按钮贴边
+- 用户反馈:切换按钮应贴所控栏;问 web 是否无法像 paseo desktop 一样放顶部工具栏
+- 结论:web 可自绘应用内顶栏(非限制;Electron 壳接入后可融进原生 titlebar)
+- WorkspaceHeaderRow 重排为工具栏语法:sidebar toggle 打头(紧贴左栏分界,
+  x=236 vs 左栏右缘 230,probe 实测)+ 工作区名;右组以 explorer toggle 收尾
+  (紧贴右 rail 分界,1408-1436/视口 1440)。高度收窄 34px、bg=background、
+  hairline 底边
+- (小坑:JSX 多行注释 {/\* ... */ 少闭合 '}' —— esbuild 直诊 tsc 报错点漂移;
+  以 esbuild 快速定位)
+

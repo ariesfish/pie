@@ -84,8 +84,11 @@ interface TabsState {
 	openChanges: () => void;
 
 	explorerMode: ExplorerMode;
+	/** Desktop left sidebar (workspaces + sessions tree) visibility. */
+	sidebarVisible: boolean;
 	setExplorerMode: (mode: ExplorerMode) => void;
 	toggleRail: () => void;
+	toggleSidebar: () => void;
 	railWidth: number;
 	setRailWidth: (px: number) => void;
 
@@ -120,9 +123,9 @@ function projectLayout(layout: WorkspaceLayout): Pick<TabsState, "layout" | "tab
 
 
 function persistLayout(get: () => TabsState): void {
-	const { workspaceKey, layout, explorerMode, railWidth } = get();
+	const { workspaceKey, layout, explorerMode, railWidth, sidebarVisible } = get();
 	if (!workspaceKey) return;
-	writeLayoutRecord(workspaceKey, { layout, explorerMode, railWidth });
+	writeLayoutRecord(workspaceKey, { layout, explorerMode, railWidth, sidebarVisible });
 }
 
 /** Module-init layout: a sole-pane creator workspace, with the tabs/
@@ -151,6 +154,7 @@ export const useTabsStore = create<TabsState>((set, get) => {
 			set({
 				...projectLayout(restoreWorkspaceLayout(record.layout)),
 				explorerMode: record.explorerMode,
+				sidebarVisible: record.sidebarVisible ?? true,
 				railWidth: record.railWidth,
 				workspaceKey,
 			});
@@ -298,6 +302,12 @@ export const useTabsStore = create<TabsState>((set, get) => {
 		},
 
 		explorerMode: null,
+		sidebarVisible: true,
+
+		toggleSidebar: () => {
+			set((s) => ({ sidebarVisible: !s.sidebarVisible }));
+			persistLayout(get);
+		},
 
 		setExplorerMode: (mode) => {
 			set({ explorerMode: mode });

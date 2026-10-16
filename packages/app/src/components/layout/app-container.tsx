@@ -22,7 +22,8 @@ const rowStyle = { flex: 1, flexDirection: "row" } as const;
 const flexStyle = { flex: 1 } as const;
 const fillStyle = { flex: 1 } as const;
 
-const SIDEBAR_DESKTOP_WIDTH = 260;
+// paseo.png measured: left sidebar occupies x0–231 (≈232px device px).
+const SIDEBAR_DESKTOP_WIDTH = 232;
 
 export function AppContainer({
 	children,
@@ -43,11 +44,17 @@ export function AppContainer({
 	// Paseo keeps the sidebar mounted (latched) once chrome has been enabled and
 	// only toggles visibility, so navigating in and out of workspaces never
 	// remounts the session list mid-scroll.
+	// The "toggle sidebar" header action flips this flag (tabs-store; persisted
+	// per workspace). Left sidebar stays fixed-width by design (paseo.png).
+	const sidebarVisible = useTabsStore((s) => s.sidebarVisible);
+
 	return (
 		<View style={styles.surfaceFill}>
 			<View style={rowStyle}>
-				<View style={[styles.sidebarColumn, chromeEnabled ? null : styles.hidden]}>
-					{chromeEnabled ? <LeftSidebar /> : null}
+				<View
+					style={[styles.sidebarColumn, chromeEnabled && sidebarVisible ? null : styles.hidden]}
+				>
+					{chromeEnabled && sidebarVisible ? <LeftSidebar /> : null}
 				</View>
 				<View style={flexStyle}>{children}</View>
 			</View>

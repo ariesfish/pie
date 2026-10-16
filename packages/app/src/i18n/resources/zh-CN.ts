@@ -57,6 +57,7 @@ export const zhCN = {
 		changes: "变更",
 		resources: "资源",
 		explorer: "切换资源栏",
+		sidebar: "切换侧栏",
 		split: "分栏",
 	},
 	timeline: {
@@ -116,7 +117,7 @@ export const zhCN = {
 		close: "关闭",
 		section: "工作区",
 		newSession: "新建会话",
-		toggleRail: "切换侧栏",
+		toggleRail: "切换资源栏",
 		previousTab: "上一个标签页",
 		nextTab: "下一个标签页",
 		closeCurrentTab: "关闭标签页",

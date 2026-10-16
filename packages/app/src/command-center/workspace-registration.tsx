@@ -44,6 +44,9 @@ function dispatchCommandAction(action: WorkspaceCommandAction): void {
 		case "workspace.rail.toggle":
 			store.toggleRail();
 			return;
+		case "workspace.sidebar.toggle":
+			store.toggleSidebar();
+			return;
 		case "workspace.tab.prev":
 			store.focusTabRelative(-1);
 			return;
@@ -107,6 +110,7 @@ export function useWorkspaceCommandCenterRegistration(
 				openChanges: t("panels.changes"),
 				usage: t("workspace.rail.usage"),
 				toggleRail: t("commandCenter.toggleRail"),
+				toggleSidebar: t("panels.sidebar"),
 				previousTab: t("commandCenter.previousTab"),
 				nextTab: t("commandCenter.nextTab"),
 				closeCurrentTab: t("commandCenter.closeCurrentTab"),

@@ -37,6 +37,8 @@ export interface WorkspaceLayoutRecord {
 	layout: WorkspaceLayout;
 	explorerMode: ExplorerMode;
 	railWidth: number;
+	/** Left sidebar visibility (records written before it existed stay true). */
+	sidebarVisible?: boolean;
 }
 
 function sanitizeTab(value: unknown): WorkspaceTab | null {
@@ -130,7 +132,7 @@ export function readLayoutRecord(workspaceKey: string): WorkspaceLayoutRecord {
 
 export function writeLayoutRecord(
 	workspaceKey: string,
-	record: { layout: WorkspaceLayout; explorerMode: ExplorerMode; railWidth: number },
+	record: { layout: WorkspaceLayout; explorerMode: ExplorerMode; railWidth: number; sidebarVisible?: boolean },
 ): void {
 	try {
 		layoutStorage.set(layoutKeyOf(workspaceKey), JSON.stringify(record));

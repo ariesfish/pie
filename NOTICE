@@ -270,3 +270,14 @@ C = design/pattern reference only.
 - 未跟随项(有意):paseo 左栏 历史导航(功能未建)、常驻右栏(pie 是 tab 化 pane
   架构)、多 host 列(单机产品)
 
+## W5 (iteration 3, 布局裁决):左栏定宽可切换 / 右栏可调宽可切换
+- 用户拍板:左栏固定宽度 + 顶栏"切换侧栏"按钮;右侧面板可调宽(RailResizeHandle
+  已有)+ "切换资源栏"按钮(已有)
+- 左栏宽 260 → 232(paseo.png 实测 x0–231)
+- tabs-store.sidebarVisible + toggleSidebar(+ per-workspace layout record
+  持久化;老 record 兼容 `?? true`)
+- header actions 增加 PanelLeft 切换钮(与活动指示同排);命令面板注册
+  view:toggle-sidebar;`commandCenter.toggleRail` 的 zh 文案纠正为"切换资源栏"
+  (原"切换侧栏"语义误导左/右)
+- probe 实证:232px 固定 / toggle 隐藏与恢复 / 资源栏按钮均过
+

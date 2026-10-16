@@ -13,6 +13,7 @@ export type WorkspaceCommandAction =
 	| { id: "workspace.tab.open"; target: "files" | "changes" }
 	| { id: "workspace.rail.mode"; mode: "files" | "changes" | "usage" }
 	| { id: "workspace.rail.toggle" }
+	| { id: "workspace.sidebar.toggle" }
 	| { id: "workspace.tab.prev" }
 	| { id: "workspace.tab.next" }
 	| { id: "workspace.tab.close-current" }
@@ -30,6 +31,7 @@ export interface WorkspaceCommandCenterLabels {
 	openChanges: string;
 	usage: string;
 	toggleRail: string;
+	toggleSidebar: string;
 	previousTab: string;
 	nextTab: string;
 	closeCurrentTab: string;
@@ -176,9 +178,18 @@ export function buildWorkspaceCommandCenterContributions(
 			id: "view:toggle-rail",
 			rank: 5,
 			title: labels.toggleRail,
-			keywords: ["toggle", "rail", "sidebar", "explorer", "collapse"],
+			keywords: ["rail", "explorer", "collapse"],
 			icon: icons.rail,
 			action: { id: "workspace.rail.toggle" },
+		}),
+		queryAction({
+			source,
+			id: "view:toggle-sidebar",
+			rank: 5,
+			title: labels.toggleSidebar,
+			keywords: ["toggle", "sidebar", "sessions", "workspaces", "collapse"],
+			icon: icons.rail,
+			action: { id: "workspace.sidebar.toggle" },
 		}),
 	);
 

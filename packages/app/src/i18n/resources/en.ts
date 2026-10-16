@@ -57,6 +57,7 @@ export const en = {
 		changes: "Changes",
 		resources: "Resources",
 		explorer: "Toggle explorer rail",
+		sidebar: "Toggle sidebar",
 		split: "Split pane",
 	},
 	timeline: {

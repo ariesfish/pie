@@ -11,6 +11,7 @@ import {
 	Gauge,
 	GitCompare,
 	Package,
+	PanelLeft,
 	Search,
 	X,
 } from "lucide-react-native";
@@ -209,6 +210,9 @@ function WorkspaceHeaderRow({
 	const { t } = useTranslation();
 	const toggleRail = useTabsStore((s) => s.toggleRail);
 
+	const toggleSidebar = useTabsStore((s) => s.toggleSidebar);
+	const sidebarVisible = useTabsStore((s) => s.sidebarVisible);
+
 	return (
 		<View style={styles.headerRow}>
 			<Text style={styles.workspace} numberOfLines={1}>
@@ -216,6 +220,15 @@ function WorkspaceHeaderRow({
 			</Text>
 			<View style={styles.headerActions}>
 				{isCompact ? <MobileSessionsButton /> : null}
+				<HeaderIcon label={t("panels.sidebar")} onPress={toggleSidebar} active={sidebarVisible}>
+					<PanelLeft
+						size={14}
+						color={
+							sidebarVisible ? theme.colors.accentForeground : theme.colors.foregroundMuted
+						}
+						strokeWidth={1.5}
+					/>
+				</HeaderIcon>
 				<HeaderIcon label={t("commandCenter.open")} onPress={openCommandCenter}>
 					<Search size={14} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 				</HeaderIcon>

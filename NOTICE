@@ -251,3 +251,22 @@ C = design/pattern reference only.
   部分组件 select() 只执行一次(疑 @pie/* 或 store 模块双实例)。同 metro.config
   hub 解析调查一并立项;临时对策:派生值每渲染直算(paseo selector 同构)
 
+## W5 (iteration 2, paseo.png 对齐):左栏 workspace 树 + 会话/工具行语法 + composer 重排
+- 用户拍板:sessions 嵌套 workspace(workspaces 可折叠)+ UI 照搬 paseo.png(vision
+  提取像素级规格:x0–231 暖灰左栏/主区纯白/灰底用户气泡/无边框工具行/composer 白卡)
+- 左栏重写:New workspace 行 + Workspaces 段 + workspace 行(accent 色块字母 logo +
+  chevron 折叠)嵌 sessions 行(MessageCircle + 标题 + 相对时间徽章)+ footer
+  (New/设置);折叠-session-scoped state(持久化挂 workspace-layout-record,后续);
+  brand 'πie'→'Pie'(π 字形在浅色 12px 下被误读,vision 两轮实证)
+- 会话面:用户气泡改灰(surface2 + 右上折角,paseo userMessageStylesheet 语法,弃
+  蓝底白字);工具行去卡壳 —— 类型图标(bash=terminal/read=文件/grep=搜索/ask=对话
+  气泡;failed=橙 TriangleAlert)+ 工具名 + 参数摘录一行(arguments.command/path
+  优先),参数/结果展开保留;Thinking 行语法一致
+- composer:paseo 卡形态 —— 圆角 20 白卡(hairline borderAccent + shadow)、无边框
+  多行输入、底部工具行(attach + AgentControlsRow(模型/思考 chip)+ 流式三钮/
+  圆形发送);grip 拖拽把手移除(视觉噪声;paseo 无此件;隐形边缘 affordance 挂 W5)
+- i18n:语言检测 navigator.language(zh-CN 用户自动中文;newContext locale 实证)
+- 主区底色 surface0 → #FFFFFF(paseo 纯白正文栏)
+- 未跟随项(有意):paseo 左栏 历史导航(功能未建)、常驻右栏(pie 是 tab 化 pane
+  架构)、多 host 列(单机产品)
+

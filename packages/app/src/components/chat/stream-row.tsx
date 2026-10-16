@@ -5,7 +5,15 @@
 // adapter and each kind renders its own row here.
 import { useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import { ChevronRight, Wrench } from "lucide-react-native";
+import {
+	ChevronRight,
+	FileText,
+	MessageCircleQuestion,
+	Search as SearchIcon,
+	SquareTerminal,
+	TriangleAlert,
+	Wrench,
+} from "lucide-react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
@@ -82,12 +90,40 @@ function ThoughtRow({ text, loading }: { text: string; loading: boolean }) {
 	);
 }
 
+/** paseo.png tool rows: borderless single line (type icon + tool name +
+ *  argument snippet), orange warning glyph when the call failed. Tap to
+ *  expand parameters/result (pie keeps that affordance). */
+function toolIcon(name: string): typeof Wrench {
+	const n = name.toLowerCase();
+	if (n.startsWith("bash") || n.startsWith("shell") || n.includes("exec"))
+		return SquareTerminal;
+	if (n.startsWith("read") || n.startsWith("write") || n.startsWith("edit") || n.includes("file"))
+		return FileText;
+	if (n.startsWith("grep") || n.startsWith("glob") || n.startsWith("search") || n.startsWith("find"))
+		return SearchIcon;
+	if (n.includes("ask") || n.includes("question")) return MessageCircleQuestion;
+	return Wrench;
+}
+
+/** One-line argument digest: pick the printable value, not raw JSON. */
+function toolArgSnippet(args: unknown): string {
+	if (!args || typeof args !== "object") return "";
+	const a = args as Record<string, unknown>;
+	const value = a.command ?? a.path ?? a.file_path ?? a.pattern ?? a.query ?? a.cmd;
+	if (typeof value === "string") return value;
+	const first = Object.values(a).find((v) => typeof v === "string");
+	return typeof first === "string" ? first : "";
+}
+
 function ToolCallRow({ item }: { item: StreamItem & { kind: "tool_call" } }) {
 	const { theme } = useUnistyles();
 	const [open, setOpen] = useState(false);
 	const data = item.payload.data;
-	const toolName = data?.toolName ?? data?.name ?? "tool";
+	const toolName = String(data?.toolName ?? data?.name ?? "tool");
 	const status = data?.status ?? "running";
+	const failed = status === "failed";
+	const Icon = toolIcon(toolName);
+	const snippet = toolArgSnippet(data?.arguments);
 	const argText = useMemo(() => {
 		try {
 			return JSON.stringify(data?.arguments ?? {}, null, 2);
@@ -98,19 +134,19 @@ function ToolCallRow({ item }: { item: StreamItem & { kind: "tool_call" } }) {
 	return (
 		<View style={styles.toolWrap}>
 			<Pressable style={styles.toolHeader} onPress={() => setOpen((v) => !v)} hitSlop={6}>
-				<Wrench size={12} color={theme.colors.accentBright} strokeWidth={1.5} />
+				{failed ? (
+					<TriangleAlert size={13} color={theme.colors.statusWarning} strokeWidth={1.75} />
+				) : (
+					<Icon size={12} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
+				)}
 				<Text style={styles.toolName} numberOfLines={1}>
 					{toolName}
 				</Text>
-				<Text
-					style={[
-						styles.toolStatus,
-						status === "failed" && { color: theme.colors.statusDanger },
-						status === "running" && { color: theme.colors.accentBright },
-					]}
-				>
-					{status}
-				</Text>
+				{snippet ? (
+					<Text style={styles.toolSnippet} numberOfLines={1}>
+						{snippet}
+					</Text>
+				) : null}
 				<ChevronRight
 					size={12}
 					color={theme.colors.foregroundExtraMuted}
@@ -142,16 +178,20 @@ function ToolCallRow({ item }: { item: StreamItem & { kind: "tool_call" } }) {
 const styles = StyleSheet.create((theme) => ({
 	userRow: {
 		alignSelf: "flex-end",
-		// Accent bubble + white text (paseo message.tsx baseline): on light the
-		// old surface1/borderAccent bubble was invisible against the page.
-		backgroundColor: theme.colors.accent,
+		// paseo userMessageStylesheet: quiet grey bubble, no border, snipped
+		// top-right corner (paseo.png first-flight spec measured #E9E9E6).
+		backgroundColor: theme.colors.surface2,
 		borderRadius: theme.borderRadius.xl,
 		borderTopRightRadius: theme.borderRadius.sm,
 		paddingVertical: theme.spacing[2],
 		paddingHorizontal: theme.spacing[3],
 		maxWidth: "84%",
 	},
-	userText: { color: "#ffffff", fontSize: theme.fontSize.content, lineHeight: 20 },
+	userText: {
+		color: theme.colors.foreground,
+		fontSize: theme.fontSize.content,
+		lineHeight: 20,
+	},
 	assistantWrap: { alignSelf: "stretch", maxWidth: "100%" },
 	thoughtWrap: { alignSelf: "stretch", gap: theme.spacing[1] },
 	thoughtHeader: {
@@ -174,31 +214,31 @@ const styles = StyleSheet.create((theme) => ({
 	noteText: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
 	toolWrap: {
 		alignSelf: "stretch",
-		backgroundColor: theme.colors.surface1,
-		borderRadius: theme.borderRadius.md,
-		borderWidth: theme.borderWidth[1],
-		borderColor: theme.colors.border,
-		overflow: "hidden",
+		// paseo.png grammar: no card chrome on tool rows — they read as grey
+		// one-liners at prose indent; the body below only appears expanded.
 	},
 	toolHeader: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: theme.spacing[2],
-		paddingHorizontal: theme.spacing[2],
-		paddingVertical: theme.spacing[1.5],
+		gap: theme.spacing[1.5],
+		paddingVertical: 3,
+		minHeight: 22,
 	},
-	toolName: { flex: 1, color: theme.colors.foreground, fontSize: theme.fontSize.sm },
-	toolStatus: {
+	toolName: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm },
+	toolSnippet: {
+		flex: 1,
 		color: theme.colors.foregroundExtraMuted,
 		fontSize: theme.fontSize.sm,
-		textTransform: "uppercase",
 	},
 	toolBody: {
 		paddingHorizontal: theme.spacing[2],
 		paddingVertical: theme.spacing[2],
 		gap: theme.spacing[2],
-		borderTopWidth: theme.borderWidth[1],
-		borderTopColor: theme.colors.border,
+		backgroundColor: theme.colors.surface1,
+		borderRadius: theme.borderRadius.md,
+		borderWidth: theme.borderWidth[1],
+		borderColor: theme.colors.border,
+		marginBottom: theme.spacing[1],
 	},
 	toolArgs: {
 		color: theme.colors.foregroundMuted,

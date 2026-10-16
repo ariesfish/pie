@@ -1,6 +1,7 @@
 // Adapted from getpaseo/paseo (Apache-2.0) i18n structure; Pie-specific keys.
 export const en = {
 	common: {
+		settings: "Settings",
 		cancel: "Cancel",
 		close: "Close",
 		retry: "Retry",
@@ -39,8 +40,11 @@ export const en = {
 		workspacePlaceholder: "/absolute/path",
 	},
 			workspaces: {
-		title: "Workspaces",
+		new: "New workspace",
 		add: "Add workspace",
+		expand: "Expand workspace",
+		collapse: "Collapse workspace",
+		title: "Workspaces",
 		pathLabel: "Project directory",
 		pathPlaceholder: "/absolute/path/to/project",
 		open: "Open workspace",

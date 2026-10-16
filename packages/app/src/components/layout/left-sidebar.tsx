@@ -1,15 +1,25 @@
 // Ported from getpaseo/paseo (Apache-2.0) — packages/app/src/components/left-sidebar.tsx
-// (Pie subset: DesktopSidebar structure — drag-area header group (brand +
-// search), the workspace's session list in date buckets, and a footer with
-// New session. Host picker / usage / plugin rows are not ported.)
-import { useEffect, useMemo } from "react";
+// + sidebar-workspace-list.tsx + agent-list.tsx (visual grammar only).
+// Pie layout (paseo.png spec): header (brand + search) → new-workspace row →
+// Workspaces section → per-workspace collapsible row with its sessions nested
+// as indented rows (bubble icon + title + relative-time badge) → footer with
+// new-session and settings. Paseo's date buckets/multi-host columns are not
+// ported; sessions nest under their workspace instead (user IA decision).
+import { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useTranslation } from "react-i18next";
-import { Search, X } from "lucide-react-native";
-import { Plus, SquareTerminal } from "lucide-react-native";
+import {
+	ChevronDown,
+	ChevronRight,
+	Cog,
+	FolderPlus,
+	MessageCircle,
+	Plus,
+	Search,
+	X,
+} from "lucide-react-native";
 import { useTabsStore } from "@/stores/tabs-store";
 
-import type { LucideIcon } from "lucide-react-native";
 import { useUnistyles, StyleSheet } from "react-native-unistyles";
 import {
 	relativeTime,
@@ -18,17 +28,18 @@ import {
 } from "@/stores/session-list-store";
 import { useConnectionStore } from "@/stores/connection-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
-import {
-	groupByProject,
-	useWorkspaceRegistryStore,
-} from "@/stores/workspace-registry-store";
-import { FolderPlus } from "lucide-react-native";
-import { useRouter, usePathname } from "expo-router";
+import { useWorkspaceRegistryStore } from "@/stores/workspace-registry-store";
+import { useRouter } from "expo-router";
+
+/** session rows render under the workspace whose path prefixes their cwd. */
+function sessionUnderWorkspace(sessionCwd: string, workspaceId: string): boolean {
+	return sessionCwd === workspaceId || sessionCwd.startsWith(`${workspaceId}/`);
+}
 
 /**
- * Desktop left sidebar. One session list per active workspace; sessions are
- * Paseo's agent-list rows. The sidebar stays mounted whenever chrome is on
- * (latch), so workspace navigation never remounts the list mid-scroll.
+ * Desktop left sidebar. Workspaces list with sessions nested under each
+ * workspace row (paseo.png layout); the sidebar stays mounted whenever chrome
+ * is on so workspace navigation never remounts the tree mid-scroll.
  */
 export function LeftSidebar() {
 	const { t } = useTranslation();
@@ -36,25 +47,27 @@ export function LeftSidebar() {
 
 	const workspaceId = useWorkspaceStore((s) => s.workspaceId);
 	const router = useRouter();
-	const pathname = usePathname();
 	const registry = useWorkspaceRegistryStore((s) => s.workspaces);
 	const register = useWorkspaceRegistryStore((s) => s.register);
 	const search = useSessionListStore((s) => s.search);
 	const setSearch = useSessionListStore((s) => s.setSearch);
 	const refresh = useSessionListStore((s) => s.refresh);
-	const select = useSessionListStore((s) => s.select);
+	const sessions = useSessionListStore((s) => s.sessions);
 	const loading = useSessionListStore((s) => s.loading);
 	const activeSessionId = useConnectionStore((s) => s.sessionId);
 
-	// Depend on the sessions array identity: session.summary.updated upserts
-	// swap it (left the sidebar pinned to a stale list otherwise).
-	// Derive on every render (paseo does the same through its selectors): an
-	// identity-keyed useMemo never recomputed under the web bundle — re-renders
-	// carried fresh session counts while the memo stayed pinned to the first
-	// empty run. Suspected duplicate-module store instance (NOTICE: W5 metro
-	// probe); deriving per render is correct either way.
-	const groups = select();
+	// Collapsed workspaces (session subtrees hidden). Session-scope: persisted
+	// collapse state lands with the workspace-layout record (NOTICE W5).
+	const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
+	// Derive on every render (identity-keyed memos pinned stale under the web
+	// bundle; see NOTICE W5 metro probe).
+	const q = search.trim().toLowerCase();
+	const sessionMatches = (s: { name?: string; firstMessage: string; sessionId: string }) =>
+		!q ||
+		(s.name ?? "").toLowerCase().includes(q) ||
+		s.firstMessage.toLowerCase().includes(q) ||
+		s.sessionId.toLowerCase().includes(q);
 
 	useEffect(() => {
 		if (workspaceId) {
@@ -63,137 +76,184 @@ export function LeftSidebar() {
 		}
 	}, [workspaceId, refresh, register]);
 
+	const toggleCollapsed = (id: string) => {
+		setCollapsed((prev) => {
+			const next = new Set(prev);
+			if (next.has(id)) next.delete(id);
+			else next.add(id);
+			return next;
+		});
+	};
+
 	return (
 		<View style={styles.sidebar}>
-			{/* Paseo's sidebarDragArea: titlebar drag region + nav rows. */}
 			<View style={styles.headerGroup}>
-				<Text style={styles.brand}>πie</Text>
-				<SearchField value={search} onChangeText={setSearch} placeholder={t("agentList.searchPlaceholder")} />
+				<Text style={styles.brand}>Pie</Text>
+				<SearchField
+					value={search}
+					onChangeText={setSearch}
+					placeholder={t("agentList.searchPlaceholder")}
+				/>
 			</View>
 
-			{/* Paseo's SidebarWorkspaceList: workspaces grouped by project. */}
-			<View style={styles.sectionHeader}>
-				<Text style={styles.sectionTitle}>{t("workspaces.title")}</Text>
-				<Pressable
-					hitSlop={6}
-					onPress={() => {
-						router.push("/workspaces");
-						useTabsStore.getState().showMobileHome();
-					}}
-				>
-					<FolderPlus size={13} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
-				</Pressable>
-			</View>
-			{groupByProject(registry).map(({ project, items }) => (
-				<View key={project || "default"} style={styles.projectGroup}>
-					{project ? <Text style={styles.projectLabel}>{project}</Text> : null}
-					{items.map((w) => {
-						const active = pathname.includes(encodeURIComponent(w.id)) || pathname === w.id;
-						return (
-							<Pressable
-								key={w.id}
-								style={({ pressed }) => [
-									styles.row,
-									active && styles.rowSelected,
-									pressed && styles.rowPressed,
-								]}
-								onPress={() => {
-									router.push({ pathname: "/w/[workspaceId]", params: { workspaceId: w.id } });
-									useTabsStore.getState().showMobileHome();
-								}}
-							>
-								<Text style={[styles.rowTitle, active && styles.rowTitleOn]} numberOfLines={1}>
-									{w.name}
-								</Text>
-							</Pressable>
-						);
-					})}
-				</View>
-			))}
+			{/* paseo.png: the "+ new workspace" affordance sits at the very top. */}
+			<Pressable
+				style={({ pressed }) => [styles.newWorkspaceRow, pressed && styles.rowPressed]}
+				onPress={() => router.push("/workspaces")}
+			>
+				<Plus size={14} color={theme.colors.accent} strokeWidth={1.75} />
+				<Text style={styles.newWorkspaceText}>{t("workspaces.new")}</Text>
+			</Pressable>
 
-			{/* Paseo's session list (agent list) — the workspace's sessions. */}
 			<ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
 				<View style={styles.sectionHeader}>
-					<Text style={styles.sectionTitle}>{t("sessions.title")}</Text>
+					<Text style={styles.sectionTitle}>{t("workspaces.title")}</Text>
 				</View>
-				{loading && groups.length === 0 ? (
-					<View style={styles.emptyWrap}>
-						<Text style={styles.emptyText}>{t("common.connecting")}</Text>
-					</View>
-				) : null}
-				{!loading && groups.length === 0 ? (
-					<View style={styles.emptyWrap}>
-						<Text style={styles.emptyText}>
-							{search.length > 0 ? t("sessions.noMatches") : t("agentList.empty")}
-						</Text>
-						{search.length === 0 && workspaceId ? (
-							<Text style={styles.emptyHint} numberOfLines={2}>
-								{t("agentList.emptyIn")}: {workspaceId}
-							</Text>
-						) : null}
-					</View>
-				) : null}
-				{groups.map(({ project, items }) => (
-					<View key={project}>
-						<Text style={styles.bucketLabel}>{project}</Text>
-						{items.map((session) => {
-							const on = activeSessionId === session.sessionId;
-							return (
+				{registry.map((w) => {
+					const active =
+						workspaceId === w.id || (workspaceId?.startsWith(`${w.id}/`) ?? false);
+					const isCollapsed = collapsed.has(w.id);
+					const wsSessions = sessions
+						.filter((s) => sessionUnderWorkspace(s.workspaceId, w.id) && sessionMatches(s))
+						.slice()
+						.sort((a, b) => (a.modified < b.modified ? 1 : -1));
+					return (
+						<View key={w.id}>
+							<View style={[styles.workspaceRow, active && styles.workspaceRowActive]}>
 								<Pressable
-									key={session.sessionId}
-									style={({ pressed }) => [
-										styles.row,
-										on && styles.rowSelected,
-										pressed && styles.rowPressed,
-									]}
+									hitSlop={8}
+									onPress={() => toggleCollapsed(w.id)}
+									accessibilityLabel={
+										isCollapsed ? t("workspaces.expand") : t("workspaces.collapse")
+									}
+									style={styles.chevronCell}
+								>
+									{isCollapsed ? (
+										<ChevronRight
+											size={13}
+											color={theme.colors.foregroundMuted}
+											strokeWidth={1.75}
+										/>
+									) : (
+										<ChevronDown
+											size={13}
+											color={theme.colors.foregroundMuted}
+											strokeWidth={1.75}
+										/>
+									)}
+								</Pressable>
+								<Pressable
+									style={styles.workspaceMain}
 									onPress={() => {
-										const conn = useConnectionStore.getState();
-										// Disk sessions (TUI/CLI-created) open via path the first time.
-										void conn.switchSession(session.sessionId, session.path || undefined);
-										useTabsStore.getState().openSession(session.sessionId);
-									useTabsStore.getState().showMobileHome();
+										router.push({ pathname: "/w/[workspaceId]", params: { workspaceId: w.id } });
+										useTabsStore.getState().showMobileHome();
 									}}
 								>
-									<Text style={[styles.rowTitle, on && styles.rowTitleOn]} numberOfLines={1}>
-										{sessionTitle(session)}
-									</Text>
-									<View style={styles.rowMeta}>
-										<Text style={styles.rowTime}>{relativeTime(session.modified)}</Text>
-										{session.messageCount > 0 ? (
-											<Text style={styles.rowCount}>{session.messageCount}</Text>
-										) : null}
+									<View style={styles.workspaceLogo}>
+										<Text style={styles.workspaceLogoText}>
+											{(w.name[0] ?? "?").toUpperCase()}
+										</Text>
 									</View>
+									<Text
+										style={[styles.workspaceName, active && styles.workspaceNameActive]}
+										numberOfLines={1}
+									>
+										{w.name}
+									</Text>
 								</Pressable>
-							);
-						})}
-					</View>
-				))}
+							</View>
+							{!isCollapsed ? (
+								wsSessions.length === 0 ? (
+									loading ? null : (
+										<Text style={styles.emptySessions} numberOfLines={1}>
+											{t("agentList.emptyIn")}
+										</Text>
+									)
+								) : (
+									wsSessions.map((s) => (
+										<SessionRow
+											key={s.sessionId}
+											session={s}
+											selected={s.sessionId === activeSessionId}
+											onPress={() => {
+												void useConnectionStore
+													.getState()
+													.switchSession(s.sessionId, s.path || undefined)
+													.then(() => {
+														useTabsStore.getState().openSession(s.sessionId);
+														useTabsStore.getState().showMobileHome();
+													});
+											}}
+										/>
+									))
+								)
+							) : null}
+						</View>
+					);
+				})}
+				{registry.length === 0 ? (
+					<Pressable
+						style={({ pressed }) => [styles.newWorkspaceRow, pressed && styles.rowPressed]}
+						onPress={() => router.push("/workspaces")}
+					>
+						<FolderPlus size={14} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
+						<Text style={styles.newWorkspaceTextMuted}>{t("workspaces.add")}</Text>
+					</Pressable>
+				) : null}
 			</ScrollView>
 
-			{/* Paseo's SidebarFooter: primary actions pinned at the bottom. */}
+			{/* paseo.png footer: new-session on the left, settings on the right. */}
 			<View style={styles.footer}>
-				<FooterButton
-					icon={Plus}
-					label={t("agentList.newSession")}
-					onPress={() => {
-						const ws = useWorkspaceStore.getState().workspaceId;
-						if (ws) {
-							useTabsStore.getState().showMobileHome();
-							void useConnectionStore.getState().startSession(ws);
-						}
-					}}
-					primary
-				/>
-				{workspaceId ? (
-					<View style={styles.workspaceRow}>
-						<SquareTerminal size={13} color={theme.colors.border} strokeWidth={1.5} />
-						<Text style={styles.workspaceText} numberOfLines={1} ellipsizeMode="middle">
-							{workspaceId}
-						</Text>
-					</View>
-				) : null}
+				<Pressable
+					hitSlop={6}
+					onPress={() => useTabsStore.getState().openNew()}
+					accessibilityLabel={t("agentList.newSession")}
+					style={styles.footerButton}
+				>
+					<Plus size={16} color={theme.colors.foregroundMuted} strokeWidth={1.75} />
+				</Pressable>
+				<Pressable
+					hitSlop={6}
+					onPress={() => router.push("/workspaces")}
+					accessibilityLabel={t("common.settings")}
+					style={styles.footerButton}
+				>
+					<Cog size={16} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
+				</Pressable>
 			</View>
 		</View>
+	);
+}
+
+function SessionRow({
+	session,
+	selected,
+	onPress,
+}: {
+	session: Parameters<typeof sessionTitle>[0];
+	selected: boolean;
+	onPress: () => void;
+}) {
+	const { theme } = useUnistyles();
+	return (
+		<Pressable
+			style={({ pressed }) => [styles.sessionRow, selected && styles.sessionRowSelected, pressed && styles.rowPressed]}
+			onPress={onPress}
+			accessibilityLabel={sessionTitle(session)}
+		>
+			<MessageCircle
+				size={13}
+				color={selected ? theme.colors.accent : theme.colors.foregroundMuted}
+				strokeWidth={1.75}
+			/>
+			<Text
+				style={[styles.sessionTitle, selected && styles.sessionTitleSelected]}
+				numberOfLines={1}
+			>
+				{sessionTitle(session)}
+			</Text>
+			<Text style={styles.sessionTime}>{relativeTime(session.modified)}</Text>
+		</Pressable>
 	);
 }
 
@@ -203,63 +263,26 @@ function SearchField({
 	placeholder,
 }: {
 	value: string;
-	onChangeText: (next: string) => void;
+	onChangeText: (v: string) => void;
 	placeholder: string;
 }) {
 	const { theme } = useUnistyles();
 	return (
 		<View style={styles.searchRow}>
-			<Search size={13} color={theme.colors.foregroundExtraMuted} strokeWidth={1.5} />
+			<Search size={13} color={theme.colors.foregroundExtraMuted} strokeWidth={1.75} />
 			<TextInput
-				style={styles.searchInput}
-				placeholder={placeholder}
-				placeholderTextColor={theme.colors.border}
 				value={value}
 				onChangeText={onChangeText}
-				autoCapitalize="none"
-				autoCorrect={false}
+				placeholder={placeholder}
+				placeholderTextColor={theme.colors.foregroundExtraMuted}
+				style={styles.searchInput}
 			/>
 			{value.length > 0 ? (
-				<Pressable onPress={() => onChangeText("")} hitSlop={6}>
-					<X size={13} color={theme.colors.foregroundExtraMuted} strokeWidth={1.5} />
+				<Pressable hitSlop={6} onPress={() => onChangeText("")} accessibilityLabel="clear">
+					<X size={12} color={theme.colors.foregroundExtraMuted} strokeWidth={1.75} />
 				</Pressable>
 			) : null}
 		</View>
-	);
-}
-
-function FooterButton({
-	icon: Icon,
-	label,
-	onPress,
-	primary,
-	ellipsize,
-}: {
-	icon: LucideIcon;
-	label: string;
-	onPress: () => void;
-	primary?: boolean;
-	ellipsize?: boolean;
-}) {
-	const { theme } = useUnistyles();
-	return (
-		<Pressable
-			style={({ pressed }) => [styles.footerButton, primary && styles.footerButtonPrimary, pressed && styles.footerButtonPressed]}
-			onPress={onPress}
-		>
-			<Icon
-				size={14}
-				color={primary ? theme.colors.accentForeground : theme.colors.foregroundMuted}
-				strokeWidth={1.5}
-			/>
-			<Text
-				style={[styles.footerButtonText, primary && styles.footerButtonTextPrimary]}
-				numberOfLines={ellipsize ? 1 : undefined}
-				ellipsizeMode={ellipsize ? "middle" : undefined}
-			>
-				{label}
-			</Text>
-		</Pressable>
 	);
 }
 
@@ -267,23 +290,19 @@ const styles = StyleSheet.create((theme) => ({
 	sidebar: {
 		flex: 1,
 		backgroundColor: theme.colors.surfaceSidebar,
+		borderRightWidth: theme.borderWidth[1],
+		borderRightColor: theme.colors.border,
 	},
 	headerGroup: {
-		paddingTop: theme.spacing[4],
 		paddingHorizontal: theme.spacing[2],
-		paddingBottom: theme.spacing[2],
+		paddingTop: theme.spacing[2],
+		paddingBottom: theme.spacing[1],
 		gap: theme.spacing[2],
-		borderBottomWidth: theme.borderWidth[1],
-		borderBottomColor: theme.colors.border,
 	},
 	brand: {
 		color: theme.colors.foreground,
 		fontSize: theme.fontSize.lg,
 		fontWeight: theme.fontWeight.bold,
-		// π's left bearing clips at the pane edge on web; give it air on both
-		// sides (vision audit first flight).
-		paddingLeft: 2,
-		paddingRight: 2,
 	},
 	searchRow: {
 		flexDirection: "row",
@@ -302,87 +321,128 @@ const styles = StyleSheet.create((theme) => ({
 		fontSize: theme.fontSize.sm,
 		padding: 0,
 	},
+	newWorkspaceRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: theme.spacing[1.5],
+		marginHorizontal: theme.spacing[2],
+		marginBottom: theme.spacing[1],
+		paddingVertical: 6,
+		paddingHorizontal: theme.spacing[1.5],
+		borderRadius: theme.borderRadius.md,
+	},
+	newWorkspaceText: {
+		color: theme.colors.accent,
+		fontSize: theme.fontSize.sm,
+		fontWeight: theme.fontWeight.medium,
+	},
+	newWorkspaceTextMuted: {
+		color: theme.colors.foregroundMuted,
+		fontSize: theme.fontSize.sm,
+	},
 	list: { flex: 1 },
-	listContent: { gap: 2, paddingBottom: theme.spacing[3] },
+	listContent: { paddingBottom: theme.spacing[3] },
 	sectionHeader: {
 		flexDirection: "row",
 		alignItems: "center",
-		justifyContent: "space-between",
 		paddingHorizontal: theme.spacing[2],
 		paddingTop: theme.spacing[2],
 		paddingBottom: 4,
-	},
-	projectGroup: { gap: 2, paddingVertical: 2 },
-	projectLabel: {
-		color: theme.colors.foregroundExtraMuted,
-		fontSize: 11,
-		fontWeight: "600",
-		paddingHorizontal: theme.spacing[2],
-		paddingVertical: 2,
 	},
 	sectionTitle: {
 		color: theme.colors.foregroundMuted,
 		fontSize: theme.fontSize.sm,
+		fontWeight: theme.fontWeight.semibold,
 	},
-	bucketLabel: {
+	workspaceRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingRight: theme.spacing[1],
+		minHeight: 34,
+	},
+	workspaceRowActive: {
+		backgroundColor: theme.colors.surfaceSidebarSelected,
+	},
+	chevronCell: {
+		width: 22,
+		alignItems: "center",
+		justifyContent: "center",
+		alignSelf: "stretch",
+	},
+	workspaceMain: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: theme.spacing[1.5],
+		flex: 1,
+		paddingVertical: 6,
+	},
+	workspaceLogo: {
+		width: 20,
+		height: 20,
+		borderRadius: 5,
+		backgroundColor: theme.colors.accent,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	workspaceLogoText: {
+		color: theme.colors.accentForeground,
+		fontSize: 11,
+		fontWeight: theme.fontWeight.bold,
+	},
+	workspaceName: {
+		color: theme.colors.foreground,
+		fontSize: theme.fontSize.base,
+		flexShrink: 1,
+	},
+	workspaceNameActive: {
+		fontWeight: theme.fontWeight.semibold,
+	},
+	emptySessions: {
 		color: theme.colors.foregroundExtraMuted,
 		fontSize: 11,
-		fontWeight: "600",
-		textTransform: "uppercase",
-		letterSpacing: 0.5,
-		paddingHorizontal: theme.spacing[2],
-		paddingTop: theme.spacing[2],
-		paddingBottom: 4,
+		paddingLeft: 38,
+		paddingVertical: 4,
 	},
-	row: {
-		borderRadius: theme.borderRadius.md,
-		paddingHorizontal: theme.spacing[2],
+	sessionRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: theme.spacing[1.5],
+		paddingLeft: 38,
+		paddingRight: theme.spacing[2],
 		paddingVertical: 6,
-		gap: 2,
+		minHeight: 30,
 	},
-	rowSelected: { backgroundColor: theme.colors.surface2 },
+	sessionRowSelected: {
+		backgroundColor: theme.colors.surfaceSidebarSelected,
+	},
+	sessionTitle: {
+		flex: 1,
+		color: theme.colors.foregroundMuted,
+		fontSize: theme.fontSize.sm,
+	},
+	sessionTitleSelected: {
+		color: theme.colors.foreground,
+		fontWeight: theme.fontWeight.medium,
+	},
+	sessionTime: {
+		color: theme.colors.foregroundExtraMuted,
+		fontSize: 10,
+	},
 	rowPressed: { opacity: 0.7 },
-	rowTitle: { color: theme.colors.foreground, fontSize: theme.fontSize.sm },
-	rowTitleOn: { color: theme.colors.foreground },
-	rowMeta: { flexDirection: "row", gap: theme.spacing[2], alignItems: "center" },
-	rowTime: { color: theme.colors.foregroundExtraMuted, fontSize: 10 },
-	rowCount: { color: theme.colors.border, fontSize: 10 },
-	emptyWrap: { padding: theme.spacing[3], gap: 4 },
-	emptyText: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
-	emptyHint: { color: theme.colors.border, fontSize: 10 },
 	footer: {
-		padding: theme.spacing[2],
-		gap: theme.spacing[1],
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		paddingHorizontal: theme.spacing[2],
+		paddingVertical: theme.spacing[1],
 		borderTopWidth: theme.borderWidth[1],
 		borderTopColor: theme.colors.border,
 	},
 	footerButton: {
-		flexDirection: "row",
+		width: 28,
+		height: 28,
 		alignItems: "center",
-		gap: theme.spacing[1.5],
-		paddingVertical: theme.spacing[1.5],
-		paddingHorizontal: theme.spacing[2],
+		justifyContent: "center",
 		borderRadius: theme.borderRadius.md,
-		borderWidth: theme.borderWidth[1],
-		borderColor: theme.colors.border,
 	},
-	footerButtonPrimary: {
-		backgroundColor: theme.colors.accent,
-		borderColor: theme.colors.accent,
-	},
-	footerButtonPressed: { opacity: 0.8 },
-	workspaceRow: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: theme.spacing[1.5],
-		paddingHorizontal: theme.spacing[2],
-		paddingVertical: 2,
-	},
-	workspaceText: { color: theme.colors.foregroundExtraMuted, fontSize: 11, flexShrink: 1 },
-	footerButtonText: {
-		color: theme.colors.foregroundMuted,
-		fontSize: theme.fontSize.sm,
-		flexShrink: 1,
-	},
-	footerButtonTextPrimary: { color: theme.colors.accentForeground },
 }));

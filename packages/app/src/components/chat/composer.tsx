@@ -4,7 +4,6 @@
 // instead of guessing. Rendering is Pie-specific and unistyles-themed.
 import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { PanResponder } from "react-native";
 import { Brain, ChevronDown, Cpu } from "lucide-react-native";
 import type { ModelCatalogItem, ThinkingLevel } from "@pie/protocol";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
@@ -27,6 +26,7 @@ type Delivery = "auto" | "steer" | "followUp";
 
 export function Composer() {
 	const { t } = useTranslation();
+	const { theme } = useUnistyles();
 	const streaming = useConnectionStore((s) => s.streaming);
 	const sessionId = useConnectionStore((s) => s.sessionId);
 	const sendPrompt = useConnectionStore((s) => s.sendPrompt);
@@ -40,7 +40,7 @@ export function Composer() {
 		{ data: string; mimeType: string; preview: string }[]
 	>([]);
 	const [queuedTip, setQueuedTip] = useState(false);
-	const [height, setHeight] = useState(150);
+	const [height] = useState(72);
 	const [modelMenu, setModelMenu] = useState(false);
 	const [thinkingMenu, setThinkingMenu] = useState(false);
 	const models = useConnectionStore((s) => s.models);
@@ -49,25 +49,10 @@ export function Composer() {
 	const setPendingModel = useConnectionStore((s) => s.setPendingModel);
 	const setPendingThinking = useConnectionStore((s) => s.setPendingThinking);
 
-	// Composer resize (paseo agent-controls dock): drag the top grip;
-	// clamp keeps the input usable and the chat list readable.
-	const dragRef = useRef<{ startY: number; startH: number } | null>(null);
-	const gripResponder = useRef(
-		PanResponder.create({
-			onMoveShouldSetPanResponder: () => true,
-			onPanResponderGrant: (e) => {
-				dragRef.current = { startY: e.nativeEvent.pageY, startH: height };
-			},
-			onPanResponderMove: (e) => {
-				if (!dragRef.current) return;
-				const dy = dragRef.current.startY - e.nativeEvent.pageY;
-				setHeight(Math.max(88, Math.min(420, dragRef.current.startH + dy)));
-			},
-			onPanResponderRelease: () => {
-				dragRef.current = null;
-			},
-		}),
-	).current;
+	// Composer height: fixed comfortable minimum; the multiline TextInput
+	// grows with content (grip-drag resizing moves to W5 as an invisible
+	// edge affordance — the handle itself read as noise; paseo.png has no
+	// such grip).
 	const tipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	useEffect(() => () => {
@@ -130,90 +115,86 @@ export function Composer() {
 		<View style={styles.root}>
 			{queuedTip && <Text style={styles.tip}>{t("chat.queue")} · ok</Text>}
 			<View style={styles.card}>
-			<View
-				{...gripResponder.panHandlers}
-				style={styles.grip}
-				accessibilityLabel="composer resize"
-			>
-				<View style={styles.gripBar} />
-			</View>
-			<AttachStrip images={images} onRemove={(i) => setImages((prev) => prev.filter((_, j) => j !== i))} label={t("chat.removeImage")} />
-			<View style={styles.composerRow}>
-				<AttachButton
-					label={t("chat.attachImage")}
-					onAttach={(list) => setImages((prev) => [...prev, ...list])}
-				/>
+				{/* paseo.png composer: borderless multiline field on the card,
+				    the affordance (attach / model / thinking / send) runs along
+				    the bottom edge of the card. */}
 				<TextInput
 					placeholder={streaming ? t("chat.placeholderStreaming") : t("chat.placeholder")}
-					placeholderTextColor="#4b5262"
+					placeholderTextColor={theme.colors.foregroundMuted}
 					multiline
 					value={draft}
 					onChangeText={setDraft}
-					style={[styles.input, { height }]}
+					style={[styles.input, { minHeight: height }]}
 					ref={inputRef}
 					onSubmitEditing={() => {
 						void submit("auto");
 					}}
 				/>
-				{streaming ? (
-					<View style={styles.choices}>
+				<AttachStrip images={images} onRemove={(i) => setImages((prev) => prev.filter((_, j) => j !== i))} label={t("chat.removeImage")} />
+				{draft.length > 4000 && <Text style={styles.limit}>{draft.length}/∞</Text>}
+				<View style={styles.cardBar}>
+					<AttachButton
+						label={t("chat.attachImage")}
+						onAttach={(list) => setImages((prev) => [...prev, ...list])}
+					/>
+					<AgentControlsRow
+						models={models}
+						pendingModel={pendingModel}
+						pendingThinking={pendingThinking}
+						onPickModel={(m) => {
+							setPendingModel(m);
+							setModelMenu(false);
+						}}
+						onPickThinking={(l) => {
+							setPendingThinking(l);
+							setThinkingMenu(false);
+						}}
+						modelMenu={modelMenu}
+						thinkingMenu={thinkingMenu}
+						onToggleModelMenu={() => {
+							setModelMenu((v) => !v);
+							setThinkingMenu(false);
+						}}
+						onToggleThinkingMenu={() => {
+							setThinkingMenu((v) => !v);
+							setModelMenu(false);
+						}}
+					/>
+					<View style={styles.cardBarSpacer} />
+					{streaming ? (
+						<View style={styles.choices}>
+							<Pressable
+								style={[styles.choice, styles.stop]}
+								accessibilityLabel={t("chat.stop")}
+								onPress={() => void abortRun()}
+							>
+								<X size={15} color="#ffffff" strokeWidth={1.75} />
+							</Pressable>
+							<Pressable
+								style={[styles.choice, styles.steer]}
+								accessibilityLabel={t("chat.steer")}
+								onPress={() => void submit("steer")}
+							>
+								<Zap size={15} color="#ffffff" strokeWidth={1.5} />
+							</Pressable>
+							<Pressable
+								style={styles.choice}
+								accessibilityLabel={t("chat.followUp")}
+								onPress={() => void submit("followUp")}
+							>
+								<Layers size={15} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
+							</Pressable>
+						</View>
+					) : (
 						<Pressable
-							style={[styles.choice, styles.stop]}
-							accessibilityLabel={t("chat.stop")}
-							onPress={() => void abortRun()}
+							style={({ pressed }) => [styles.sendRound, pressed && { opacity: 0.8 }]}
+							accessibilityLabel={t("common.send")}
+							onPress={() => void submit("auto")}
 						>
-							<X size={18} color="#e6e9ef" strokeWidth={1.75} />
+							<CornerDownLeft size={16} color={theme.colors.accentForeground} strokeWidth={1.75} />
 						</Pressable>
-						<Pressable
-							style={[styles.choice, styles.steer]}
-							accessibilityLabel={t("chat.steer")}
-							onPress={() => void submit("steer")}
-						>
-							<Zap size={18} color="#e6e9ef" strokeWidth={1.5} />
-						</Pressable>
-						<Pressable
-							style={[styles.choice]}
-							accessibilityLabel={t("chat.followUp")}
-							onPress={() => void submit("followUp")}
-						>
-							<Layers size={18} color="#8b93a7" strokeWidth={1.5} />
-						</Pressable>
-					</View>
-				) : (
-					<Button
-						variant="default"
-						size="md"
-						leftIcon={<CornerDownLeft size={16} color="#ffffff" strokeWidth={1.5} />}
-						onPress={() => void submit("auto")}
-					>
-						{t("common.send")}
-					</Button>
-				)}
-			</View>
-			{draft.length > 4000 && <Text style={styles.limit}>{draft.length}/∞</Text>}
-			<AgentControlsRow
-				models={models}
-				pendingModel={pendingModel}
-				pendingThinking={pendingThinking}
-				onPickModel={(m) => {
-					setPendingModel(m);
-					setModelMenu(false);
-				}}
-				onPickThinking={(l) => {
-					setPendingThinking(l);
-					setThinkingMenu(false);
-				}}
-				modelMenu={modelMenu}
-				thinkingMenu={thinkingMenu}
-				onToggleModelMenu={() => {
-					setModelMenu((v) => !v);
-					setThinkingMenu(false);
-				}}
-				onToggleThinkingMenu={() => {
-					setThinkingMenu((v) => !v);
-					setModelMenu(false);
-				}}
-			/>
+					)}
+				</View>
 			</View>
 		</View>
 	);
@@ -313,31 +294,50 @@ const styles = StyleSheet.create((theme) => ({
 		// the transcript — give it the content measure plus a top hairline.
 		paddingHorizontal: theme.spacing[3],
 		paddingTop: theme.spacing[1],
-	 borderTopWidth: theme.borderWidth[1],
+		borderTopWidth: theme.borderWidth[1],
 		borderTopColor: theme.colors.border,
 		backgroundColor: theme.colors.background,
 		maxWidth: DEFAULT_CONTENT_MAX_WIDTH + theme.spacing[6],
 		alignSelf: "center",
 		width: "100%",
 	},
+	// paseo.png composer card: page-white, ~20px radius, hairline border,
+	// soft shadow; the multiline field sits on it with no inner chrome.
 	card: {
-		backgroundColor: theme.colors.surface1,
-		borderRadius: theme.borderRadius.lg,
+		backgroundColor: theme.colors.background,
+		borderRadius: 20,
 		borderWidth: theme.borderWidth[1],
 		borderColor: theme.colors.border,
 		paddingBottom: theme.spacing[1],
+		shadowColor: "#000000",
+		shadowOpacity: 0.04,
+		shadowRadius: 12,
+		shadowOffset: { width: 0, height: 4 },
+		elevation: 2,
 	},
-	composerRow: { flexDirection: "row", gap: theme.spacing[2], alignItems: "flex-end" },
 	input: {
-		flex: 1,
-		backgroundColor: theme.colors.surface1,
-		borderRadius: theme.borderRadius.lg,
-		borderWidth: theme.borderWidth[1],
-		borderColor: theme.colors.border,
 		paddingHorizontal: theme.spacing[3],
-		paddingVertical: theme.spacing[2],
+		paddingTop: theme.spacing[2],
+		paddingBottom: theme.spacing[1],
 		color: theme.colors.foreground,
 		fontSize: theme.fontSize.content,
+		textAlignVertical: "top",
+	},
+	cardBar: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: theme.spacing[2],
+		paddingHorizontal: theme.spacing[2],
+		paddingBottom: 2,
+	},
+	cardBarSpacer: { flex: 1 },
+	sendRound: {
+		width: 30,
+		height: 30,
+		borderRadius: theme.borderRadius.full,
+		backgroundColor: theme.colors.accent,
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	// Streaming trio (stop/steer/followUp) sits inline where Send lives —
 	// first-flight audit caught them stacked vertically off the input's edge.
@@ -372,17 +372,6 @@ const styles = StyleSheet.create((theme) => ({
 	disabledText: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm },
 	tip: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm, alignSelf: "flex-end" },
 	limit: { color: theme.colors.statusWarning, fontSize: theme.fontSize.sm, alignSelf: "flex-end" },
-	grip: {
-		height: 12,
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	gripBar: {
-		width: 36,
-		height: 3,
-		borderRadius: 2,
-		backgroundColor: theme.colors.borderAccent,
-	},
 	controlsRow: {
 		flexDirection: "row",
 		alignItems: "center",

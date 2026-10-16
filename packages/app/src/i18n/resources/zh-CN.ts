@@ -1,6 +1,7 @@
 // Adapted from getpaseo/paseo (Apache-2.0) i18n structure; Pie-specific keys.
 export const zhCN = {
 	common: {
+		settings: "设置",
 		cancel: "取消",
 		close: "关闭",
 		retry: "重试",
@@ -39,8 +40,11 @@ export const zhCN = {
 		workspacePlaceholder: "/绝对路径",
 	},
 			workspaces: {
-		title: "工作区",
+		new: "新建工作区",
 		add: "添加工作区",
+		expand: "展开工作区",
+		collapse: "折叠工作区",
+		title: "工作区",
 			pathLabel: "项目目录",
 			pathPlaceholder: "/项目的绝对路径",
 			open: "打开工作区",

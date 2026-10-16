@@ -391,7 +391,9 @@ const pieDarkColors = buildDarkSemanticColors({
 
 // Pie light
 const pieLightColors = buildLightSemanticColors({
-	surface0: "#F7F8FA",
+	// paseo.png grammar: the transcript column reads pure white; chrome lives
+	// one step down in surface1/sidebar greys.
+	surface0: "#FFFFFF",
 	surface1: "#EDEFF3",
 	surface2: "#E4E7ED",
 	surface3: "#D5DAE3",

@@ -74,6 +74,9 @@ export const en = {
 		searchPlaceholder: "Search sessions…",
 		empty: "No sessions",
 		emptyIn: "workspace",
+		project: "Project",
+		projectRoot: "{{workspace}} (workspace root)",
+		workspaceRoot: "Workspace root",
 		newSession: "New session",
 		start: "Start session",
 		buckets: {

@@ -4,6 +4,8 @@
  */
 
 import { existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { SessionManager } from "@earendil-works/pi-coding-agent";
 import type { SessionListItem, WorkspaceInfo } from "@pie/protocol";
 import { HostSession, HostSessionError, type HostSessionOptions } from "./host-session.js";
@@ -166,14 +168,25 @@ export class SessionRegistry {
 	 * appended entries yet has no file on disk — so the registry-held sessions
 	 * are merged in explicitly.
 	 */
-	async listSessions(workspaceId: string): Promise<SessionListItem[]> {
-		const infos = await SessionManager.list(workspaceId);
+	async listSessions(workspaceId: string, recursive = false): Promise<SessionListItem[]> {
+		// Recursive mode: a workspace is a container (e.g. ~/Projects/github);
+		// projects are the git sub-repos beneath it. pi buckets sessions by the
+		// project cwd (session dir slug), so listAll + prefix filter yields
+		// every session under the workspace tree, each carrying its own cwd.
+		const prefixMatch = (cwd: string): boolean =>
+			cwd === workspaceId || (recursive && cwd.startsWith(`${workspaceId}/`));
+		// Sessions live under the agent dir (host-session pins new sessions
+		// there); hermetic agent dirs must list their own tree, not ~/.pi/agent.
+		const sessionsDir = join(this.deps.agentDir ?? homedir(), "sessions");
+		const infos = recursive
+			? (await SessionManager.listAll(sessionsDir)).filter((info) => prefixMatch(info.cwd))
+			: (await SessionManager.list(workspaceId, sessionsDir)).filter((info) => prefixMatch(info.cwd));
 		const items: SessionListItem[] = infos.map((info) => {
 			const host = this.sessions.get(info.id);
 			return {
 				sessionId: info.id,
 				path: info.path,
-				workspaceId,
+				workspaceId: info.cwd,
 				name: info.name,
 				created: info.created.toISOString(),
 				modified: info.modified.toISOString(),
@@ -185,7 +198,7 @@ export class SessionRegistry {
 			};
 		});
 		for (const host of this.sessions.values()) {
-			if (host.cwd !== workspaceId) continue;
+			if (!prefixMatch(host.cwd)) continue;
 			if (items.some((item) => item.sessionId === host.sessionId)) continue;
 			items.push({
 				sessionId: host.sessionId,

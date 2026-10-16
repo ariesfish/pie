@@ -74,6 +74,9 @@ export const zhCN = {
 		searchPlaceholder: "搜索会话…",
 		empty: "暂无会话",
 		emptyIn: "工作区",
+		project: "项目",
+		projectRoot: "{{workspace}}(工作区根)",
+		workspaceRoot: "工作区根",
 		newSession: "新会话",
 		start: "开始会话",
 		buckets: {

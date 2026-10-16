@@ -32,7 +32,7 @@ export function buildStreamItems(input: BuildStreamItemsInput): {
 	for (const entry of input.entries) {
 		history.push(...entryItems(entry, input.toolCalls));
 	}
-	const liveHead = liveDeltaItem(input.deltaText, input.deltaKind);
+	const liveHead = liveDeltaItem(input.deltaText, input.deltaKind, input.toolCalls);
 	return { history, liveHead };
 }
 
@@ -88,7 +88,7 @@ function entryItems(entry: SessionEntry, toolCalls: Record<string, ToolCallRecor
 					status: "ready",
 				});
 			}
-		} else if (block.type === "tool_use") {
+		} else if (block.type === "toolCall") {
 			const toolCallId = String(block.id ?? "");
 			const record = toolCalls[toolCallId];
 			items.push({
@@ -103,7 +103,7 @@ function entryItems(entry: SessionEntry, toolCalls: Record<string, ToolCallRecor
 						toolName: record?.toolName ?? String(block.name ?? ""),
 						// pie's store records ok/error; the stream vocabulary expects the ran set.
 						status: record?.status === "error" ? "failed" : record ? "completed" : "running",
-						arguments: record?.args ?? block.input,
+						arguments: record?.args ?? block.arguments,
 						result: record?.result,
 						error: record?.status === "error" ? record.result : undefined,
 					},
@@ -114,7 +114,22 @@ function entryItems(entry: SessionEntry, toolCalls: Record<string, ToolCallRecor
 	return items;
 }
 
-function liveDeltaItem(deltaText: string, deltaKind: "thinking" | "text" | "toolArgs" | null): StreamItem[] {
+
+/** Best-effort parse for streaming tool-arg payloads (may be partial JSON). */
+function tryParseJson(text: string): Record<string, unknown> | null {
+	try {
+		const parsed = JSON.parse(text);
+		return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null;
+	} catch {
+		return null;
+	}
+}
+
+function liveDeltaItem(
+	deltaText: string,
+	deltaKind: "thinking" | "text" | "toolArgs" | null,
+	toolCalls: Record<string, ToolCallRecord>,
+): StreamItem[] {
 	if (!deltaText) return [];
 	if (deltaKind === "thinking") {
 		return [
@@ -125,6 +140,31 @@ function liveDeltaItem(deltaText: string, deltaKind: "thinking" | "text" | "tool
 				timestamp: new Date(),
 				status: "loading",
 			},
+		];
+	}
+	if (deltaKind === "toolArgs") {
+		// Tool arguments streaming in: render a live tool card, not prose
+		// (first-flight audit: raw JSON leaked into the assistant message).
+		// Prefer the newest running tool from the store; fall back to a bare
+		// running card when the start event has not landed yet.
+		const running = Object.values(toolCalls).filter((t) => t.status === "running");
+		const latest = running[running.length - 1];
+		return [
+			{
+				kind: "tool_call",
+				id: "live:delta",
+				turnId: undefined,
+				timestamp: new Date(),
+				payload: {
+					source: "agent",
+					data: {
+						toolCallId: latest?.toolCallId ?? "live",
+						toolName: latest?.toolName ?? "tool",
+						status: "running",
+						arguments: tryParseJson(deltaText) ?? deltaText,
+					},
+				},
+			} satisfies ToolCallItem,
 		];
 	}
 	return [

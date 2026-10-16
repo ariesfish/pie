@@ -4,7 +4,8 @@
  */
 
 import { createServer } from "node:http";
-import { readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import os from "node:os";
@@ -20,7 +21,7 @@ import {
 import { DAEMON_VERSION } from "../version.js";
 import type { PermissionMode } from "../pi/permissions.js";
 import { SessionRegistry } from "../core/daemon.js";
-import { FsService } from "../services/fs-service.js";
+import { FsService, isIgnoredName } from "../services/fs-service.js";
 import { GitService } from "../services/git-service.js";
 import { PackageService } from "../services/package-service.js";
 import { HostSession, HostSessionError } from "../core/host-session.js";
@@ -48,6 +49,8 @@ export interface DaemonServerOptions {
 export class DaemonServer {
 	readonly registry: SessionRegistry;
 	readonly router = new CommandRouter();
+	/** Last summary broadcast per session (session.summary.updated dedup). */
+	private lastSummary = new Map<string, string>();
 	/** Lazy no-session catalog runtime (models.list P1 fallback). */
 	private catalogRuntime?: Promise<(() => ReturnType<HostSession["models"]>) | null>;
 	readonly fsService = new FsService();
@@ -394,7 +397,28 @@ export class DaemonServer {
 
 		r.register("session.list", async (args) => {
 			const workspaceId = requiredString(args, "workspaceId");
-			return { sessions: await self.registry.listSessions(workspaceId) };
+			const recursive = args["recursive"] === true;
+			return { sessions: await self.registry.listSessions(workspaceId, recursive) };
+		});
+
+		r.register("workspace.projects", async (args) => {
+			const workspaceId = requiredString(args, "workspaceId");
+			const projects: Array<{ path: string; name: string }> = [];
+			let entries: Array<{ name: string; isDirectory: () => boolean }> = [];
+			try {
+				entries = await readdir(workspaceId, { withFileTypes: true });
+			} catch {
+				return { projects };
+			}
+			for (const entry of entries) {
+				if (!entry.isDirectory.call(entry)) continue;
+				if (isIgnoredName(entry.name)) continue;
+				const dirPath = join(workspaceId, entry.name);
+				if (!existsSync(join(dirPath, ".git"))) continue;
+				projects.push({ path: dirPath, name: entry.name });
+			}
+			projects.sort((a, b) => a.name.localeCompare(b.name));
+			return { projects };
 		});
 
 		r.register("session.create", async (args) => {
@@ -729,12 +753,87 @@ export class DaemonServer {
 		const sid = (ev.data as { sessionId?: string }).sessionId;
 		if (!sid) return;
 		this.broadcast(sid, ev.ev, ev.data);
+		// Summary sync point: after a turn settles (or the title changes), the
+		// persisted row may have advanced (first message landed, message count,
+		// modified). Diff against the last broadcast and push the row so
+		// list-side UI does not keep showing a stale placeholder title.
+		if (ev.ev === "session.turn.ended" || ev.ev === "session.renamed") {
+			const host = this.registry.get(sid);
+			if (host) this.emitSessionSummary(host, ev.ev);
+		}
+	}
+
+	/** First-broadcast timestamp per session (SessionListItem.created filler). */
+	private summaryCreated = new Map<string, string>();
+
+	/** Broadcast session.summary.updated when the persisted row changed. */
+	private emitSessionSummary(host: HostSession, cause: string): void {
+		// Entry log is the durable source (run-projection `messages` misses
+		// entries that landed without an LLM round, e.g. an aborted first turn).
+		const entries = host.session.sessionManager.getEntries() as Array<{
+			type?: string;
+			message?: { role?: string; content?: unknown };
+		}>;
+		const firstUser = entries.find(
+			(e) => e.type === "message" && e.message?.role === "user",
+		);
+		const firstMessage = firstUser ? firstMessageText(firstUser.message!) : "";
+		const messageCount = entries.filter((e) => e.type === "message").length;
+		const created =
+			this.summaryCreated.get(host.sessionId) ??
+			(() => {
+				const iso = new Date().toISOString();
+				this.summaryCreated.set(host.sessionId, iso);
+				return iso;
+			})();
+		const item = {
+			sessionId: host.sessionId,
+			path: host.sessionFile ?? "",
+			workspaceId: host.cwd,
+			name: host.session.sessionManager.getSessionName(),
+			created,
+			modified: new Date().toISOString(),
+			messageCount,
+			firstMessage,
+			parentSessionPath: undefined,
+			open: true,
+			pending: host.session.isStreaming,
+		};
+		const sig = JSON.stringify([
+			cause,
+			item.name,
+			item.firstMessage,
+			item.messageCount,
+			item.path,
+		]);
+		if (this.lastSummary.get(host.sessionId) === sig) return;
+		this.lastSummary.set(host.sessionId, sig);
+		const ev = {
+			ev: "session.summary.updated",
+			data: { sessionId: host.sessionId, item },
+		} satisfies WireEventLike;
+		this.broadcast(host.sessionId, "session.summary.updated", ev.data);
 	}
 }
 
 interface WireEventLike {
 	ev: EventName;
 	data: unknown;
+}
+
+/** User-facing first-message snippet: first text part, trimmed (parity with
+ *  pi's SessionManager firstMessage on the daemon side). */
+function firstMessageText(message: { role?: string; content?: unknown }): string {
+	const content = message.content;
+	if (typeof content === "string") return content.trim();
+	if (Array.isArray(content)) {
+		for (const part of content) {
+			if (part && typeof part === "object" && "text" in part && typeof (part as { text: unknown }).text === "string") {
+				return ((part as { text: string }).text).trim();
+			}
+		}
+	}
+	return "";
 }
 
 function wsFatal(ws: WebSocket, code: string, message: string, version?: number): void {

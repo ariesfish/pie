@@ -1,7 +1,7 @@
 // New-session tab (the "+" tab): create a session in the active workspace —
 // or pick one of the registered workspaces first. The model picker arrives
 // with the composer/model-selection surface.
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { StyleSheet } from "react-native-unistyles";
@@ -20,11 +20,19 @@ export function NewSessionPanel() {
 	const conn = useConnectionStore((s) => s.conn);
 	const error = useConnectionStore((s) => s.error);
 	const registry = useWorkspaceRegistryStore((s) => s.workspaces);
+	const projects = useSessionListStore((s) => s.projects);
+	const refreshProjects = useSessionListStore((s) => s.refreshProjects);
 	const [pick, setPick] = useState(workspaceId ?? null);
+	const [pickProject, setPickProject] = useState<string | null>(null);
 	const [busy, setBusy] = useState(false);
 	const router = useRouter();
-
 	const target = pick ?? workspaceId;
+
+	// A workspace container discovers its project sub-repos on entry
+	// (workspace.projects); the creator offers them as session cwds.
+	useEffect(() => {
+		if (target) void refreshProjects();
+	}, [target, refreshProjects]);
 	const options = useMemo(() => {
 		const ids = registry.map((w) => w.id).filter((id) => id !== target);
 		return target ? [target, ...ids] : ids;
@@ -36,7 +44,11 @@ export function NewSessionPanel() {
 		setBusy(true);
 		try {
 			// startSession = workspace.open + session.create + attach (retry-safe).
-			await useConnectionStore.getState().startSession(ws);
+			// Sessions belong to projects: the session runs in the picked
+			// project's cwd (the workspace stays the pane context).
+			await useConnectionStore.getState().startSession(ws, {
+				projectPath: pickProject ?? undefined,
+			});
 			await useSessionListStore.getState().refresh();
 			const sessionId = useConnectionStore.getState().sessionId;
 			if (sessionId) useTabsStore.getState().openSession(sessionId);
@@ -76,6 +88,44 @@ export function NewSessionPanel() {
 							</Pressable>
 						);
 					})}
+					{projects.length > 0 ? (
+						<>
+							<Text style={styles.label}>{t("agentList.project")}</Text>
+							<Pressable
+								style={({ pressed }) => [
+									styles.option,
+									!pickProject && styles.optionOn,
+									pressed && styles.optionPressed,
+								]}
+								onPress={() => setPickProject(null)}
+							>
+								<View style={styles.optionMain}>
+									<Text style={[styles.optionTitle, !pickProject && styles.optionTitleOn]} numberOfLines={1}>
+										{t("agentList.projectRoot", { workspace: target?.split("/").filter(Boolean).pop() ?? "" })}
+									</Text>
+								</View>
+							</Pressable>
+							{projects.map((p) => {
+								const on = p.path === pickProject;
+								return (
+									<Pressable
+										key={p.path}
+										style={({ pressed }) => [styles.option, on && styles.optionOn, pressed && styles.optionPressed]}
+										onPress={() => setPickProject(p.path)}
+									>
+										<View style={styles.optionMain}>
+											<Text style={[styles.optionTitle, on && styles.optionTitleOn]} numberOfLines={1}>
+												{p.name}
+											</Text>
+											<Text style={styles.optionPath} numberOfLines={1}>
+												{p.path}
+											</Text>
+										</View>
+									</Pressable>
+								);
+							})}
+						</>
+					) : null}
 					<Button variant="default" onPress={() => void create()} disabled={busy}>
 						{busy ? t("common.connecting") : t("agentList.start")}
 					</Button>
@@ -89,7 +139,17 @@ export function NewSessionPanel() {
 }
 
 const styles = StyleSheet.create((theme) => ({
-	root: { flex: 1, padding: theme.spacing[6], gap: theme.spacing[2], maxWidth: 480, alignSelf: "center", width: "100%" },
+	// User feedback first flight: the form stacked hard against the top edge
+	// with dead space below — center it in the pane.
+	root: {
+		flex: 1,
+		justifyContent: "center",
+		padding: theme.spacing[6],
+		gap: theme.spacing[2],
+		maxWidth: 480,
+		alignSelf: "center",
+		width: "100%",
+	},
 	title: { color: theme.colors.foreground, fontSize: theme.fontSize.xl, fontWeight: "600", marginBottom: theme.spacing[2] },
 	label: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
 	option: {

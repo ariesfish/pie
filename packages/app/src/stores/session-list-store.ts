@@ -4,6 +4,7 @@
 import { create } from "zustand";
 
 import type { SessionListItem } from "@pie/protocol";
+import i18n from "@/i18n/i18next";
 
 import { useConnectionStore } from "./connection-store";
 import { useWorkspaceStore } from "./workspace-store";
@@ -19,21 +20,32 @@ const BUCKET_LABEL_KEY: Record<DateBucket, string> = {
 };
 export { BUCKET_LABEL_KEY };
 
+/** A git sub-repo directly under the open workspace (workspace.projects). */
+export interface WorkspaceProject {
+	path: string;
+	name: string;
+}
+
 interface SessionListState {
 	sessions: SessionListItem[];
+	projects: WorkspaceProject[];
 	loading: boolean;
 	error: string | null;
 	fetchedAt: number;
 	search: string;
 
 	refresh: () => Promise<void>;
+	refreshProjects: () => Promise<void>;
 	setSearch: (q: string) => void;
-	/** Grouped + searched view model for the sidebar. */
-	select: () => Array<{ bucket: DateBucket; items: SessionListItem[] }>;
+	upsert: (item: SessionListItem) => void;
+	/** Grouped + searched view model for the sidebar: sessions bucket by the
+	 *  project cwd they belong to (recursive workspace listing). */
+	select: () => Array<{ project: string; items: SessionListItem[] }>;
 }
 
 export const useSessionListStore = create<SessionListState>((set, get) => ({
 	sessions: [],
+	projects: [],
 	loading: false,
 	error: null,
 	fetchedAt: 0,
@@ -45,17 +57,44 @@ export const useSessionListStore = create<SessionListState>((set, get) => ({
 		if (!workspaceId || !conn) return;
 		set({ loading: true });
 		try {
-			const res = await conn.request("session.list", { workspaceId });
+			// Recursive: a workspace is a container; its sessions are bucketed
+			// by the project cwd each session carries (session.create may run
+			// in a project sub-repo, whose sessions still belong here).
+			const res = await conn.request("session.list", { workspaceId, recursive: true });
 			set({ sessions: res.sessions, loading: false, error: null, fetchedAt: Date.now() });
 		} catch (err) {
 			set({ loading: false, error: err instanceof Error ? err.message : String(err) });
 		}
 	},
 
+	refreshProjects: async () => {
+		const workspaceId = useWorkspaceStore.getState().workspaceId;
+		const conn = useConnectionStore.getState().conn;
+		if (!workspaceId || !conn) return;
+		try {
+			const res = await conn.request("workspace.projects", { workspaceId });
+			set({ projects: res.projects });
+		} catch {
+			// Non-fatal: the creator falls back to the workspace root.
+		}
+	},
+
 	setSearch: (q) => set({ search: q }),
 
+	/** Upsert an unsolicited row (session.summary.updated). Keep list order
+	 *  stable: replace in place, or prepend an unseen row. */
+	upsert: (item) => {
+		set((st) => {
+			const idx = st.sessions.findIndex((s) => s.sessionId === item.sessionId);
+			if (idx === -1) return { sessions: [item, ...st.sessions] };
+			const next = st.sessions.slice();
+			next[idx] = item;
+			return { sessions: next };
+		});
+	},
+
 	select: () => {
-		const { sessions, search } = get();
+		const { sessions, search, projects } = get();
 		const q = search.trim().toLowerCase();
 		const filtered = q
 			? sessions.filter(
@@ -65,20 +104,32 @@ export const useSessionListStore = create<SessionListState>((set, get) => ({
 						s.sessionId.toLowerCase().includes(q),
 				)
 			: sessions;
-		const byBucket = new Map<DateBucket, SessionListItem[]>();
+		// Group by project: the session's own cwd (workspaceId). Project label
+		// prefers the discovered sub-repo name; the workspace root itself (""
+		// never — the cwd is always a real path) shows its basename.
+		const workspaceId = useWorkspaceStore.getState().workspaceId ?? "";
+		const projectName = (cwd: string): string => {
+			const known = projects.find((p) => p.path === cwd);
+			if (known) return known.name;
+			// The workspace container itself can collide with a same-named
+			// sub-repo (…/pie vs …/pie/pie); label the root explicitly.
+			if (cwd === workspaceId) return i18n.t("agentList.workspaceRoot");
+			return cwd.split("/").filter(Boolean).pop() ?? cwd;
+		};
+		const byProject = new Map<string, SessionListItem[]>();
 		for (const s of filtered) {
-			const bucket = bucketOf(s.modified);
-			const list = byBucket.get(bucket) ?? [];
+			const key = s.workspaceId || workspaceId;
+			const list = byProject.get(key) ?? [];
 			list.push(s);
-			byBucket.set(bucket, list);
+			byProject.set(key, list);
 		}
-		for (const list of byBucket.values()) {
+		for (const list of byProject.values()) {
 			list.sort((a, b) => (a.modified < b.modified ? 1 : -1));
 		}
-		const order: DateBucket[] = ["today", "yesterday", "week", "month", "older"];
-		return order
-			.filter((b) => (byBucket.get(b)?.length ?? 0) > 0)
-			.map((bucket) => ({ bucket, items: byBucket.get(bucket)! }));
+		// Order: projects with the newest activity first.
+		return Array.from(byProject.entries())
+			.sort(([, a], [, b]) => (a[0]?.modified < b[0]?.modified ? 1 : -1))
+			.map(([key, items]) => ({ project: projectName(key), items }));
 	},
 }));
 

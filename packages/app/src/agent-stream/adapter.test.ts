@@ -53,7 +53,7 @@ describe("buildStreamItems", () => {
 					content: [
 						{ type: "thinking", thinking: "pondering" },
 						{ type: "text", text: "done" },
-						{ type: "tool_use", id: "call-9", name: "bash", input: { cmd: "ls" } },
+						{ type: "toolCall", id: "call-9", name: "bash", arguments: { cmd: "ls" } },
 					],
 				}),
 			],
@@ -89,8 +89,8 @@ describe("buildStreamItems", () => {
 					id: "a2",
 					role: "assistant",
 					content: [
-						{ type: "tool_use", id: "call-e", name: "bash", input: {} },
-						{ type: "tool_use", id: "call-x", name: "fs", input: {} },
+						{ type: "toolCall", id: "call-e", name: "bash", arguments: {} },
+						{ type: "toolCall", id: "call-x", name: "fs", arguments: {} },
 					],
 				}),
 			],

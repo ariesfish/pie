@@ -8,6 +8,7 @@ import { PanResponder } from "react-native";
 import { Brain, ChevronDown, Cpu } from "lucide-react-native";
 import type { ModelCatalogItem, ThinkingLevel } from "@pie/protocol";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { DEFAULT_CONTENT_MAX_WIDTH } from "@/styles/theme";
 import { useTranslation } from "react-i18next";
 import { ArrowBigUp, CornerDownLeft, Layers, X, Zap } from "lucide-react-native";
 import {
@@ -306,9 +307,21 @@ function AgentControlsRow({
 }
 
 const styles = StyleSheet.create((theme) => ({
-	root: { gap: theme.spacing[1] },
+	root: {
+		gap: theme.spacing[1],
+		// User feedback first flight: the floating composer had no seam against
+		// the transcript — give it the content measure plus a top hairline.
+		paddingHorizontal: theme.spacing[3],
+		paddingTop: theme.spacing[1],
+	 borderTopWidth: theme.borderWidth[1],
+		borderTopColor: theme.colors.border,
+		backgroundColor: theme.colors.background,
+		maxWidth: DEFAULT_CONTENT_MAX_WIDTH + theme.spacing[6],
+		alignSelf: "center",
+		width: "100%",
+	},
 	card: {
-		backgroundColor: theme.colors.surface0,
+		backgroundColor: theme.colors.surface1,
 		borderRadius: theme.borderRadius.lg,
 		borderWidth: theme.borderWidth[1],
 		borderColor: theme.colors.border,
@@ -326,7 +339,9 @@ const styles = StyleSheet.create((theme) => ({
 		color: theme.colors.foreground,
 		fontSize: theme.fontSize.content,
 	},
-	choices: { flexDirection: "column", gap: theme.spacing[1] },
+	// Streaming trio (stop/steer/followUp) sits inline where Send lives —
+	// first-flight audit caught them stacked vertically off the input's edge.
+	choices: { flexDirection: "row", gap: theme.spacing[1] },
 	stop: {
 		backgroundColor: theme.colors.statusDanger,
 		borderColor: theme.colors.statusDanger,
@@ -366,7 +381,7 @@ const styles = StyleSheet.create((theme) => ({
 		width: 36,
 		height: 3,
 		borderRadius: 2,
-		backgroundColor: "#3a3f4b",
+		backgroundColor: theme.colors.borderAccent,
 	},
 	controlsRow: {
 		flexDirection: "row",

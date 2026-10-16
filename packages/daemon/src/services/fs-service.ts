@@ -278,6 +278,7 @@ const IGNORED_NAMES = new Set([
 	"target",
 ]);
 
-function isIgnoredName(name: string): boolean {
+/** Shared with server-side project discovery (workspace.projects). */
+export function isIgnoredName(name: string): boolean {
 	return IGNORED_NAMES.has(name);
 }

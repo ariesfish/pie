@@ -42,6 +42,18 @@ export interface CommandMap {
 		args: { path: string };
 		result: { workspaceId: WorkspaceId; path: string; trusted: boolean | null; name: string };
 	};
+	/** Git sub-repos directly under a workspace (project candidates for
+	 *  session creation and session grouping). */
+	"workspace.projects": {
+		args: { workspaceId: WorkspaceId };
+		result: {
+			projects: Array<{
+				/** Absolute project path — also a valid session.create cwd. */
+				path: string;
+				name: string;
+			}>;
+		};
+	};
 
 	// --- workspace filesystem (P2b, read-only observation) ------------------------------
 	/** List a directory of an open workspace (one level, sorted). */
@@ -142,7 +154,9 @@ export interface CommandMap {
 	// --- sessions ----------------------------------------------------------------------
 	/** Sessions known for a workspace (Pi SessionManager.list). */
 	"session.list": {
-		args: { workspaceId: WorkspaceId };
+		/** recursive: include sessions whose project cwd lives under the
+		 *  workspace (sub-repos), not just at the workspace root. */
+		args: { workspaceId: WorkspaceId; recursive?: boolean };
 		result: { sessions: SessionListItem[] };
 	};
 	/** Create a new session in a workspace. */

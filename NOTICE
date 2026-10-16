@@ -225,3 +225,29 @@ Type per docs/paseo-ui-reuse.md: A = direct port, B = port with source swap,
 C = design/pattern reference only.
 
 [getpaseo/paseo]: https://github.com/getpaseo/paseo
+
+## W5 (iteration 1, dev-mode UI pass): 会话过程补全 + workspace/project IA + 调查项
+- 会话过程补全(用户反馈 + vision 三轮审计驱动):
+  - protocol `session.summary.updated`:title/firstMessage/messageCount 落盘后
+    差分广播(daemon forwardBySession 在 turn.ended/renamed 后对账,签名去重)
+  - 工具调用卡:adapter block 形状对齐协议(toolCall+arguments,原 tool_use+input
+    全错位);live toolArgs delta 走 running 卡(原裸 JSON 混入散文)
+  - LeftSidebar/sessions 每渲染直算分组(useMemo 身份键在 web bundle 上不重算,
+    疑双模块 store 实例 —— 见调查项);空会话(未落盘)也入列(daemon recursive
+    合并 registry-held 前缀匹配)
+  - tab 空会话标题 i18n(不再显示 session id)
+- IA(workspace 内子项目聚合,用户拍板):
+  - session.list +recursive(listAll 按 cwd 前缀聚合,session 归属 cwd)
+  - workspace.projects:直接子 git repo 发现(isIgnoredName 共享)
+  - creator 选 project(session.create cwd=project);左栏按 project 分组;
+    Workspace root 与同名子 repo 分名(i18n workspaceRoot)
+- agentDir 会话落盘修复:SessionManager create/continue/branch 一律
+  join(agentDir, "sessions")(隔离 agentDir 此前直写 ~/.pi/agent/sessions);
+  listSessions 同样对齐(测试实证)
+- 视觉(浅色):user 气泡 accent/白字;paseo 折角;正文 contentMaxWidth 真正
+  应用(strategy-web 原 null);composer 顶边 + grip 弱化;creator 垂直居中;
+  流式三按钮横排;brand π 裁切防御;10px 字升 11px
+- **调查项(w5 metro probe)**:web bundle 中 identity-keyed useMemo 不重算 +
+  部分组件 select() 只执行一次(疑 @pie/* 或 store 模块双实例)。同 metro.config
+  hub 解析调查一并立项;临时对策:派生值每渲染直算(paseo selector 同构)
+

@@ -8,6 +8,7 @@
  */
 
 import type { EntryId, RequestId, SessionId } from "./ids.js";
+import type { SessionListItem } from "./commands.js";
 import type {
 	ContextUsage,
 	ModelRef,
@@ -156,6 +157,13 @@ export interface SessionRenamedData {
 	sessionId: SessionId;
 	name?: string;
 }
+/** A session-list row changed unprompted (session file first landed, first
+ *  message persisted, message count / modified time advanced). Lets list-side
+ *  UI stay live without re-issuing session.list. */
+export interface SessionSummaryUpdatedData {
+	sessionId: SessionId;
+	item: SessionListItem;
+}
 export interface ThinkingChangedData {
 	sessionId: SessionId;
 	level: ThinkingLevel;
@@ -262,6 +270,7 @@ export interface EventPayloadMap {
 	"session.leaf.changed": LeafChangedData;
 	"session.snapshot": { snapshot: import("./tree.js").SessionSnapshot };
 	"session.renamed": SessionRenamedData;
+	"session.summary.updated": SessionSummaryUpdatedData;
 	"session.thinking.changed": ThinkingChangedData;
 	"session.model.changed": ModelChangedData;
 	"session.state.changed": StateChangedData;

@@ -272,8 +272,10 @@ function PaneTabsRow({
 			case "session": {
 				const { sessionId } = tab.target;
 				const session = sessions.find((s) => s.sessionId === sessionId);
+				// A just-created session has no list row yet (first message not
+				// persisted): show a spoken title, not the raw session id.
 				return {
-					title: session ? sessionTitle(session) : `${sessionId.slice(0, 8)}…`,
+					title: session ? sessionTitle(session) : t("agentList.newSession"),
 					icon: MessageSquare,
 					closable: true,
 				};

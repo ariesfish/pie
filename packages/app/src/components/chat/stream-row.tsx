@@ -142,15 +142,16 @@ function ToolCallRow({ item }: { item: StreamItem & { kind: "tool_call" } }) {
 const styles = StyleSheet.create((theme) => ({
 	userRow: {
 		alignSelf: "flex-end",
-		backgroundColor: theme.colors.surface1,
+		// Accent bubble + white text (paseo message.tsx baseline): on light the
+		// old surface1/borderAccent bubble was invisible against the page.
+		backgroundColor: theme.colors.accent,
 		borderRadius: theme.borderRadius.xl,
-		borderWidth: theme.borderWidth[1],
-		borderColor: theme.colors.borderAccent,
+		borderTopRightRadius: theme.borderRadius.sm,
 		paddingVertical: theme.spacing[2],
 		paddingHorizontal: theme.spacing[3],
 		maxWidth: "84%",
 	},
-	userText: { color: theme.colors.foreground, fontSize: theme.fontSize.content, lineHeight: 20 },
+	userText: { color: "#ffffff", fontSize: theme.fontSize.content, lineHeight: 20 },
 	assistantWrap: { alignSelf: "stretch", maxWidth: "100%" },
 	thoughtWrap: { alignSelf: "stretch", gap: theme.spacing[1] },
 	thoughtHeader: {

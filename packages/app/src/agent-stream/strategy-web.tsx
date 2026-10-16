@@ -1190,9 +1190,15 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
       paddingBottom: 16,
       paddingLeft: isMobileBreakpoint ? 8 : 16,
       paddingRight: isMobileBreakpoint ? 8 : 16,
+      // User feedback first flight: prose ran rail-to-rail on wide panes.
+      // Apply the content measure the height estimator already assumed.
+      maxWidth: isMobileBreakpoint ? undefined : contentMaxWidth,
+      marginLeft: "auto",
+      marginRight: "auto",
+      width: "100%",
       boxSizing: "border-box",
     };
-  }, [isMobileBreakpoint]);
+  }, [contentMaxWidth, isMobileBreakpoint]);
   const scrollContainerStyle = useMemo((): CSSProperties => {
     const overlayScrollbarEnabled = scrollEnabled && !isMobileBreakpoint;
     return {

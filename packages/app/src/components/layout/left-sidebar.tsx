@@ -46,7 +46,15 @@ export function LeftSidebar() {
 	const loading = useSessionListStore((s) => s.loading);
 	const activeSessionId = useConnectionStore((s) => s.sessionId);
 
-	const groups = useMemo(() => select(), [select]);
+	// Depend on the sessions array identity: session.summary.updated upserts
+	// swap it (left the sidebar pinned to a stale list otherwise).
+	// Derive on every render (paseo does the same through its selectors): an
+	// identity-keyed useMemo never recomputed under the web bundle — re-renders
+	// carried fresh session counts while the memo stayed pinned to the first
+	// empty run. Suspected duplicate-module store instance (NOTICE: W5 metro
+	// probe); deriving per render is correct either way.
+	const groups = select();
+
 
 	useEffect(() => {
 		if (workspaceId) {
@@ -125,9 +133,9 @@ export function LeftSidebar() {
 						) : null}
 					</View>
 				) : null}
-				{groups.map(({ bucket, items }) => (
-					<View key={bucket}>
-						<Text style={styles.bucketLabel}>{t(`agentList.buckets.${bucket}`)}</Text>
+				{groups.map(({ project, items }) => (
+					<View key={project}>
+						<Text style={styles.bucketLabel}>{project}</Text>
 						{items.map((session) => {
 							const on = activeSessionId === session.sessionId;
 							return (
@@ -272,6 +280,10 @@ const styles = StyleSheet.create((theme) => ({
 		color: theme.colors.foreground,
 		fontSize: theme.fontSize.lg,
 		fontWeight: theme.fontWeight.bold,
+		// π's left bearing clips at the pane edge on web; give it air on both
+		// sides (vision audit first flight).
+		paddingLeft: 2,
+		paddingRight: 2,
 	},
 	searchRow: {
 		flexDirection: "row",
@@ -303,7 +315,7 @@ const styles = StyleSheet.create((theme) => ({
 	projectGroup: { gap: 2, paddingVertical: 2 },
 	projectLabel: {
 		color: theme.colors.foregroundExtraMuted,
-		fontSize: 10,
+		fontSize: 11,
 		fontWeight: "600",
 		paddingHorizontal: theme.spacing[2],
 		paddingVertical: 2,
@@ -314,7 +326,7 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	bucketLabel: {
 		color: theme.colors.foregroundExtraMuted,
-		fontSize: 10,
+		fontSize: 11,
 		fontWeight: "600",
 		textTransform: "uppercase",
 		letterSpacing: 0.5,
@@ -366,7 +378,7 @@ const styles = StyleSheet.create((theme) => ({
 		paddingHorizontal: theme.spacing[2],
 		paddingVertical: 2,
 	},
-	workspaceText: { color: theme.colors.foregroundExtraMuted, fontSize: 10, flexShrink: 1 },
+	workspaceText: { color: theme.colors.foregroundExtraMuted, fontSize: 11, flexShrink: 1 },
 	footerButtonText: {
 		color: theme.colors.foregroundMuted,
 		fontSize: theme.fontSize.sm,

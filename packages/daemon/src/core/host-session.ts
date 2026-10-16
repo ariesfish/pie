@@ -16,6 +16,7 @@ import {
 	SettingsManager,
 } from "@earendil-works/pi-coding-agent";
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type {
 	ContextUsage,
 	EventData,
@@ -140,24 +141,27 @@ export class HostSession {
 	static async open(opts: HostSessionOptions): Promise<HostSession> {
 		let cwd = opts.cwd;
 		let sessionManager: SessionManager;
+		// Sessions persist under the agent dir (an isolated agentDir —
+		// dogfood copies, tests — must own its sessions, not ~/.pi/agent).
+		const agentDir = opts.agentDir ?? getDefaultAgentDir();
+		const agentSessionsDir = opts.sessionDir ?? join(agentDir, "sessions");
 		if (opts.mode === "open" && opts.sessionPath) {
 			sessionManager = SessionManager.open(opts.sessionPath, opts.sessionDir, opts.cwd);
 			cwd = opts.cwd ?? sessionManager.getCwd() ?? process.cwd();
 		} else if (opts.mode === "continue") {
 			cwd = cwd ?? process.cwd();
-			sessionManager = SessionManager.continueRecent(cwd, opts.sessionDir);
+			sessionManager = SessionManager.continueRecent(cwd, agentSessionsDir);
 		} else if (opts.mode === "branch" && opts.parentSessionPath) {
 			// runtime.fork parity for "fork before the first entry": a fresh empty
 			// session whose header records the source as parentSession.
 			cwd = cwd ?? process.cwd();
-			sessionManager = SessionManager.create(cwd, opts.sessionDir);
+			sessionManager = SessionManager.create(cwd, agentSessionsDir);
 			sessionManager.newSession({ parentSession: opts.parentSessionPath });
 		} else {
 			cwd = cwd ?? process.cwd();
-			sessionManager = SessionManager.create(cwd, opts.sessionDir);
+			sessionManager = SessionManager.create(cwd, agentSessionsDir);
 		}
 
-		const agentDir = opts.agentDir ?? getDefaultAgentDir();
 		const settingsManager = SettingsManager.create(cwd, agentDir);
 		// A workspace the user explicitly opened through the daemon is trusted:
 		// project-level resources (.pi/extensions, .pi/skills, …) must load.

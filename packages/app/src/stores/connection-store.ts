@@ -10,6 +10,7 @@ import { createWsTransportFactory } from "@pie/client/ws";
 import type { ContextUsage, SessionEntry } from "@pie/protocol";
 import type { ModelCatalogItem, ModelRef, ThinkingLevel } from "@pie/protocol";
 
+import { useSessionListStore } from "./session-list-store";
 import { useWorkspaceStore } from "./workspace-store";
 
 export type ConnectionStatus = "idle" | "connecting" | "connected" | "failed" | "disconnected";
@@ -66,7 +67,16 @@ interface ConnectionState {
 	} | null;
 
 	connect: (wsUrl: string, token: string) => Promise<void>;
-	startSession: (workspace: string, opts?: { model?: ModelRef; thinkingLevel?: ThinkingLevel }) => Promise<void>;
+	startSession: (
+		workspace: string,
+		opts?: {
+			model?: ModelRef;
+			thinkingLevel?: ThinkingLevel;
+			/** Session cwd: a project sub-repo under the workspace (sessions
+			 *  belong to projects; the workspace stays the pane context). */
+			projectPath?: string;
+		},
+	) => Promise<void>;
 	refreshModels: () => Promise<void>;
 	setPendingModel: (model: ModelRef | null) => void;
 	setPendingThinking: (level: ThinkingLevel | null) => void;
@@ -136,7 +146,8 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 			const preset = opts ?? {};
 			const model = preset.model ?? get().pendingModel ?? undefined;
 			const thinkingLevel = preset.thinkingLevel ?? get().pendingThinking ?? undefined;
-			const created = await conn.request("session.create", { workspaceId: workspace, ...(model ? { model } : {}), ...(thinkingLevel ? { thinkingLevel } : {}) });
+			const sessionCwd = preset.projectPath ?? workspace;
+			const created = await conn.request("session.create", { workspaceId: sessionCwd, ...(model ? { model } : {}), ...(thinkingLevel ? { thinkingLevel } : {}) });
 			set({ sessionId: created.sessionId });
 			void get().applySessionPreset(created.sessionId);
 			await conn.request("session.attach", { sessionId: created.sessionId });
@@ -273,6 +284,11 @@ export function applyStoreEvent(
 		}));
 	};
 	switch (event.ev) {
+		case "session.summary.updated":
+			// Unprompted list-row update (session file landed / row advanced):
+			// upsert in place so sidebar + tab titles shed the placeholder.
+			useSessionListStore.getState().upsert(event.data.item);
+			break;
 		case "session.snapshot":
 			tree.applySnapshot(event.data.snapshot);
 			useConnectionStore.setState((s) => ({

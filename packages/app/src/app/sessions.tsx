@@ -1,7 +1,7 @@
 // Ported from getpaseo/paseo (Apache-2.0) — packages/app/src/screens/sessions-screen.tsx
 // (Pie subset: menu header + search row + agent list. Host filter, import
 // session and load-more pagination are not ported.)
-import { useMemo, useEffect } from "react";
+import { useEffect } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { ChevronLeft, Search, X } from "lucide-react-native";
@@ -30,7 +30,9 @@ export default function SessionsScreen() {
 	const select = useSessionListStore((s) => s.select);
 	const loading = useSessionListStore((s) => s.loading);
 
-	const groups = useMemo(() => select(), [select]);
+	// Derive per render: identity-keyed memo pinned stale on web (see
+	// left-sidebar NOTE / NOTICE W5 metro probe).
+	const groups = select();
 
 	useEffect(() => {
 		if (workspaceId) void refresh();
@@ -85,9 +87,9 @@ export default function SessionsScreen() {
 						) : null}
 					</View>
 				) : null}
-				{groups.map(({ bucket, items }) => (
-					<View key={bucket}>
-						<Text style={styles.bucketLabel}>{t(`agentList.buckets.${bucket}`)}</Text>
+				{groups.map(({ project, items }) => (
+					<View key={project}>
+						<Text style={styles.bucketLabel}>{project}</Text>
 						{items.map((session) => (
 							<Pressable
 								key={session.sessionId}

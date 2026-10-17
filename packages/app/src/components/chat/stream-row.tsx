@@ -3,8 +3,8 @@
 // foundation's mechanics (turn grouping, anchor transport, virtualization
 // identity) need one row per item, so blocks are already lifted by the
 // adapter and each kind renders its own row here.
-import { useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Animated, Easing, Pressable, Text, View } from "react-native";
 import {
 	ChevronRight,
 	FileText,
@@ -60,28 +60,54 @@ function UserRow({ text }: { text: string }) {
 	);
 }
 
+/** Small chevron that eases between closed (→) and open (↓) — one smooth
+ *  rotation instead of the hard 90° snap. */
+function AnimatedChevron({ open, color }: { open: boolean; color: string }) {
+	const spin = useRef(new Animated.Value(open ? 1 : 0)).current;
+	useEffect(() => {
+		Animated.timing(spin, {
+			toValue: open ? 1 : 0,
+			duration: 150,
+			easing: Easing.out(Easing.quad),
+			useNativeDriver: true,
+		}).start();
+	}, [open, spin]);
+	return (
+		<Animated.View
+			style={{
+				transform: [
+					{
+						rotate: spin.interpolate({
+							inputRange: [0, 1],
+							outputRange: ["0deg", "90deg"],
+						}),
+					},
+				],
+			}}
+		>
+			<ChevronRight size={12} color={color} strokeWidth={1.5} />
+		</Animated.View>
+	);
+}
+
 function ThoughtRow({ text, loading }: { text: string; loading: boolean }) {
 	const { t } = useTranslation();
 	const { theme } = useUnistyles();
 	const [open, setOpen] = useState(false);
 	return (
-		<View style={styles.thoughtWrap}>
-			<Pressable style={styles.thoughtHeader} onPress={() => setOpen((v) => !v)} hitSlop={6}>
+		<View style={styles.processWrap}>
+			<Pressable style={styles.processHeader} onPress={() => setOpen((v) => !v)} hitSlop={6}>
 				{loading ? (
-					<ActivityIndicator size="small" color={theme.colors.foregroundExtraMuted} />
+					<ActivityIndicator size={12} color={theme.colors.foregroundExtraMuted} />
 				) : (
-					<ChevronRight
-						size={12}
-						color={theme.colors.foregroundExtraMuted}
-						strokeWidth={1.5}
-						style={open ? styles.chevronOpen : styles.chevronClosed}
-					/>
+					<AnimatedChevron open={open} color={theme.colors.foregroundExtraMuted} />
 				)}
 				<Text style={styles.thoughtLabel} numberOfLines={1}>
 					{loading ? t("chat.thinking") : t("chat.thought")}
 				</Text>
 			</Pressable>
-			{open && !loading ? (
+			{/* While streaming, expanding shows the partial thought live. */}
+			{open && text ? (
 				<Text style={styles.thoughtText} selectable>
 					{text}
 				</Text>
@@ -116,12 +142,14 @@ function toolArgSnippet(args: unknown): string {
 }
 
 function ToolCallRow({ item }: { item: StreamItem & { kind: "tool_call" } }) {
+	const { t } = useTranslation();
 	const { theme } = useUnistyles();
 	const [open, setOpen] = useState(false);
 	const data = item.payload.data;
 	const toolName = String(data?.toolName ?? data?.name ?? "tool");
 	const status = data?.status ?? "running";
-	const failed = status === "failed";
+	const running = status === "running" || status === "executing";
+	const failed = status === "failed" || status === "canceled";
 	const Icon = toolIcon(toolName);
 	const snippet = toolArgSnippet(data?.arguments);
 	const argText = useMemo(() => {
@@ -131,10 +159,20 @@ function ToolCallRow({ item }: { item: StreamItem & { kind: "tool_call" } }) {
 			return String(data?.arguments ?? "");
 		}
 	}, [data?.arguments]);
+	const resultText =
+		data?.result != null
+			? typeof data.result === "string"
+				? data.result
+				: JSON.stringify(data.result, null, 2)
+			: null;
 	return (
-		<View style={styles.toolWrap}>
-			<Pressable style={styles.toolHeader} onPress={() => setOpen((v) => !v)} hitSlop={6}>
-				{failed ? (
+		<View style={styles.processWrap}>
+			<Pressable style={styles.processHeader} onPress={() => setOpen((v) => !v)} hitSlop={6}>
+				{/* Status-aware glyph: spinner while the call runs, orange warning
+				 *  when it failed/was canceled, the tool's own icon when done. */}
+				{running ? (
+					<ActivityIndicator size={12} color={theme.colors.foregroundMuted} />
+				) : failed ? (
 					<TriangleAlert size={13} color={theme.colors.statusWarning} strokeWidth={1.75} />
 				) : (
 					<Icon size={12} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
@@ -147,27 +185,33 @@ function ToolCallRow({ item }: { item: StreamItem & { kind: "tool_call" } }) {
 						{snippet}
 					</Text>
 				) : null}
-				<ChevronRight
-					size={12}
-					color={theme.colors.foregroundExtraMuted}
-					strokeWidth={1.5}
-					style={open ? styles.chevronOpen : styles.chevronClosed}
-				/>
+				<AnimatedChevron open={open} color={theme.colors.foregroundExtraMuted} />
 			</Pressable>
 			{open ? (
 				<View style={styles.toolBody}>
-					{data?.arguments != null ? <Text style={styles.toolArgs}>{argText}</Text> : null}
-					{data?.result != null ? (
-						<Text style={styles.toolResult} selectable>
-							{typeof data.result === "string"
-								? data.result
-								: JSON.stringify(data.result, null, 2)}
-						</Text>
+					{data?.arguments != null ? (
+						<View style={styles.toolSection}>
+							<Text style={styles.toolSectionLabel}>{t("chat.toolArguments")}</Text>
+							<Text style={styles.toolArgs} selectable>
+								{argText}
+							</Text>
+						</View>
+					) : null}
+					{resultText ? (
+						<View style={styles.toolSection}>
+							<Text style={styles.toolSectionLabel}>{t("chat.toolResult")}</Text>
+							<Text style={styles.toolResult} selectable>
+								{resultText}
+							</Text>
+						</View>
 					) : null}
 					{data?.error != null ? (
-						<Text style={styles.toolError} selectable>
-							{String(data.error)}
-						</Text>
+						<View style={styles.toolErrorSection}>
+							<Text style={styles.toolSectionLabel}>{t("chat.toolError")}</Text>
+							<Text style={styles.toolError} selectable>
+								{String(data.error)}
+							</Text>
+						</View>
 					) : null}
 				</View>
 			) : null}
@@ -193,12 +237,23 @@ const styles = StyleSheet.create((theme) => ({
 		lineHeight: 20,
 	},
 	assistantWrap: { alignSelf: "stretch", maxWidth: "100%" },
-	thoughtWrap: { alignSelf: "stretch", gap: theme.spacing[1] },
-	thoughtHeader: {
+	// Quiet rail shared by thought + tool rows: process chrome reads as one
+	// indented, left-railed block family — distinct from prose and user
+	// bubbles without any card chrome (paseo.png grammar kept, rail added).
+	processWrap: {
+		alignSelf: "stretch",
+		gap: theme.spacing[1],
+		borderLeftWidth: 2,
+		borderLeftColor: theme.colors.border,
+		paddingLeft: theme.spacing[2],
+		paddingVertical: theme.spacing[0.5],
+	},
+	processHeader: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: theme.spacing[2],
+		gap: theme.spacing[1.5],
 		paddingVertical: 2,
+		minHeight: 24,
 	},
 	thoughtLabel: {
 		color: theme.colors.foregroundExtraMuted,
@@ -208,22 +263,11 @@ const styles = StyleSheet.create((theme) => ({
 		color: theme.colors.foregroundMuted,
 		fontSize: theme.fontSize.sm,
 		lineHeight: 18,
+		// Aligns under the header label (rail + chevron + gap ≈ 26px).
 		paddingLeft: theme.spacing[4],
 	},
 	noteWrap: { alignSelf: "center", paddingVertical: theme.spacing[1] },
 	noteText: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
-	toolWrap: {
-		alignSelf: "stretch",
-		// paseo.png grammar: no card chrome on tool rows — they read as grey
-		// one-liners at prose indent; the body below only appears expanded.
-	},
-	toolHeader: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: theme.spacing[1.5],
-		paddingVertical: 3,
-		minHeight: 22,
-	},
 	toolName: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm },
 	toolSnippet: {
 		flex: 1,
@@ -240,6 +284,19 @@ const styles = StyleSheet.create((theme) => ({
 		borderColor: theme.colors.border,
 		marginBottom: theme.spacing[1],
 	},
+	toolSection: { gap: theme.spacing[0.5] },
+	toolSectionLabel: {
+		color: theme.colors.foregroundExtraMuted,
+		fontSize: theme.fontSize.sm,
+		fontWeight: theme.fontWeight.medium,
+	},
+	toolErrorSection: {
+		gap: theme.spacing[0.5],
+		backgroundColor: theme.colors.statusDangerTint,
+		borderRadius: theme.borderRadius.sm,
+		paddingHorizontal: theme.spacing[2],
+		paddingVertical: theme.spacing[1.5],
+	},
 	toolArgs: {
 		color: theme.colors.foregroundMuted,
 		fontFamily: theme.fontFamily.mono,
@@ -255,6 +312,4 @@ const styles = StyleSheet.create((theme) => ({
 		fontFamily: theme.fontFamily.mono,
 		fontSize: theme.fontSize.sm,
 	},
-	chevronOpen: { transform: [{ rotate: "90deg" }] },
-	chevronClosed: { transform: [{ rotate: "0deg" }] },
 }));

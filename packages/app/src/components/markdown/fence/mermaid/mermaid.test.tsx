@@ -15,9 +15,11 @@ const { theme } = vi.hoisted(() => ({
     fontSize: { code: 12 },
     fontFamily: { mono: "monospace" },
     borderRadius: { md: 6 },
+    borderWidth: { 1: 1 },
     colors: {
       surface1: "#111",
       foreground: "#eee",
+      border: "#333",
     },
   },
 }));

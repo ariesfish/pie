@@ -48,7 +48,15 @@ export function MermaidFence({ code, phase }: MarkdownFenceRendererProps) {
 	if (svg) {
 		return (
 			<View style={styles.svgWrap}>
-				<MermaidSvg svg={svg} />
+				{/* Tall diagrams cap at a fixed height and scroll instead of
+				 *  pushing the rest of the transcript away. */}
+				<ScrollView
+					style={styles.svgScroll}
+					contentContainerStyle={styles.svgScrollContent}
+					showsVerticalScrollIndicator={false}
+				>
+					<MermaidSvg svg={svg} />
+				</ScrollView>
 			</View>
 		);
 	}
@@ -91,14 +99,25 @@ const styles = StyleSheet.create((theme) => ({
 	svgWrap: {
 		backgroundColor: theme.colors.surface1,
 		borderRadius: theme.borderRadius.md,
-		padding: theme.spacing[3],
+		borderWidth: theme.borderWidth[1],
+		borderColor: theme.colors.border,
 		overflow: "hidden" as const,
 		marginTop: theme.spacing[2],
 		marginBottom: theme.spacing[3],
 	},
+	svgScroll: {
+		// Cap the diagram's footprint in the transcript; anything taller
+		// scrolls inside the card. Small diagrams stay uncropped.
+		maxHeight: 480,
+	},
+	svgScrollContent: {
+		padding: theme.spacing[3],
+	},
 	asciiWrap: {
 		backgroundColor: theme.colors.surface1,
 		borderRadius: theme.borderRadius.md,
+		borderWidth: theme.borderWidth[1],
+		borderColor: theme.colors.border,
 		marginTop: theme.spacing[2],
 		marginBottom: theme.spacing[3],
 	},

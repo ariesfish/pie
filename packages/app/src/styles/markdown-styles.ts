@@ -181,7 +181,8 @@ export function createMarkdownStyles(theme: Theme) {
       paddingHorizontal: theme.spacing[1],
       paddingVertical: 2,
       borderRadius: theme.borderRadius.md,
-      borderWidth: 0,
+      borderWidth: theme.borderWidth[1],
+      borderColor: theme.colors.border,
       fontFamily: theme.fontFamily.mono,
       fontSize: theme.fontSize.code,
     },
@@ -194,7 +195,7 @@ export function createMarkdownStyles(theme: Theme) {
       borderRadius: theme.borderRadius.md,
       fontFamily: theme.fontFamily.mono,
       fontSize: theme.fontSize.code,
-      marginVertical: theme.spacing[2],
+      marginVertical: theme.spacing[3],
     },
 
     fence: {
@@ -222,6 +223,8 @@ export function createMarkdownStyles(theme: Theme) {
       borderWidth: 1,
       borderColor: theme.colors.border,
       borderRadius: theme.borderRadius.md,
+      // Clip the header row's surface tint to the rounded corners.
+      overflow: "hidden" as const,
       marginVertical: theme.spacing[3],
     },
 
@@ -317,7 +320,7 @@ export function createMarkdownStyles(theme: Theme) {
       backgroundColor: theme.colors.surface1,
       color: `${theme.colors.foreground}cc`,
       borderLeftWidth: 4,
-      borderLeftColor: theme.colors.surface2,
+      borderLeftColor: theme.colors.surface3,
       paddingHorizontal: theme.spacing[4],
       paddingTop: theme.spacing[3],
       paddingBottom: 0,
@@ -334,7 +337,7 @@ export function createMarkdownStyles(theme: Theme) {
     hr: {
       backgroundColor: theme.colors.border,
       height: 1,
-      marginVertical: 10,
+      marginVertical: theme.spacing[3],
     },
 
     // =========================================================================

@@ -159,6 +159,8 @@ Closed 2026-10-17: renameSession(trim/清除语义)+ 失败错误态 + session.r
 
 - T-003
 
+Closed 2026-10-17: 菜单入口 + 重命名面板 + 清除 + 内联错误横幅落地;浏览器取证 12/12(含写锁冲突横幅与 zh-CN 文案),walkthrough 回归与基线一致(commit 见 git log)。
+
 ## [T-005] walkthrough 验收扩展 + 跨端/TUI 取证 (ready-for-agent)
 
 - **Parent**: T-001

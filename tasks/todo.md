@@ -34,12 +34,12 @@ Per-task checklists and status. Heading markers are triage roles (see docs/agent
 - [x] npm run check 全绿
 
 ## T-004 (ready-for-agent)
-- [ ] 菜单入口 + 行内即时更新
-- [ ] 面板预填旧名
-- [ ] 清除回退首条消息摘要
-- [ ] 写锁冲突提示
-- [ ] 中英文案
-- [ ] npm run check 全绿
+- [x] 菜单入口 + 行内即时更新
+- [x] 面板预填旧名
+- [x] 清除回退首条消息摘要
+- [x] 写锁冲突提示
+- [x] 中英文案
+- [x] npm run check 全绿
 
 ## T-005 (ready-for-agent)
 - [ ] walkthrough 断言全绿 + 截图

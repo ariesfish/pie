@@ -42,8 +42,8 @@ Per-task checklists and status. Heading markers are triage roles (see docs/agent
 - [x] npm run check 全绿
 
 ## T-005 (ready-for-agent)
-- [ ] walkthrough 断言全绿 + 截图
-- [ ] 手机与桌面名字一致
-- [ ] pi TUI 一致性
-- [ ] 别端改名实时更新
+- [x] walkthrough 断言全绿 + 截图
+- [x] 手机与桌面名字一致
+- [ ] pi TUI 一致性(skip-test:pi CLI 无非交互会话列表;文件级保证已由 T-002 覆盖,人工验收)
+- [x] 别端改名实时更新
 - [ ] judgment —— 入口可发现性(产品确认,不阻塞)

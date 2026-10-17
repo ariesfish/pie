@@ -182,3 +182,5 @@ Closed 2026-10-17: 菜单入口 + 重命名面板 + 清除 + 内联错误横幅�
 ## Blocked by
 
 - T-004
+
+Closed 2026-10-17: walkthrough 扩展 R1-R11 全绿(分叉继承/标签完整性/UI 改名清除/别端实时更新/手机同名字)+ 紧凑壳层 BottomSheetModalProvider 修复(顺带修好 09/10)。两项保留未勾:pi TUI 一致性(CLI 无非交互列表能力,skip-test,文件级保证已由 T-002 覆盖)与入口可发现性(产品 judgment)。08 rail resize 为既有 headless 问题,基线对比记录在案。

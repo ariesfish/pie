@@ -30,3 +30,6 @@ coverage/
 
 # UI walkthrough screenshots (npm run ui-walkthrough)
 /ui-walkthrough-shots/
+
+# Verification evidence (.pi/skills/verify-pie)
+/.audit/

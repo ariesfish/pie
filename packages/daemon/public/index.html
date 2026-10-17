@@ -270,7 +270,7 @@ function connect(url) {
 	$("connState").textContent = "connecting…";
 	ws = new WebSocket(url);
 	ws.onopen = () => {
-		const token = new URLSearchParams(location.search).get("token") || $("tokenInput")?.value || "";
+		const token = new URLSearchParams(location.search).get("token") || "";
 		const payload = {
 			hello: {
 				v: 1,

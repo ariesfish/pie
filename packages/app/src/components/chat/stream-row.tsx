@@ -3,10 +3,10 @@
 // foundation's mechanics (turn grouping, anchor transport, virtualization
 // identity) need one row per item, so blocks are already lifted by the
 // adapter and each kind renders its own row here.
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Easing, Pressable, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import {
-	ChevronRight,
+	Clock,
 	FileText,
 	MessageCircleQuestion,
 	Search as SearchIcon,
@@ -60,36 +60,6 @@ function UserRow({ text }: { text: string }) {
 	);
 }
 
-/** Small chevron that eases between closed (→) and open (↓) — one smooth
- *  rotation instead of the hard 90° snap. */
-function AnimatedChevron({ open, color }: { open: boolean; color: string }) {
-	const spin = useRef(new Animated.Value(open ? 1 : 0)).current;
-	useEffect(() => {
-		Animated.timing(spin, {
-			toValue: open ? 1 : 0,
-			duration: 150,
-			easing: Easing.out(Easing.quad),
-			useNativeDriver: true,
-		}).start();
-	}, [open, spin]);
-	return (
-		<Animated.View
-			style={{
-				transform: [
-					{
-						rotate: spin.interpolate({
-							inputRange: [0, 1],
-							outputRange: ["0deg", "90deg"],
-						}),
-					},
-				],
-			}}
-		>
-			<ChevronRight size={12} color={color} strokeWidth={1.5} />
-		</Animated.View>
-	);
-}
-
 function ThoughtRow({ text, loading }: { text: string; loading: boolean }) {
 	const { t } = useTranslation();
 	const { theme } = useUnistyles();
@@ -100,7 +70,7 @@ function ThoughtRow({ text, loading }: { text: string; loading: boolean }) {
 				{loading ? (
 					<ActivityIndicator size={12} color={theme.colors.foregroundExtraMuted} />
 				) : (
-					<AnimatedChevron open={open} color={theme.colors.foregroundExtraMuted} />
+					<Clock size={12} color={theme.colors.foregroundExtraMuted} />
 				)}
 				<Text style={styles.thoughtLabel} numberOfLines={1}>
 					{loading ? t("chat.thinking") : t("chat.thought")}
@@ -185,7 +155,6 @@ function ToolCallRow({ item }: { item: StreamItem & { kind: "tool_call" } }) {
 						{snippet}
 					</Text>
 				) : null}
-				<AnimatedChevron open={open} color={theme.colors.foregroundExtraMuted} />
 			</Pressable>
 			{open ? (
 				<View style={styles.toolBody}>
@@ -299,17 +268,14 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	toolArgs: {
 		color: theme.colors.foregroundMuted,
-		fontFamily: theme.fontFamily.mono,
 		fontSize: theme.fontSize.sm,
 	},
 	toolResult: {
 		color: theme.colors.foreground,
-		fontFamily: theme.fontFamily.mono,
 		fontSize: theme.fontSize.sm,
 	},
 	toolError: {
 		color: theme.colors.statusDanger,
-		fontFamily: theme.fontFamily.mono,
 		fontSize: theme.fontSize.sm,
 	},
 }));

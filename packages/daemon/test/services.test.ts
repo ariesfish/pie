@@ -32,6 +32,10 @@ beforeAll(async () => {
 	await exec("git", ["init", "-q"], { cwd: root });
 	await exec("git", ["config", "user.email", "t@t"], { cwd: root });
 	await exec("git", ["config", "user.name", "t"], { cwd: root });
+	// Hostile diff config on purpose: a user-global diff.mnemonicPrefix renames
+	// the a/ b/ markers the parser splits on; the daemon must pin prefixes and
+	// parse regardless (regression: both gitService.diff cases parsed to []).
+	await exec("git", ["config", "diff.mnemonicPrefix", "true"], { cwd: root });
 	await mkdir(join(root, "node_modules"), { recursive: true });
 	await mkdir(join(root, "src"), { recursive: true });
 	await writeFile(join(root, "src", "committed.ts"), "export const a = 1;\n");

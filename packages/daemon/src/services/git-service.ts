@@ -139,7 +139,10 @@ export class GitService {
 
 		const diffTargets = env.filter((e) => !e.untracked);
 		if (diffTargets.length > 0) {
-			const args = ["diff", "--no-color", "--no-ext-diff"];
+			// Prefixes are pinned below: parseUnifiedDiff splits on the exact `a/`/`b/`
+		// markers, which a user-global diff.mnemonicPrefix (i/ w/) or diff.noprefix
+		// would silently rename — every diff would parse to [].
+		const args = ["diff", "--no-color", "--no-ext-diff", "--src-prefix=a/", "--dst-prefix=b/"];
 			if (opts.staged) args.push("--cached", "HEAD");
 			if (opts.path) args.push("--", opts.path);
 			else args.push("--");
@@ -155,6 +158,8 @@ export class GitService {
 					"diff",
 					"--no-color",
 					"--no-ext-diff",
+					"--src-prefix=a/",
+					"--dst-prefix=b/",
 					"--no-index",
 					"--",
 					"/dev/null",

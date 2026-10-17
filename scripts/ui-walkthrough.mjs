@@ -130,6 +130,7 @@ async function main() {
 	const appUrl = `http://127.0.0.1:${STATIC_PORT}/?url=${encodeURIComponent(`ws://127.0.0.1:${DAEMON_PORT}`)}&token=${TOKEN}&workspace=${encodeURIComponent(workspace)}`;
 	try {
 		await runAssertions(appUrl, workspace);
+		await runRenameEvidence(appUrl, workspace, agentDir);
 	} catch (error) {
 		results.push(`CRASH ${String(error?.stack || error)}`);
 		process.exitCode = 1;
@@ -471,6 +472,198 @@ async function runAssertions(appUrl, workspacePath) {
 
 async function shot(page, name) {
 	await page.screenshot({ path: join(SHOTS, `${name}.png`) });
+}
+
+// ---------------------------------------------------------------- rename evidence
+// T-005: session rename walkthrough assertions. Fabricates on-disk session
+// files (flat JSONL under the daemon's sessions dir — the daemon's listAll
+// reads flat files) and drives rename/clear through the real app UI, a
+// second "phone" page, and a bare wire client as the "other device".
+
+async function runRenameEvidence(appUrl, workspacePath, agentDir) {
+	const sessionsDir = join(agentDir, "sessions");
+	mkdirSync(sessionsDir, { recursive: true });
+
+	const now = new Date().toISOString();
+	const mk = (type, id, parentId, extra) => Object.assign({ type, id, parentId, timestamp: now }, extra);
+	const lines = (entries) => entries.map((e) => JSON.stringify(e)).join("\n") + "\n";
+
+	const parentPath = join(sessionsDir, `${now.replace(/[:.]/g, "-")}_walkparent01.jsonl`);
+	const parentId = "walkparent01";
+	writeFileSync(
+		parentPath,
+		lines([
+			mk("session", parentId, null, { version: 3, cwd: workspacePath }),
+			mk("message", "m0000001", null, { message: { role: "user", content: "分叉源消息" } }),
+			mk("session_info", "s0000001", "m0000001", { name: "分叉源名字" }),
+		]),
+	);
+	const forkPath = join(sessionsDir, `${now.replace(/[:.]/g, "-")}_walkfork01.jsonl`);
+	writeFileSync(
+		forkPath,
+		lines([
+			mk("session", "walkfork01", null, { version: 3, cwd: workspacePath, parentSession: parentPath }),
+			mk("message", "m0000002", null, { message: { role: "user", content: "分叉源消息" } }),
+			mk("session_info", "s0000002", "m0000002", { name: "分叉源名字" }),
+		]),
+	);
+	const labelPath = join(sessionsDir, `${now.replace(/[:.]/g, "-")}_walklabel01.jsonl`);
+	writeFileSync(
+		labelPath,
+		lines([
+			mk("session", "walklabel01", null, { version: 3, cwd: workspacePath }),
+			mk("message", "m0000003", null, { message: { role: "user", content: "标签会话消息" } }),
+			mk("message", "m0000004", "m0000003", { message: { role: "assistant", content: "助手回复" } }),
+			mk("label", "l0000001", "m0000004", { targetId: "m0000003", label: "重构探索" }),
+		]),
+	);
+
+	// --- bare wire client = the "other device"
+	const wire = new WirePeer(`ws://127.0.0.1:${DAEMON_PORT}`, TOKEN);
+	await wire.open;
+	await wire.request("workspace.open", { path: workspacePath });
+
+	// fork inheritance: fork carries the name at the fork point; renaming the
+	// parent afterwards must not touch the fork.
+	let listed = await wire.request("session.list", { workspaceId: workspacePath, recursive: true });
+	const forkRow = listed.sessions.find((x) => x.sessionId === "walkfork01");
+	check("R1 fork inherits the name at the fork point", forkRow?.name === "分叉源名字", `fork=${forkRow?.name}`);
+	await wire.request("session.rename", { sessionId: parentId, name: "改父名" });
+	listed = await wire.request("session.list", { workspaceId: workspacePath, recursive: true });
+	const forkAfter = listed.sessions.find((x) => x.sessionId === "walkfork01");
+	const parentAfter = listed.sessions.find((x) => x.sessionId === "walkparent01");
+	check(
+		"R2 renaming the parent does not affect the fork",
+		forkAfter?.name === "分叉源名字" && parentAfter?.name === "改父名",
+		`parent=${parentAfter?.name} fork=${forkAfter?.name}`,
+	);
+
+	// label integrity: renaming appends a session_info entry and must leave
+	// the branch label entry untouched (file-level, since the app timeline
+	// does not render label pills yet).
+	const labelBefore = readFileSync(labelPath, "utf8");
+	await wire.request("session.rename", { sessionId: "walklabel01", name: "标签会话新名" });
+	const labelAfter = readFileSync(labelPath, "utf8");
+	const labelLineBefore = labelBefore.split("\n").find((l) => l.includes('"type":"label"'));
+	const labelLineAfter = labelAfter.split("\n").find((l) => l.includes('"type":"label"'));
+	check(
+		"R3 rename leaves the branch label entry intact",
+		labelLineAfter !== undefined && labelLineAfter === labelLineBefore,
+		`label=${labelLineAfter?.slice(0, 40)}…`,
+	);
+	const labelListed = await wire.request("session.list", { workspaceId: workspacePath, recursive: true });
+	check("R4 labeled session renamed", labelListed.sessions.find((x) => x.sessionId === "walklabel01")?.name === "标签会话新名");
+
+	// --- desktop page: rename + clear through the real UI
+	const { chromium } = loadPlaywright();
+	const browser = await chromium.launch({ channel: "chrome", headless: true });
+	try {
+		const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+		await page.goto(appUrl, { waitUntil: "networkidle" });
+		await sleep(2500);
+		const parentRowEl = page.locator('[aria-label="改父名"]').first();
+		for (let i = 0; i < 20; i++) {
+			if (await parentRowEl.isVisible().catch(() => false)) break;
+			await sleep(500);
+		}
+		check("R5 renamed parent row visible in sidebar", await parentRowEl.isVisible().catch(() => false));
+		await parentRowEl.click({ button: "right" });
+		await sleep(600);
+		await page.getByTestId("session-row-rename").click();
+		await sleep(600);
+		await page.getByTestId("rename-session-input").fill("支付联调");
+		await page.getByText("Save").first().click();
+		await sleep(1200);
+		check("R6 UI rename: row shows the new name", await page.locator('[aria-label="支付联调"]').first().isVisible().catch(() => false));
+		await shot(page, "14-rename-ui");
+		const afterRename = await wire.request("session.list", { workspaceId: workspacePath, recursive: true });
+		check("R7 wire state matches UI rename", afterRename.sessions.find((x) => x.sessionId === parentId)?.name === "支付联调");
+
+		// clear through the menu
+		await page.locator('[aria-label="支付联调"]').first().click({ button: "right" });
+		await sleep(600);
+		await page.getByTestId("session-row-clear-name").click();
+		await sleep(1200);
+		check("R8 UI clear: row falls back to the first message", await page.locator('[aria-label="分叉源消息"]').first().isVisible().catch(() => false));
+		await shot(page, "15-rename-clear");
+		const afterClear = await wire.request("session.list", { workspaceId: workspacePath, recursive: true });
+		check("R9 wire state matches UI clear", (afterClear.sessions.find((x) => x.sessionId === parentId)?.name ?? "") === "");
+
+		// --- cross-device live update: the wire peer grabs the write lock first
+		// (attach readwrite), then the desktop attaches (downgraded to
+		// readonly, subscribed). The wire rename must then reach the desktop
+		// row through the session.renamed broadcast — no reload.
+		await wire.request("session.attach", { sessionId: parentId, as: "readwrite", path: parentPath });
+		await page.locator('[aria-label="分叉源消息"]').first().click();
+		await sleep(2000);
+		await wire.request("session.rename", { sessionId: parentId, name: "手机端改名" });
+		await sleep(1500);
+		const desktopLive = await page.locator('[aria-label="手机端改名"]').first().isVisible().catch(() => false);
+		check("R10 desktop row updates live after an off-device rename (no reload)", desktopLive);
+		await shot(page, "16-live-update");
+
+		// --- phone page: same daemon, same name. The compact header's
+		// sessions button opens the sessions drawer without a swipe gesture.
+		const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+		const phone = await ctx.newPage();
+		await phone.goto(appUrl, { waitUntil: "networkidle" });
+		await sleep(2500);
+		await phone.getByLabel("sessions").first().click();
+		await sleep(1200);
+		let phoneSees = false;
+		for (let i = 0; i < 16 && !phoneSees; i++) {
+			phoneSees = await phone.locator('[aria-label="手机端改名"]').first().isVisible().catch(() => false);
+			if (!phoneSees) await sleep(500);
+		}
+		check("R11 phone shows the same session name as the desktop", phoneSees);
+		await shot(phone, "17-phone-sessions");
+
+		wire.ws.close();
+	} finally {
+		await browser.close();
+	}
+}
+
+/** Minimal wire client (hello + request), reused from the daemon test style. */
+class WirePeer {
+	constructor(url, token) {
+		const require = createRequire(join(ROOT, "package.json"));
+		const { WebSocket } = require("ws");
+		this.ws = new WebSocket(url);
+		this.next = 0;
+		this.pending = new Map();
+		this.open = new Promise((res) =>
+			this.ws.on("open", () => {
+				this.ws.send(
+					JSON.stringify({
+						hello: { v: 1, client: { kind: "cli", version: "0.1.0", platform: "test" }, caps: ["treeSync"], auth: { method: "token", token } },
+					}) + "\n",
+				);
+				res();
+			}),
+		);
+		this.ws.on("message", (chunk) => {
+			const text = typeof chunk === "string" ? chunk : Buffer.from(chunk).toString("utf8");
+			for (const line of text.split("\n")) {
+				if (!line.trim()) continue;
+				const pkt = JSON.parse(line);
+				if (pkt.id) {
+					const p = this.pending.get(pkt.id);
+					if (p) {
+						this.pending.delete(pkt.id);
+						pkt.ok ? p.resolve(pkt.data) : p.reject(new Error(pkt.error.message));
+					}
+				}
+			}
+		});
+	}
+	request(cmd, args = {}) {
+		const id = `c-${++this.next}`;
+		return new Promise((resolve, reject) => {
+			this.pending.set(id, { resolve, reject });
+			this.ws.send(JSON.stringify({ id, cmd, args }) + "\n");
+		});
+	}
 }
 
 main().catch((error) => {

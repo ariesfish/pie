@@ -6,6 +6,7 @@ import { Stack } from "expo-router";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { QueryClient, QueryClientProvider, onlineManager } from "@tanstack/react-query";
 import "@/styles/unistyles";
@@ -75,9 +76,11 @@ function RootAppTree() {
 					<KeyboardProvider>
 						<GestureHandlerRootView style={flexStyle}>
 							<SafeAreaProvider>
-								<View style={styles.surfaceFill}>
-									<AppShell />
-								</View>
+								<BottomSheetModalProvider>
+									<View style={styles.surfaceFill}>
+										<AppShell />
+									</View>
+								</BottomSheetModalProvider>
 							</SafeAreaProvider>
 						</GestureHandlerRootView>
 					</KeyboardProvider>

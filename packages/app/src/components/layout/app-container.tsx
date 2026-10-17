@@ -169,7 +169,12 @@ export function MobileSessionsButton() {
 	const { theme } = useUnistyles();
 	const showMobileSessions = useTabsStore((s) => s.showMobileSessions);
 	return (
-		<Pressable hitSlop={6} onPress={showMobileSessions} style={styles.headerIcon}>
+		<Pressable
+			hitSlop={6}
+			onPress={showMobileSessions}
+			accessibilityLabel="sessions"
+			style={styles.headerIcon}
+		>
 			<Menu size={14} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 		</Pressable>
 	);

@@ -1,0 +1,9 @@
+id	decision	reason	evidence	verdict
+T005-1	walkthrough 扩展 runRenameEvidence:伪造磁盘会话文件(flat JSONL,header v3 + message + session_info/label)驱动 daemon 与 app UI	SDK 无法在纯 node require(无 exports main),walkthrough 用 node 直跑;flat 布局与 daemon listAll 兼容(SDK 已验证)	scripts/ui-walkthrough.mjs runRenameEvidence	green
+T005-2	分叉继承取证(R1/R2):fork 文件带 parentSession + 拷贝 session_info;改名父会话后 fork 名不变	对齐 SPEC 决策4(SDK forkFrom 复制条目)	R1/R2 PASS + wire session.list	green
+T005-3	标签完整性(R3):文件级断言——改名只追加 session_info,label 条目逐字符不变	app 时间线尚无 label pill 渲染(功能未移植),数据级不变量是当前可验证上限	R3 PASS	green
+T005-4	跨端实时更新(R10):wire(别端)先 readwrite attach 持锁,桌面页 attach 降级 readonly 订阅;wire 改名 → 桌面行经 session.renamed 实时更新,无需刷新	daemon 写锁语义:先 attach 者持锁,后 attach 者降级——测试顺序必须尊重此规则(首版顺序反向导致 CRASH,调整后通过)	R10 PASS	green
+T005-5	手机取证(R11):第二浏览器上下文(390×844)+ 紧凑头部「sessions」按钮(MobileSessionsButton 补 accessibilityLabel="sessions")打开抽屉,断言与桌面同名字	紧凑抽屉手势在 headless 下不可靠,改走按钮入口;按钮 a11y label 顺带补上	R11 PASS + 17-phone-sessions.png	green
+T005-6	修复根布局缺失 BottomSheetModalProvider(_layout.tsx)——紧凑壳层崩溃根因	证据探针暴露:compact 模式挂载 AdaptiveModalSheet/gorhom BottomSheetModal 时 useBottomSheetModalInternal 无 context 直接抛错;顺带修复 walkthrough 09/10 两个「既有失败」(同源)	_layout.tsx + walkthrough 09/10 PASS	green
+T005-7	pi TUI 一致性取证 skip-test:pi CLI 无「非交互列出会话名」命令(--resume 为交互 TUI),无法在无头环境驱动	会话文件级保证已由 T-002 wire 测试覆盖(session_info 条目即 TUI 读取的同一份存储);TUI 渲染侧留人工验收,AC 勾选项保留未勾	.audit/T-005.tsv 本行	skip-test
+T005-8	08 rail resize 保持 FAIL:基线对比确认与本次改动无关的既有问题(拖拽手柄在 headless 下不位移)	基线(stash T-004/T-005 代码)同样 FAIL,不在本次范围	walkthrough 基线对比	skip-test

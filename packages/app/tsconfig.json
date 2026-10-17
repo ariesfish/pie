@@ -23,6 +23,7 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "env.d.ts",
+			"react-native-web.d.ts",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
   ],

@@ -87,6 +87,7 @@ export const en = {
 		workspaceRoot: "Workspace root",
 		newSession: "New session",
 		start: "Start session",
+		renameErrorNotConnected: "Not connected to the daemon",
 		buckets: {
 			today: "Today",
 			yesterday: "Yesterday",

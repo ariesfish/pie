@@ -289,6 +289,10 @@ export function applyStoreEvent(
 			// upsert in place so sidebar + tab titles shed the placeholder.
 			useSessionListStore.getState().upsert(event.data.item);
 			break;
+		case "session.renamed":
+			// Rename broadcast (open sessions): sync the row name in place.
+			useSessionListStore.getState().applyRenamed(event.data.sessionId, event.data.name);
+			break;
 		case "session.snapshot":
 			tree.applySnapshot(event.data.snapshot);
 			useConnectionStore.setState((s) => ({

@@ -1,0 +1,6 @@
+id	decision	reason	evidence	verdict
+T003-1	store 新增 renameSession:输入 trim,trim 后为空 = 清除(发空串),不拒绝	与 T-002 的 wire 显式清除语义一致;SPEC 开放选项取「按清除处理」	packages/app/src/stores/session-list-store.ts	green
+T003-2	改名成功后本地 upsert 行(闭环会话无广播);打开中会话的事件广播与本地更新幂等	磁盘会话无订阅者,靠本地更新;summary.updated 已存在(upsert 幂等)	renameSession 实现 + 注释	green
+T003-3	事件路由新增 session.renamed → applyRenamed(行内原地更新,未知会话忽略不前置)	打开中会话改名跨端同步;未知行交给下次 refresh	packages/app/src/stores/connection-store.ts	green
+T003-4	失败进入 renameError {sessionId, message}(行数据不变);无连接用 i18n 键 agentList.renameErrorNotConnected	UI 需要错误态驱动提示;未连接与 wire 错误区分文案	store + resources/en.ts + zh-CN.ts	green
+T003-5	回退标题规则复用现有 sessionTitle,补回归测试锁优先级(名 > 首条消息 > 占位,空白名回退)	规则已存在于 sessionTitle,AC 要求回归锁定	packages/app/src/stores/session-list-store.test.ts	green

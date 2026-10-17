@@ -33,11 +33,18 @@ interface SessionListState {
 	error: string | null;
 	fetchedAt: number;
 	search: string;
+	/** Last failed rename (wire error or no connection); row data unchanged. */
+	renameError: { sessionId: string; message: string } | null;
 
 	refresh: () => Promise<void>;
 	refreshProjects: () => Promise<void>;
 	setSearch: (q: string) => void;
 	upsert: (item: SessionListItem) => void;
+	/** Rename or clear (whitespace-only input = explicit clear, sends ""). */
+	renameSession: (sessionId: string, input: string) => Promise<void>;
+	/** Event-driven sync: session.renamed broadcast updates the row in place. */
+	applyRenamed: (sessionId: string, name?: string) => void;
+	clearRenameError: () => void;
 	/** Grouped + searched view model for the sidebar: sessions bucket by the
 	 *  project cwd they belong to (recursive workspace listing). */
 	select: () => Array<{ project: string; items: SessionListItem[] }>;
@@ -50,6 +57,7 @@ export const useSessionListStore = create<SessionListState>((set, get) => ({
 	error: null,
 	fetchedAt: 0,
 	search: "",
+	renameError: null,
 
 	refresh: async () => {
 		const workspaceId = useWorkspaceStore.getState().workspaceId;
@@ -92,6 +100,46 @@ export const useSessionListStore = create<SessionListState>((set, get) => ({
 			return { sessions: next };
 		});
 	},
+
+	/** Rename or clear a session's name. Whitespace-only input = explicit
+	 *  clear (sends empty string, matching the daemon's session_info clear
+	 *  semantics). On success the row is updated locally (closed sessions get
+	 *  no broadcast); open sessions also receive session.renamed/
+	 *  summary.updated events, which are idempotent with this update. */
+	renameSession: async (sessionId, input) => {
+		const conn = useConnectionStore.getState().conn;
+		const trimmed = input.trim();
+		if (!conn) {
+			set({ renameError: { sessionId, message: i18n.t("agentList.renameErrorNotConnected") } });
+			return;
+		}
+		try {
+			await conn.request("session.rename", { sessionId, name: trimmed });
+			set((st) => {
+				const idx = st.sessions.findIndex((s) => s.sessionId === sessionId);
+				if (idx === -1) return { renameError: null };
+				const next = st.sessions.slice();
+				next[idx] = { ...next[idx], name: trimmed.length > 0 ? trimmed : undefined };
+				return { sessions: next, renameError: null };
+			});
+		} catch (err) {
+			set({ renameError: { sessionId, message: err instanceof Error ? err.message : String(err) } });
+		}
+	},
+
+	/** session.renamed broadcast: sync the row name in place; ignore rows we
+	 *  don't hold (a later refresh picks them up). */
+	applyRenamed: (sessionId, name) => {
+		set((st) => {
+			const idx = st.sessions.findIndex((s) => s.sessionId === sessionId);
+			if (idx === -1) return {};
+			const next = st.sessions.slice();
+			next[idx] = { ...next[idx], name: name && name.trim().length > 0 ? name : undefined };
+			return { sessions: next };
+		});
+	},
+
+	clearRenameError: () => set({ renameError: null }),
 
 	select: () => {
 		const { sessions, search, projects } = get();

@@ -87,6 +87,7 @@ export const zhCN = {
 		workspaceRoot: "工作区根",
 		newSession: "新会话",
 		start: "开始会话",
+		renameErrorNotConnected: "未连接 daemon",
 		buckets: {
 			today: "今天",
 			yesterday: "昨天",

@@ -1,0 +1,7 @@
+id	decision	reason	evidence	verdict
+T004-1	入口用 ContextMenu 引擎(移动长按出 bottom sheet / 桌面·Web 右键出锚定弹层),菜单两项:重命名、清除会话名	PRD 定「长按/悬停或右键」;复用 paseo 移植的菜单引擎,平台自适应开箱即用	left-sidebar.tsx SessionRow + testID session-row-rename/-clear-name	green
+T004-2	重命名面板用 AdaptiveModalSheet + AdaptiveTextInput 预填当前名;提交后无条件关面板,失败靠侧栏横幅提示	与 store 的 trim/清除语义一致;失败提示统一走横幅,面板不阻塞重试	rename-session-sheet.tsx	green
+T004-3	错误提示:侧栏内联横幅(renameError → 显示 + 6s 自动消失 + 手动关闭)而非 useToast	取证时发现 LeftSidebar 在 ToastProvider 之外(AppContainer chrome),useToast 直接崩溃整个 app——真实 bug 由证据探针抓到后修复	left-sidebar.tsx renameErrorBanner;t4-06-lock-banner.png 取证	green
+T004-4	清除为菜单内一步操作,不设确认弹窗	可逆(重命名即可恢复),PRD 已定	probe: T4 clear 一步回退	green
+T004-5	i18n 五键(rename/clearName/renameTitle/renamePlaceholder/renameSubmit)进 en + zh-CN	面板与菜单全文案双语;取消复用 common.cancel	en.ts / zh-CN.ts;zh 探针(--locale zh-CN)菜单/面板/保存全中文	green
+T004-6	证据:浏览器探针 12/12(磁盘改名、清除回退、写锁横幅、打开中改名+广播、wire 状态一致);walkthrough 回归 11 PASS / 3 既有 FAIL(08/09/10)——经 stash 基线对比确认与本次改动无关	evidence 类 AC 按规程走真浏览器取证	ui-walkthrough-shots/rename-evidence/*.png;基线对比记录	green

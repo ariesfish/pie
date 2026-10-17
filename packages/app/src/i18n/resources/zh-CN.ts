@@ -88,6 +88,11 @@ export const zhCN = {
 		newSession: "新会话",
 		start: "开始会话",
 		renameErrorNotConnected: "未连接 daemon",
+		rename: "重命名",
+		clearName: "清除会话名",
+		renameTitle: "重命名会话",
+		renamePlaceholder: "会话名",
+		renameSubmit: "保存",
 		buckets: {
 			today: "今天",
 			yesterday: "昨天",

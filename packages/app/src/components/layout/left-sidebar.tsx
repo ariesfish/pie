@@ -30,6 +30,13 @@ import { useConnectionStore } from "@/stores/connection-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import { useWorkspaceRegistryStore } from "@/stores/workspace-registry-store";
 import { useRouter } from "expo-router";
+import {
+	ContextMenu,
+	ContextMenuContent,
+	ContextMenuItem,
+	ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { RenameSessionSheet } from "./rename-session-sheet";
 
 /** session rows render under the workspace whose path prefixes their cwd. */
 function sessionUnderWorkspace(sessionCwd: string, workspaceId: string): boolean {
@@ -55,6 +62,20 @@ export function LeftSidebar() {
 	const sessions = useSessionListStore((s) => s.sessions);
 	const loading = useSessionListStore((s) => s.loading);
 	const activeSessionId = useConnectionStore((s) => s.sessionId);
+	const renameError = useSessionListStore((s) => s.renameError);
+	const clearRenameError = useSessionListStore((s) => s.clearRenameError);
+	// Rename panel target (null = closed).
+	const [renameTarget, setRenameTarget] = useState<Parameters<typeof sessionTitle>[0] | null>(null);
+
+	// One inline error surface for both entry points (panel submit and the
+	// menu's clear action): show the last rename failure, auto-dismiss.
+	// The sidebar renders outside the route's ToastProvider (AppContainer
+	// chrome), so the error banner lives here instead of a toast.
+	useEffect(() => {
+		if (!renameError) return;
+		const timer = setTimeout(() => clearRenameError(), 6000);
+		return () => clearTimeout(timer);
+	}, [renameError, clearRenameError]);
 
 	// Collapsed workspaces (session subtrees hidden). Session-scope: persisted
 	// collapse state lands with the workspace-layout record (NOTICE W5).
@@ -184,6 +205,10 @@ export function LeftSidebar() {
 														useTabsStore.getState().showMobileHome();
 													});
 											}}
+											onRename={() => setRenameTarget(s)}
+											onClear={() =>
+												void useSessionListStore.getState().renameSession(s.sessionId, "")
+											}
 										/>
 									))
 								)
@@ -201,6 +226,27 @@ export function LeftSidebar() {
 					</Pressable>
 				) : null}
 			</ScrollView>
+
+			<RenameSessionSheet
+				session={renameTarget}
+				visible={Boolean(renameTarget)}
+				onClose={() => setRenameTarget(null)}
+			/>
+
+			{renameError ? (
+				<View style={styles.renameErrorBanner}>
+					<Text style={styles.renameErrorText} numberOfLines={2}>
+						{renameError.message}
+					</Text>
+					<Pressable
+						hitSlop={6}
+						onPress={clearRenameError}
+						accessibilityLabel="dismiss"
+					>
+						<X size={12} color={theme.colors.destructiveForeground} strokeWidth={1.75} />
+					</Pressable>
+				</View>
+			) : null}
 
 			{/* paseo.png footer: new-session on the left, settings on the right. */}
 			<View style={styles.footer}>
@@ -229,31 +275,50 @@ function SessionRow({
 	session,
 	selected,
 	onPress,
+	onRename,
+	onClear,
 }: {
 	session: Parameters<typeof sessionTitle>[0];
 	selected: boolean;
 	onPress: () => void;
+	onRename: () => void;
+	onClear: () => void;
 }) {
 	const { theme } = useUnistyles();
+	const { t } = useTranslation();
 	return (
-		<Pressable
-			style={({ pressed }) => [styles.sessionRow, selected && styles.sessionRowSelected, pressed && styles.rowPressed]}
-			onPress={onPress}
-			accessibilityLabel={sessionTitle(session)}
-		>
-			<MessageCircle
-				size={13}
-				color={selected ? theme.colors.accent : theme.colors.foregroundMuted}
-				strokeWidth={1.75}
-			/>
-			<Text
-				style={[styles.sessionTitle, selected && styles.sessionTitleSelected]}
-				numberOfLines={1}
+		<ContextMenu>
+			<ContextMenuTrigger
+				style={({ pressed }) => [
+					styles.sessionRow,
+					selected && styles.sessionRowSelected,
+					pressed && styles.rowPressed,
+				]}
+				onPress={onPress}
+				accessibilityLabel={sessionTitle(session)}
 			>
-				{sessionTitle(session)}
-			</Text>
-			<Text style={styles.sessionTime}>{relativeTime(session.modified)}</Text>
-		</Pressable>
+				<MessageCircle
+					size={13}
+					color={selected ? theme.colors.accent : theme.colors.foregroundMuted}
+					strokeWidth={1.75}
+				/>
+				<Text
+					style={[styles.sessionTitle, selected && styles.sessionTitleSelected]}
+					numberOfLines={1}
+				>
+					{sessionTitle(session)}
+				</Text>
+				<Text style={styles.sessionTime}>{relativeTime(session.modified)}</Text>
+			</ContextMenuTrigger>
+			<ContextMenuContent>
+				<ContextMenuItem onSelect={onRename} testID="session-row-rename">
+					{t("agentList.rename")}
+				</ContextMenuItem>
+				<ContextMenuItem onSelect={onClear} testID="session-row-clear-name">
+					{t("agentList.clearName")}
+				</ContextMenuItem>
+			</ContextMenuContent>
+		</ContextMenu>
 	);
 }
 
@@ -429,6 +494,24 @@ const styles = StyleSheet.create((theme) => ({
 		fontSize: 10,
 	},
 	rowPressed: { opacity: 0.7 },
+	renameErrorBanner: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: theme.spacing[1.5],
+		marginHorizontal: theme.spacing[2],
+		marginBottom: theme.spacing[1],
+		paddingHorizontal: theme.spacing[2],
+		paddingVertical: 6,
+		borderRadius: theme.borderRadius.md,
+		backgroundColor: theme.colors.surface1,
+		borderWidth: theme.borderWidth[1],
+		borderColor: theme.colors.destructive,
+	},
+	renameErrorText: {
+		flex: 1,
+		color: theme.colors.destructiveForeground,
+		fontSize: theme.fontSize.sm,
+	},
 	footer: {
 		flexDirection: "row",
 		alignItems: "center",

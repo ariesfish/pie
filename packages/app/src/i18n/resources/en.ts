@@ -88,6 +88,11 @@ export const en = {
 		newSession: "New session",
 		start: "Start session",
 		renameErrorNotConnected: "Not connected to the daemon",
+		rename: "Rename",
+		clearName: "Clear session name",
+		renameTitle: "Rename session",
+		renamePlaceholder: "Session name",
+		renameSubmit: "Save",
 		buckets: {
 			today: "Today",
 			yesterday: "Yesterday",

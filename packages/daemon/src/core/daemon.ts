@@ -161,6 +161,21 @@ export class SessionRegistry {
 	}
 
 	/**
+	 * Rename a session this daemon does not hold open: locate the session file
+	 * on disk and append a session_info entry directly (no attach, no open-side
+	 * effects). Empty/whitespace names pass through as an explicit clear.
+	 * Returns false when no session file matches the id.
+	 */
+	async renameOnDisk(sessionId: string, name: string): Promise<boolean> {
+		const sessionsDir = join(this.deps.agentDir ?? homedir(), "sessions");
+		const infos = await SessionManager.listAll(sessionsDir);
+		const info = infos.find((i) => i.id === sessionId);
+		if (!info) return false;
+		SessionManager.open(info.path, undefined, info.cwd).appendSessionInfo(name);
+		return true;
+	}
+
+	/**
 	 * Read-only session listing for a workspace. Lists both daemon-held
 	 * sessions and Pi JSONL files on disk (same storage as `pi` TUI/CLI).
 	 *

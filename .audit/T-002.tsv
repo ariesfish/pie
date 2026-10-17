@@ -1,0 +1,5 @@
+id	decision	reason	evidence	verdict
+T002-1	磁盘改名:SessionManager.listAll 按 id 定位 + SessionManager.open(path, undefined, cwd) 直接 appendSessionInfo,不经 attach	SPEC 开放问题1已验证:open() 支持既有文件且 persist=true,_persist 即时追加;wire 协议零改动	packages/daemon/src/core/daemon.ts renameOnDisk	green
+T002-2	session.rename handler 分流:registry 有 host 走原路径(requireWriter + 广播),无 host 走磁盘路径;未找到抛 not_found "Session not found"	打开中会话保持写锁与广播语义;磁盘会话无订阅者无需广播	packages/daemon/src/server/server.ts	green
+T002-3	name 校验从 requiredString(拒空)改为仅类型检查,空/纯空白透传 SDK 作显式清除	SDK appendSessionInfo 空名即清除(getSessionName→undefined);SDK RPC 的空串限制不适用于 daemon 直调 AgentSession.setSessionName	server.ts + packages/protocol/src/commands.ts 注释	green
+T002-4	测试伪造磁盘会话必须 appendMessage(无 message 会话不落盘——pi 惰性 flush)	首轮 RED 运行时发现 SessionManager.create 无会话内容不写文件,listAll 找不到→"Session not found"	packages/daemon/test/session-rename.test.ts createDiskSession	green

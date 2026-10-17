@@ -544,11 +544,23 @@ export class DaemonServer {
 		});
 
 		r.register("session.rename", async (args, ctx) => {
+			const sessionId = requiredString(args, "sessionId");
+			// Empty/whitespace-only name = explicit clear (SDK session_info semantics).
+			const name = args["name"];
+			if (typeof name !== "string") {
+				throw new HostSessionError("Missing required string argument: name", "invalid_args");
+			}
 			const host = requireHost(args);
-			if (host instanceof HostSessionError) throw host;
+			if (host instanceof HostSessionError) {
+				// Not open: rename the on-disk session file directly (no attach).
+				if (!(await self.registry.renameOnDisk(sessionId, name))) {
+					throw new HostSessionError(`Session not found: ${sessionId}`, "not_found");
+				}
+				return {};
+			}
 			const lockError = requireWriter(host, ctx.connection);
 			if (lockError) throw lockError;
-			host.rename(requiredString(args, "name"));
+			host.rename(name);
 			return {};
 		});
 

@@ -293,6 +293,9 @@ export interface CommandMap {
 	};
 
 	// --- misc session ops --------------------------------------------------------------------------
+	/** Rename a session's display name. `name` semantics: empty or
+	 *  whitespace-only string = explicit clear (name removed, list falls back
+	 *  to the first-message snippet). Works for open and on-disk sessions. */
 	"session.rename": {
 		args: { sessionId: SessionId; name: string };
 		result: Record<string, never>;

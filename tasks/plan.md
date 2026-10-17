@@ -134,6 +134,8 @@ Closed 2026-10-17: renameOnDisk 磁盘路径 + 空串显式清除落地,session-
 
 - T-002
 
+Closed 2026-10-17: renameSession(trim/清除语义)+ 失败错误态 + session.renamed 事件同步落地,store 模型测试 9/9,`npm run check` 全绿(commit 见 git log)。
+
 ## [T-004] 列表行改名入口 + 清除 + i18n (ready-for-agent)
 
 - **Parent**: T-001

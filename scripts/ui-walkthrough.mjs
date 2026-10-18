@@ -7,7 +7,7 @@
 //
 // Usage:
 //   npm run ui-walkthrough                     # fresh web export + run
-//   npm run ui-walkthrough -- --reuse-export   # reuse packages/app/dist/app-web
+//   npm run ui-walkthrough -- --reuse-export   # reuse packages/app/dist
 //   npm run ui-walkthrough -- --shots <dir>    # screenshot dir (default ./ui-walkthrough-shots)
 //   npm run ui-walkthrough -- --keep           # keep the scratch fixture for inspection
 //
@@ -82,7 +82,7 @@ async function main() {
 
 	// ---------------------------------------------------------------- web export
 	const exportDir = join(scratch, "web-export");
-	const bundled = join(ROOT, "packages", "app", "dist", "app-web");
+	const bundled = join(ROOT, "packages", "app", "dist");
 	if (REUSE_EXPORT && existsSync(bundled)) {
 		cpSync(bundled, exportDir, { recursive: true });
 	} else {

@@ -6,7 +6,7 @@
 //   npm run use /path/to/project -- --agent /path/to/agent-dir
 //   npm run use /path/to/project -- --port 8800      # web port
 //
-// The web bundle is served from packages/app/dist/app-web; build it first
+// The web bundle is served from packages/app/dist; build it first
 // with `npm run app:build:web` if the script finds it missing.
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -39,7 +39,7 @@ const webPort = Number(flag("port", "8800"));
 const daemonPort = webPort + 1;
 const token = Math.random().toString(36).slice(2, 10);
 
-const dist = join(import.meta.dirname, "..", "packages", "app", "dist", "app-web");
+const dist = join(import.meta.dirname, "..", "packages", "app", "dist");
 if (!existsSync(join(dist, "index.html"))) {
 	console.error(`✗ web bundle missing: ${dist}
   build it first:  npm run app:build:web`);

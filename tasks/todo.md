@@ -76,3 +76,9 @@ Per-task checklists and status. Heading markers are triage roles (see docs/agent
 - [ ] 无环境变量 → 默认 off(daemon.log 无 Permission 行)
 - [ ] demo-permission-card.md 过时表述改正;SKILL.md launch 节提环境变量
 - [ ] npm run check 全绿
+
+## T-006 进度(过夜演练)
+- [x] use.mjs 守卫越过(bundle 不再误报缺失)
+- [x] walkthrough --reuse-export 复用分支实证(26 PASS;与全新导出断言集一致)
+- [x] scripts/ 下无 "app-web" 残留
+- [x] npm run check 全绿

@@ -87,3 +87,8 @@ Per-task checklists and status. Heading markers are triage roles (see docs/agent
 - [x] index.html 无单引号字符串(grep 不变量:pre 'sendBtn' → post 无)
 - [x] daemon 起页 smoke(served page 无单引号,sendBtn 元素在位,清理完成)
 - [x] npm run check 全绿
+
+## T-009 进度(过夜演练)
+- [x] GLOSSARY.md 增「会话列表」条目(含 Relationships 行,与会话树区分)
+- [x] SPEC.md 开放问题 2 标已解决(指针回 GLOSSARY + .audit/T-009.tsv)
+- [x] npm run check 全绿

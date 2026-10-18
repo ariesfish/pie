@@ -104,5 +104,5 @@ mkdirSync(join(dir, "agent-home", "sessions"), { recursive: true });
 ## Open Questions
 
 1. **SDK 磁盘追加可行性**(实现第一步验证):用 `SessionManager(cwd, dir, file, persist)` 直接构造到既有会话文件并 `appendSessionInfo` 是否可靠。若不可行,备选「临时打开再改名」会引入「改名顺带打开会话」副作用——需回来改本 spec。
-2. **「会话列表」一词**(工作区下会话集合视图)尚未入 `GLOSSARY.md`,与「会话树」(单会话内分支结构)不同;本 spec 按 PRD 用词,align 后续补钉。
+2. **「会话列表」一词**(工作区下会话集合视图)尚未入 `GLOSSARY.md`,与「会话树」(单会话内分支结构)不同;本 spec 按 PRD 用词,align 后续补钉。—— **已解决(2026-10-18)**:`GLOSSARY.md` 已入「会话列表」条目(含与「会话树」的区分与 Relationships 行),证据见 `.audit/T-009.tsv`。
 3. **桌面/Web 入口形态**:PRD 定「悬停或右键」,实现时二选一或都做;最终形态由 SHOULD 的 [judgment] 条目由产品确认兜底。

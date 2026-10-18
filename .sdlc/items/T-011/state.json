@@ -24,6 +24,13 @@
       "runs": 2,
       "first_pass": true,
       "ts": "2026-10-18T03:39:03Z"
+    },
+    "review": {
+      "class": "A",
+      "verdict": "PASS",
+      "ts": "2026-10-18T03:56:29Z",
+      "file": ".audit/evidence/review-cdad17f/verdict.json",
+      "runs": 1
     }
   },
   "history": [
@@ -103,6 +110,16 @@
       "ts": "2026-10-18T03:39:40Z",
       "type": "close",
       "note": "根因修复(原生拖拽劫持→dragstart preventDefault),四门入账:repro FAIL→tdd/check×2 PASS;walkthrough 08 全绿 x 1174→1106,断言未放宽"
+    },
+    {
+      "step": 7,
+      "ts": "2026-10-18T03:56:29Z",
+      "type": "verdict",
+      "gate": "review",
+      "class": "A",
+      "file": ".audit/evidence/review-cdad17f/verdict.json",
+      "sha256": "6aeb0e1319115637",
+      "verdict": "PASS"
     }
   ]
 }

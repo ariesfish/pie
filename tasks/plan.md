@@ -184,3 +184,24 @@ Closed 2026-10-17: 菜单入口 + 重命名面板 + 清除 + 内联错误横幅�
 - T-004
 
 Closed 2026-10-17: walkthrough 扩展 R1-R11 全绿(分叉继承/标签完整性/UI 改名清除/别端实时更新/手机同名字)+ 紧凑壳层 BottomSheetModalProvider 修复(顺带修好 09/10)。两项保留未勾:pi TUI 一致性(CLI 无非交互列表能力,skip-test,文件级保证已由 T-002 覆盖)与入口可发现性(产品 judgment)。08 rail resize 为既有 headless 问题,基线对比记录在案。
+
+## [T-006] 过时 dist 路径:walkthrough/use 死路径修复 (ready-for-agent)
+
+- **Parent**: spec/2026-10-overnight-compression.md
+- **Type**: AFK
+- **Blocked by**: None
+
+## What to build
+
+`scripts/ui-walkthrough.mjs`(:10 用法注释、:85 bundled 常量)与 `scripts/use.mjs`(:9 注释、:42 dist 常量)引用 `packages/app/dist/app-web`,该目录不存在(expo web 导出落 `packages/app/dist/`,README:54 与 verify-pie serve-app-web.mjs 为证)。四处统一改为 `packages/app/dist`。修后 `npm run use` 不再在 bundle 守卫必死,`--reuse-export` 快路径真正生效。
+
+## Acceptance criteria
+
+- [ ] [check: `grep -rn "dist/app-web" scripts/` 返回空]
+- [ ] [check: `node scripts/use.mjs <scratch-ws> -- --agent <scratch-agent>` 越过 bundle 守卫(不再打印 "web bundle missing")]
+- [ ] [check: `npm run ui-walkthrough -- --reuse-export` 走复用分支(日志无 "exporting web bundle" 行)且断言全 PASS]
+- [ ] [check: npm run check 全绿]
+
+## Blocked by
+
+None

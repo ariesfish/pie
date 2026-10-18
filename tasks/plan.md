@@ -205,3 +205,22 @@ Closed 2026-10-17: walkthrough 扩展 R1-R11 全绿(分叉继承/标签完整性
 ## Blocked by
 
 None
+
+
+## [T-011] walkthrough 08 rail resize:headless 基线 FAIL 排查修复 (ready-for-agent)
+
+### Problem
+
+`npm run ui-walkthrough` 的 08(rail resize handle widens rail)在 headless
+基线 FAIL(overnight 2026-10-18 两次运行一致;handle 找得到、拖拽未见 rail
+变宽)。已知的其它步骤全绿,仅 08 挂。
+
+### Acceptance criteria
+
+- [ ] [check: node scripts/ui-walkthrough.mjs --reuse-export 复现:修复前 08 FAIL(账本入 history,复现在前)]
+- [ ] [check: 修复后 npm run ui-walkthrough 全步绿(含 08),输出入账]
+- [ ] [check: npm run typecheck 0 错]
+- [ ] [check: npx vitest run 全绿]
+- [ ] [judgment: 根因修复而非放宽断言——放宽 check 条件须人点头]
+
+Closed 2026-10-18: 根因 = Chromium 原生文本拖拽劫持(handle 被 live DOM 选区覆盖时,按下拖拽触发真实 dragstart + pointercancel,RNGH pan 在第一帧 move 后被取消)——handle 增 isWeb 守卫的 dragstart preventDefault;walkthrough 全绿含 08(x 1174→1106),typecheck 0 错,vitest 885+1 全绿;断言零放宽(commit 见 git log)。

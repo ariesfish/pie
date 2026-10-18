@@ -2,7 +2,7 @@
 // Paseo's full ResizeHandle (components/resize-handle.tsx, pointer-event
 // multi-touch protocol wired to the split-group resize model) lands with the
 // W1c-2 nested-split port; this is the single-rail subset of its mechanics.
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
@@ -32,6 +32,21 @@ export function RailResizeHandle({
 	const { theme } = useUnistyles();
 	const [dragging, setDragging] = useState(false);
 	const startWidthRef = useRef(width);
+	const viewRef = useRef<View>(null);
+
+	// Web-only: a live DOM text selection that covers the handle makes Chromium
+	// start a native text drag on press-drag (trusted dragstart + pointercancel),
+	// which kills the RNGH pan before it moves. Refusing the native drag keeps
+	// the pointer stream on the pan gesture. (walkthrough 08 headless repro:
+	// dragstart hijack left the rail width unchanged, x 1174 → 1174.)
+	useEffect(() => {
+		if (!isWeb) return;
+		const node = viewRef.current as unknown as HTMLElement | null;
+		if (!node) return;
+		const refuseNativeDrag = (event: Event) => event.preventDefault();
+		node.addEventListener("dragstart", refuseNativeDrag);
+		return () => node.removeEventListener("dragstart", refuseNativeDrag);
+	}, []);
 
 	const pan = Gesture.Pan()
 		.minDistance(2)
@@ -49,6 +64,7 @@ export function RailResizeHandle({
 	return (
 		<GestureDetector gesture={pan}>
 			<View
+				ref={viewRef}
 				accessibilityRole="adjustable"
 				accessibilityLabel="resize explorer rail"
 				style={[

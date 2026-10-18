@@ -1,0 +1,108 @@
+{
+  "id": "T-011",
+  "title": "rail resize headless 基线 FAIL 排查修复(walkthrough 08)",
+  "opened": "2026-10-18T03:16:49Z",
+  "closed": "2026-10-18T03:39:40Z",
+  "gates": {
+    "repro": {
+      "class": "D",
+      "pass": false,
+      "runs": 1,
+      "first_pass": false,
+      "ts": "2026-10-18T03:17:33Z"
+    },
+    "tdd": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "ts": "2026-10-18T03:37:50Z"
+    },
+    "check": {
+      "class": "D",
+      "pass": true,
+      "runs": 2,
+      "first_pass": true,
+      "ts": "2026-10-18T03:39:03Z"
+    }
+  },
+  "history": [
+    {
+      "step": 1,
+      "ts": "2026-10-18T03:16:49Z",
+      "type": "open"
+    },
+    {
+      "step": 2,
+      "ts": "2026-10-18T03:17:33Z",
+      "type": "run",
+      "gate": "repro",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "ui-walkthrough",
+        "--",
+        "--reuse-export"
+      ],
+      "dir": ".",
+      "exit": 1,
+      "pass": false,
+      "evidence": "\n> pie@0.1.0 ui-walkthrough\n> node scripts/ui-walkthrough.mjs --reuse-export\n\n• starting daemon on 8761 …\n• running assertions (screenshots → /home/ariesfish/Projects/harness/pie/ui-walkthrough-shots)\n\n=== UI WALKTHROUGH ===\nPASS  01 connect → workspace header\nPASS  02 rail open → files tree shows src/\nPASS  03 open app.ts → files tab + CodeMirror mounted — cm-editors=1\nPASS  03b README.md → md preview (frontmatter + code copy + mermaid) — heading=true copyBtn=1 svg=1 fm=1\nPASS  03c edit → autosave CAS write lands on disk — editor=true disk=true\nPASS  04 changes tab → diff document renders (canvas + sticky headers) — headers=2 canvas=3\nPASS  05a sticky creator + entry present\nPASS  05b creator panel shows Start session\nPASS  05c session created → session tab + composer — composer=true\nPASS  05d usage rail → token quartet + message stats — tokens=true counts=true\nPASS  06 split pane → two pane headers — split=2 close=2\nPASS  07 drag drop → files tab still present — app.ts nodes=1\nFAIL  08 rail resize handle widens rail — x 1174 → 1174\nPASS  09 compact → sessions drawer opens (edge swipe)\nPASS  09b sessions drawer closes (push-away swipe) — backdrop=0\nPASS  10 compact → explorer drawer opens (right edge swipe) — backdrop=1 filesTab=1\nPASS  R1 fork inherits the name at the fork point — fork=分叉源名字\nPASS  R2 renaming the parent does not affect the fork — parent=改父名 fork=分叉源名字\nPASS  R3 rename leaves the branch label entry intact — label={\"type\":\"label\",\"id\":\"l0000001\",\"parentI…\nPASS  R4 labeled session renamed\nPASS  R5 renamed parent row visible in sidebar\nPASS  R6 UI rename: row shows the new name\nPASS  R7 wire state matches UI rename\nPASS  R8 UI clear: row falls back to the first message\nPASS  R9 wire state matches UI clear\nPASS  R10 desktop row updates live after an off-device rename (no reload)\nPASS  R11 phone shows the same session name as the desktop\nscreenshots: /home/ariesfish/Projects/harness/pie/ui-walkthrough-shots\n"
+    },
+    {
+      "step": 3,
+      "ts": "2026-10-18T03:37:50Z",
+      "type": "run",
+      "gate": "tdd",
+      "class": "D",
+      "argv": [
+        "npx",
+        "vitest",
+        "run"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "upport act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal presentation > only replaces when the callsite asks for replacement\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n"
+    },
+    {
+      "step": 4,
+      "ts": "2026-10-18T03:38:07Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "\n> pie@0.1.0 typecheck\n> npm run typecheck --workspaces --if-present\n\n\n> @pie/protocol@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/client@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/daemon@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/app@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/desktop@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n"
+    },
+    {
+      "step": 5,
+      "ts": "2026-10-18T03:39:03Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "ui-walkthrough"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "ed: /tmp/pie-ui-walk-awTNX5/web-export\n• starting daemon on 8761 …\n• running assertions (screenshots → /home/ariesfish/Projects/harness/pie/ui-walkthrough-shots)\n\n=== UI WALKTHROUGH ===\nPASS  01 connect → workspace header\nPASS  02 rail open → files tree shows src/\nPASS  03 open app.ts → files tab + CodeMirror mounted — cm-editors=1\nPASS  03b README.md → md preview (frontmatter + code copy + mermaid) — heading=true copyBtn=1 svg=1 fm=1\nPASS  03c edit → autosave CAS write lands on disk — editor=true disk=true\nPASS  04 changes tab → diff document renders (canvas + sticky headers) — headers=2 canvas=3\nPASS  05a sticky creator + entry present\nPASS  05b creator panel shows Start session\nPASS  05c session created → session tab + composer — composer=true\nPASS  05d usage rail → token quartet + message stats — tokens=true counts=true\nPASS  06 split pane → two pane headers — split=2 close=2\nPASS  07 drag drop → files tab still present — app.ts nodes=1\nPASS  08 rail resize handle widens rail — x 1174 → 1106\nPASS  09 compact → sessions drawer opens (edge swipe)\nPASS  09b sessions drawer closes (push-away swipe) — backdrop=0\nPASS  10 compact → explorer drawer opens (right edge swipe) — backdrop=1 filesTab=1\nPASS  R1 fork inherits the name at the fork point — fork=分叉源名字\nPASS  R2 renaming the parent does not affect the fork — parent=改父名 fork=分叉源名字\nPASS  R3 rename leaves the branch label entry intact — label={\"type\":\"label\",\"id\":\"l0000001\",\"parentI…\nPASS  R4 labeled session renamed\nPASS  R5 renamed parent row visible in sidebar\nPASS  R6 UI rename: row shows the new name\nPASS  R7 wire state matches UI rename\nPASS  R8 UI clear: row falls back to the first message\nPASS  R9 wire state matches UI clear\nPASS  R10 desktop row updates live after an off-device rename (no reload)\nPASS  R11 phone shows the same session name as the desktop\nscreenshots: /home/ariesfish/Projects/harness/pie/ui-walkthrough-shots\nFavicon source file in Expo config (web.favicon) does not exist: ./assets/favicon.png\n"
+    },
+    {
+      "step": 6,
+      "ts": "2026-10-18T03:39:40Z",
+      "type": "close",
+      "note": "根因修复(原生拖拽劫持→dragstart preventDefault),四门入账:repro FAIL→tdd/check×2 PASS;walkthrough 08 全绿 x 1174→1106,断言未放宽"
+    }
+  ]
+}

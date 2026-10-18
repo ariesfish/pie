@@ -20,9 +20,11 @@ build is the full product UI (rail/tabs/panes).
 
 - ✅ proven end to end at generation time (2026-10): `demo-session-journey`,
   `app-web-files-markdown` — evidence in `.audit/evidence/verify-pie-*/`.
+- ✅ proven 2026-10-18: `app-web-changes-diff` (11/11 steps) — evidence
+  `.audit/evidence/overnight-20261018/T-008/app-web-diff/`.
 - ⬜ mapped but not yet proven by a real-target run: `demo-chat-steer-follow`,
   `demo-permission-card` (both additionally need a real model and spend real
-  tokens), `app-web-changes-diff`.
+  tokens).
 
 A journey whose prerequisites are missing must report failure honestly with
 the reason in its Gotchas — never soften it to green.

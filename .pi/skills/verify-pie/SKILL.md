@@ -231,8 +231,9 @@ interface contract. Do not edit either side without the user's approval.
 `.pi/skills/verify-pie/features/` — README index + one file per feature
 (Sub-features / How to get to it (user POV) / Driving it with control-web /
 Gotchas). Proof status: `demo-session-journey` and `app-web-files-markdown`
-were proven end to end at generation time; chat/steer, permission cards, and
-app-web diff are mapped but unproven until a real-target run drives them
-(chat and permission journeys additionally need a real model and spend real
-tokens — see their files). Keep the map honest as the app changes:
-`maintain-verification-skill`.
+were proven end to end at generation time; `app-web-changes-diff` proven
+2026-10-18 (11/11 steps, evidence `.audit/evidence/overnight-20261018/T-008/`);
+chat/steer and permission cards remain mapped but unproven until a real-target
+run drives them (chat and permission journeys additionally need a real model
+and spend real tokens — see their files). Keep the map honest as the app
+changes: `maintain-verification-skill`.

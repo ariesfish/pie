@@ -56,6 +56,11 @@ aria/accessible-name → CSS selector → text; real Input events via CDP.
 `<runId>` convention: `YYYYMMDD-HHMMSS` or anything unique; it names the run
 dir `/tmp/pie-verify-<runId>` and the evidence dir (below).
 
+Permission mode passthrough (for `demo-permission-card` journeys):
+`VERIFY_PIE_PERMISSION=ask` (off|annotations|ask, default off) → `--permission`;
+optional `VERIFY_PIE_PERMISSION_TIMEOUT_MS` → `--permission-timeout-ms`;
+both land in run.json (`permissionMode`, `permissionTimeoutMs`).
+
 What the helper does (all observable): creates `/tmp/pie-verify-<runId>/{agent,workspace}`,
 copies `~/.pi/agent/{auth.json,models.json}` into the scratch agent dir chmod 600
 (needed for `models.list` and chat; removed at cleanup — if you must not copy

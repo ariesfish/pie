@@ -92,3 +92,9 @@ Per-task checklists and status. Heading markers are triage roles (see docs/agent
 - [x] GLOSSARY.md 增「会话列表」条目(含 Relationships 行,与会话树区分)
 - [x] SPEC.md 开放问题 2 标已解决(指针回 GLOSSARY + .audit/T-009.tsv)
 - [x] npm run check 全绿
+
+## T-010 进度(过夜演练)
+- [x] VERIFY_PIE_PERMISSION=ask(+TIMEOUT) → run.json permissionMode=ask + daemon.log "Permission ask (timeout 30000ms)"
+- [x] 无环境变量 → 默认 off(无 Permission 行);非法值 exit 2 拒绝、不起进程
+- [x] demo-permission-card.md 过时表述改正;SKILL.md launch 节提环境变量
+- [x] npm run check 全绿

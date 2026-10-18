@@ -6,7 +6,12 @@
 #              (chmod 600; needed for models.list and chat; removed with the dir)
 #   workspace/ git fixture (README.md + src/app.ts, clean commit, then dirtied)
 #   daemon.log stdout+stderr of the daemon
-#   run.json   {runId,port,token,agentDir,workspace,pid,daemonLog,staticPort}
+#   run.json   {runId,port,token,agentDir,workspace,pid,daemonLog,staticPort,
+#              permissionMode,permissionTimeoutMs}
+#
+# Permission mode (for demo-permission-card journeys): VERIFY_PIE_PERMISSION
+# env (off|annotations|ask, default off) is passed through as --permission;
+# VERIFY_PIE_PERMISSION_TIMEOUT_MS (optional) as --permission-timeout-ms.
 #
 # The recorded pid is the kernel's listener pid for our port (ss -tlnp), not
 # $! — a foreign listener would have made our daemon exit (EADDRINUSE) and this
@@ -23,6 +28,12 @@ AGENT_DIR="$RUN_DIR/agent"
 WORKSPACE="$RUN_DIR/workspace"
 TOKEN="verify-$RUN_ID"
 STATIC_PORT=8899
+PERMISSION_MODE="${VERIFY_PIE_PERMISSION:-off}"
+case "$PERMISSION_MODE" in
+	off|annotations|ask) ;;
+	*) echo "VERIFY_PIE_PERMISSION expects off|annotations|ask, got: $PERMISSION_MODE" >&2; exit 2 ;;
+esac
+PERMISSION_TIMEOUT_MS="${VERIFY_PIE_PERMISSION_TIMEOUT_MS:-}"
 
 mkdir -p "$AGENT_DIR" "$WORKSPACE"
 
@@ -50,8 +61,14 @@ printf 'untracked\n' > "$WORKSPACE/notes.txt"
 
 # daemon, in-process tsx loader: one clean node pid (same runtime as npm run daemon)
 cd "$ROOT"
-node --import tsx packages/daemon/src/index.ts \
-	--listen "127.0.0.1:$PORT" --token "$TOKEN" --pi "$AGENT_DIR" \
+set -- --listen "127.0.0.1:$PORT" --token "$TOKEN" --pi "$AGENT_DIR"
+if [ "$PERMISSION_MODE" != "off" ]; then
+	set -- "$@" --permission "$PERMISSION_MODE"
+	if [ -n "$PERMISSION_TIMEOUT_MS" ]; then
+		set -- "$@" --permission-timeout-ms "$PERMISSION_TIMEOUT_MS"
+	fi
+fi
+node --import tsx packages/daemon/src/index.ts "$@" \
 	> "$RUN_DIR/daemon.log" 2>&1 &
 
 # readiness: HTTP 200 on / (the daemon serves the demo page itself)
@@ -79,6 +96,6 @@ if [ -z "$PID" ]; then
 fi
 
 cat > "$RUN_DIR/run.json" <<EOF
-{"runId":"$RUN_ID","port":$PORT,"token":"$TOKEN","agentDir":"$AGENT_DIR","workspace":"$WORKSPACE","pid":$PID,"daemonLog":"$RUN_DIR/daemon.log","staticPort":$STATIC_PORT}
+{"runId":"$RUN_ID","port":$PORT,"token":"$TOKEN","agentDir":"$AGENT_DIR","workspace":"$WORKSPACE","pid":$PID,"daemonLog":"$RUN_DIR/daemon.log","staticPort":$STATIC_PORT,"permissionMode":"$PERMISSION_MODE","permissionTimeoutMs":${PERMISSION_TIMEOUT_MS:-600000}}
 EOF
 cat "$RUN_DIR/run.json"

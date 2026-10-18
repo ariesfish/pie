@@ -8,11 +8,11 @@
  * whole script block including boot; silently disabling the element on a
  * guarded read). Lock the invariant statically: every id referenced through
  * `$()` — double-quoted, single-quoted (the page's own style, e.g.
- * `$('sendBtn')`), or `?.`-guarded — must exist as an `id="..."` attribute in
- * the same file. Quote-agnostic on purpose: the guard must cover the spellings
- * the file actually uses. This asserts resolvability only — click-to-behavior
- * wiring is covered by the verify-pie demo-session journey (drive-based), not
- * by source spelling.
+ * `$('sendBtn')`), template-literal backticks, or `?.`-chained — must exist as
+ * an `id="..."` attribute in the same file. Quote-agnostic on purpose: the
+ * guard must cover the spellings the file could plausibly use. This asserts
+ * resolvability only — click-to-behavior wiring is covered by the verify-pie
+ * demo-session journey (drive-based), not by source spelling.
  */
 
 import { describe, expect, it } from "vitest";
@@ -21,28 +21,30 @@ import { join } from "node:path";
 
 const HTML = readFileSync(join(__dirname, "..", "public", "index.html"), "utf8");
 
-// `$("id")`, `$('id')`, `$("id" )`, `$( "id" )` — any quote, leading/trailing
-// inner whitespace tolerated; both standalone and `?.`-chained calls captured
-// (the chain makes a typo silent, not safe — that is exactly the class to lock).
-const REF = /\$\(\s*(['"])([^'"]+)\1\s*\)/g;
-const referencedIds = [...HTML.matchAll(REF)].map((m) => m[2]);
+// `$("id")`, `$('id')`, `$(`id`)`, `$("id" )`, `$( "id" )` — any quote style
+// (template literals included), leading/trailing inner whitespace tolerated;
+// standalone and `?.`-chained calls captured alike (chaining makes a typo
+// silent, not safe — that is exactly the class to lock).
+const REF = /\$\(\s*(['"`])([^'"`]+)\1\s*\)/g;
 const declaredIds = new Set(
 	[...HTML.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]),
 );
+// The real guard predicate, shared by the invariant test and its own
+// mutation self-test (the self-test must exercise the guard itself, not a
+// re-implementation that could drift).
+const unresolved = (src: string): string[] =>
+	[...src.matchAll(REF)].map((m) => m[2]!).filter((id) => !declaredIds.has(id));
 
 describe("demo page id bindings", () => {
 	it("every $()-referenced id (any quote style, guarded included) exists as id= in the page", () => {
-		const missing = referencedIds.filter((id) => !declaredIds.has(id));
 		expect(
-			missing,
+			unresolved(HTML),
 			"$() references a nonexistent id — unguarded call sites crash the whole script at load; guarded ones die silently",
 		).toEqual([]);
 	});
 
-	it("guard bite: the ripened typo class must fail this file (self-test on a mutated copy)", (t) => {
-		// The historical instance, in every spelling the file uses:
-		// double/single quotes, inner space, and ?. chaining.
-		const ANCHOR = /\$\("newSession"\)\.onclick = newSession;/m;
+	it("guard bite: the ripened typo class must fail the real guard (mutation self-test)", (t) => {
+		const ANCHOR = /\$\(\s*"newSession"\s*\)\.onclick = newSession;/m;
 		if (!ANCHOR.test(HTML)) {
 			// A legal refactor (e.g. document.querySelector) removed the anchor —
 			// this self-test voids itself; the resolvability guard above stands alone.
@@ -53,18 +55,14 @@ describe("demo page id bindings", () => {
 			"$('newSessionn').onclick = newSession;",
 			'$("newSessionn" ).onclick = newSession;',
 			'$("newSessionn")?.onclick?.(null);',
+			"$(`newSessionn`).onclick = newSession;",
 		];
 		for (const bad of mutations) {
 			const mutated = HTML.replace(ANCHOR, bad);
-			expect(mutated, "mutation harness: anchor replace failed").not.toBe(HTML);
-			expect(mutated, "mutation harness: anchor line not found").not.toBe(HTML);
-			const stillResolves = [...mutated.matchAll(REF)]
-				.map((m) => m[2])
-				.every((id) => declaredIds.has(id));
 			expect(
-				stillResolves,
+				unresolved(mutated),
 				`mutation escaped the guard: ${bad}`,
-			).toBe(false);
+			).toContain("newSessionn");
 		}
 	});
 });

@@ -82,3 +82,8 @@ Per-task checklists and status. Heading markers are triage roles (see docs/agent
 - [x] walkthrough --reuse-export 复用分支实证(26 PASS;与全新导出断言集一致)
 - [x] scripts/ 下无 "app-web" 残留
 - [x] npm run check 全绿
+
+## T-007 进度(过夜演练)
+- [x] index.html 无单引号字符串(grep 不变量:pre 'sendBtn' → post 无)
+- [x] daemon 起页 smoke(served page 无单引号,sendBtn 元素在位,清理完成)
+- [x] npm run check 全绿

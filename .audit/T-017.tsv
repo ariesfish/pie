@@ -1,0 +1,5 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T017-1	paseo 语义移植但数据层按 ADR-0005 适配(不 verbatim):text 层 zustand+localStorage(pie 既有 idiom,免引 async-storage/zod/react-query 新依赖);只取 pie 消费的 layout/wrapLines 两键	resolveDiffLayout 逐字移植;paseo 的 legacy 键迁移是 paseo 安装面历史,pie 无	changes-preferences-store.ts;对照 paseo hooks/use-changes-preferences	test 绿	ui-walkthrough-shots/04b-split.png
+T017-2	默认值 = pie 现行为(unified + wrapLines ON),与 paseo 默认(wrap OFF)不同	保持 W3c-4 上线行为不变;切换只改显示不改默认	DEFAULT_CHANGES_PREFERENCES + 测试用例 1	green		changes-preferences-store.ts
+T017-3	ChangesPanel 头部两个切换钮:布局(testID changes-layout-toggle,仅 canUseSplitLayout=isWeb∧非窄屏时显示)+ wrap(testID changes-wrap-toggle,恒显);displayPreferences 全部改由 store 驱动	paseo 的 useDiffPanelPreferences 形态裁剪到 pie 面板;双 testID 供走查零文案依赖	changes-panel.tsx toggleBtn 段	green		ui-walkthrough-shots/04c-wrap-toggle.png
+T017-4	walkthrough 扩 04b(切换后标签翻转+canvas 存活)+04c(wrap 钮在);04b 走不到 toggle 时(窄屏分支)如实记 pass 并注明 hidden	像素级 split 验证属视觉证据(截图),机器断言锁「切换生效且引擎不挂」	ui-walkthrough.mjs 04b/04c;实测 before="Split view" after="Unified view" canvas=3	green		ui-walkthrough-shots/04b-split.png

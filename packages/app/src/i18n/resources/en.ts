@@ -202,5 +202,8 @@ export const en = {
 		fileCount_other: "{{count}} files",
 		noDiff: "No diff body",
 		clean: "Working tree clean",
+		layoutSplit: "Split view",
+		layoutUnified: "Unified view",
+		wrapToggle: "Wrap",
 	},
 } as const;

@@ -330,6 +330,31 @@ async function runAssertions(appUrl, workspacePath) {
 	);
 	await shot(page, "04-changes-tab");
 
+	// 04b T-017: layout toggle → effective layout flips (label flip + no crash);
+	// wrap toggle present. Label text is locale-independent via testID + text compare.
+	const layoutToggle = page.getByTestId("changes-layout-toggle");
+	const wrapToggle = page.getByTestId("changes-wrap-toggle");
+	const wrapVisible = await wrapToggle.isVisible().catch(() => false);
+	if (await layoutToggle.isVisible().catch(() => false)) {
+		const before = (await layoutToggle.textContent()) ?? "";
+		await layoutToggle.click();
+		await sleep(800);
+		const after = (await layoutToggle.textContent()) ?? "";
+		const canvasAfter = await page.locator("canvas").count();
+		check(
+			"04b layout toggle → unified/split flips (canvas alive)",
+			before !== "" && after !== "" && before !== after && canvasAfter > 0,
+			`before="${before}" after="${after}" canvas=${canvasAfter}`,
+		);
+		await shot(page, "04b-split");
+		await layoutToggle.click();
+		await sleep(400);
+	} else {
+		check("04b layout toggle hidden (compact/native: split unavailable)", true);
+	}
+	check("04c wrap toggle present", wrapVisible);
+	await shot(page, "04c-wrap-toggle");
+
 
 	// 05 sticky creator → start session
 	const creator = page.getByLabel("New session", { exact: false }).first();

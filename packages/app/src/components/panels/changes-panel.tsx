@@ -6,9 +6,12 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
-import { RefreshCw } from "lucide-react-native";
+import { Columns2, RefreshCw, WrapText } from "lucide-react-native";
 
 import { useWorkspaceStore } from "@/stores/workspace-store";
+import { useChangesPreferences, resolveDiffLayout } from "@/stores/changes-preferences-store";
+import { useIsCompactFormFactor } from "@/constants/layout";
+import { isWeb } from "@/constants/platform";
 import { parseGitDiffFile } from "@/git/parsed-diff";
 import { DiffDocument } from "@/git/diff-document";
 
@@ -25,6 +28,15 @@ export function ChangesPanel() {
 
 	const [collapsedPaths, setCollapsedPaths] = useState<string[]>([]);
 	const [focusRequestId, setFocusRequestId] = useState(0);
+
+	// T-017: persisted display preferences + paseo's degradation rule
+	// (split needs room: web, non-compact — else unified).
+	const preferences = useChangesPreferences((s) => s.preferences);
+	const setLayout = useChangesPreferences((s) => s.setLayout);
+	const setWrapLines = useChangesPreferences((s) => s.setWrapLines);
+	const isCompact = useIsCompactFormFactor();
+	const canUseSplitLayout = isWeb && !isCompact;
+	const effectiveLayout = resolveDiffLayout(preferences.layout, canUseSplitLayout);
 
 	useEffect(() => {
 		if (!status && !loading) void refresh();
@@ -75,6 +87,47 @@ export function ChangesPanel() {
 						strokeWidth={1.75}
 					/>
 				</Pressable>
+				{canUseSplitLayout ? (
+					<Pressable
+						hitSlop={8}
+						onPress={() => setLayout(effectiveLayout === "unified" ? "split" : "unified")}
+						style={styles.toggleBtn}
+						accessibilityLabel={
+							effectiveLayout === "unified" ? t("changes.layoutSplit") : t("changes.layoutUnified")
+						}
+						testID="changes-layout-toggle"
+					>
+						<Columns2
+							size={13}
+							color={effectiveLayout === "split" ? theme.colors.accent : theme.colors.foregroundMuted}
+							strokeWidth={1.75}
+						/>
+						<Text
+							style={[
+								styles.toggleText,
+								effectiveLayout === "split" && { color: theme.colors.accent },
+							]}
+						>
+							{effectiveLayout === "unified" ? t("changes.layoutSplit") : t("changes.layoutUnified")}
+						</Text>
+					</Pressable>
+				) : null}
+				<Pressable
+					hitSlop={8}
+					onPress={() => setWrapLines(!preferences.wrapLines)}
+					style={styles.toggleBtn}
+					accessibilityLabel={t("changes.wrapToggle")}
+					testID="changes-wrap-toggle"
+				>
+					<WrapText
+						size={13}
+						color={preferences.wrapLines ? theme.colors.accent : theme.colors.foregroundMuted}
+						strokeWidth={1.75}
+					/>
+					<Text style={[styles.toggleText, preferences.wrapLines && { color: theme.colors.accent }]}>
+						{t("changes.wrapToggle")}
+				</Text>
+				</Pressable>
 			</View>
 			{status.entries.length === 0 && (
 				<View style={styles.center}>
@@ -85,8 +138,8 @@ export function ChangesPanel() {
 				<DiffDocument
 					files={files}
 					displayPreferences={{
-						layout: "unified",
-						wrapLines: true,
+						layout: effectiveLayout,
+						wrapLines: preferences.wrapLines,
 						codeFontSize: theme.fontSize.code,
 						monoFontFamily: theme.fontFamily.mono,
 					}}
@@ -123,6 +176,21 @@ const styles = StyleSheet.create((theme) => ({
 		fontSize: theme.fontSize.sm,
 	},
 	refreshBtn: { padding: 4 },
+	toggleBtn: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: theme.spacing[1],
+		paddingHorizontal: theme.spacing[1.5],
+		paddingVertical: 4,
+		borderRadius: theme.borderRadius.md,
+		borderWidth: theme.borderWidth[1],
+		borderColor: theme.colors.border,
+		backgroundColor: theme.colors.surface0,
+	},
+	toggleText: {
+		color: theme.colors.foregroundMuted,
+		fontSize: theme.fontSize.sm,
+	},
 	errorText: {
 		color: theme.colors.statusDanger,
 		fontSize: theme.fontSize.sm,

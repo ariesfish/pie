@@ -131,9 +131,9 @@ Per-task checklists and status. Heading markers are triage roles (see docs/agent
 - [x] 删后 grep 无引用残留 + npm run check + walkthrough 复绿（04 仍过，27 PASS）
 
 ## T-017 (ready-for-agent)
-- [ ] 搬 paseo use-changes-preferences + 硬编码替换 + 布局切换 UI
-- [ ] 窄屏降级规则单测 + walkthrough 04 扩断言（split 切换生效）
-- [ ] npm run check 全绿
+- [x] 搬 paseo use-changes-preferences 语义 + 硬编码替换 + 布局切换 UI（数据层按 ADR-0005 不 verbatim：localStorage+zustand 适配）
+- [x] 窄屏降级规则单测（resolveDiffLayout）+ walkthrough 04b/04c 扩断言（split 切换生效）
+- [x] npm run check 全绿（904 用例）+ walkthrough 复绿（exit 0，04b 实证 before="Split view"→after="Unified view"）
 
 ## T-008 进度(过夜演练)
 - [x] launch + doctor + serve + drive 全链跑通(11/11 steps;首跑按原配方 4 步 RED,抓出两处挂账漂移)

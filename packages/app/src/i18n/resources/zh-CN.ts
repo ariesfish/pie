@@ -201,5 +201,8 @@ export const zhCN = {
 		fileCount: "{{count}} 个文件",
 		noDiff: "无差异内容",
 		clean: "工作区干净",
+		layoutSplit: "分栏视图",
+		layoutUnified: "合并视图",
+		wrapToggle: "自动换行",
 	},
 } as const;

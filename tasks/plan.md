@@ -88,6 +88,8 @@ Ordered slice list. Append new sections only; ids never renumber.
 - 名字持久化与 pi TUI 共享同一份 `~/.pi/agent` 存储,README 已有此承诺,本 PRD 是它的兑现。
 - align 阶段已产出 `GLOSSARY.md` 并写入本次全部术语决策;无 ADR(四个决策均可逆、不意外)。
 
+Closed 2026-10-19: 子票 T-002..T-005 全部关闭(见各票 Closed 说明与 .audit 台账);伞票结案。剩两项 judgment 挂账不阻塞——入口可发现性(产品确认)、pi TUI 一致性(人工验收,skip-test 依据见 T-005 关闭说明)。
+
 ## [T-002] daemon:磁盘会话改名 + 空串清除(wire 回归) (ready-for-agent)
 
 - **Parent**: T-001
@@ -207,7 +209,132 @@ Closed 2026-10-17: walkthrough 扩展 R1-R11 全绿(分叉继承/标签完整性
 None
 
 
-## [T-011] walkthrough 08 rail resize:headless 基线 FAIL 排查修复 (ready-for-agent)
+## [T-012] 批量权限批复:多选一键允许/拒绝(PRD 父票) (ready-for-agent)
+
+- **Type**: AFK
+- **Blocked by**: —
+- **子票**: T-013(daemon wire)→ T-014(app store)→ T-015(app UI + 演示页)
+- **Spec**: `spec/2026-10-batch-permission-diff-finish.md`
+
+### Problem
+
+daemon `--permission=ask|annotations` 模式下,一次会话可能同时基多个工具调用等待审批;当前 wire `permission.respond` 只能单张结算,app store 只存单卡对象(后到覆盖先到),演示页虽能叠多卡但只能逐张点。用户要能勾选多张卡后一键「全部允许/全部拒绝」;单卡时批量栏不出现。
+
+### Solution
+
+wire 只加不改:新命令 `permission.respondMany`(批量结算 + unknown id 报告)+ 新事件 `session.permission.settled`(三来源:user/timeout/dispose,服务端权威撤卡)。app store 权限态列表化 + 选择集;UI 多卡多选 + 批量栏;演示页同步。W5 行内评论与语音输入不属本票(缓议,挂 P3)。
+
+### 拆迁决策(已定)
+
+- 立票背景:todo.md 原「T-011」清单与已关闭的 rail-resize T-011 撞号;本轮按「ids never renumber」原则下迁至此新号立票。
+- stored pending 列表化后,单卡 respond 与批量 respondMany 必须等价(单卡路径不得回归)。
+- `- **下一站**:P2 收尾(diff Skia 渲染器升级、语音输入评估)→ P3…` 见 README 状态节本轮刷新;W3c 引擎证据:2b7fe08 / d8d1497 / df79b1d + walkthrough 04 在验。
+
+### Acceptance Criteria
+
+**MUST**(按子票执行,详见 T-013..T-015)
+
+- [check: daemon wire —— respondMany 全结算 + timer 清除 + pending 清空]
+- [check: daemon wire —— unknown 报告 + 已知 id 正常结算]
+- [check: daemon wire —— 批量 allowSession 按 toolName 记入会话允许集]
+- [check: daemon wire —— 单张 respond 回归 + denyAll 回归]
+- [check: daemon wire —— settled 事件三来源广播(user/timeout/dispose)]
+- [check: store —— 列表增删 + 选择集生命周期 + 批量请求携带 + 单卡等价]
+- [check: npm run check 全绿]
+- [evidence: 多卡同屏 + 全选全部允许 + toolcard 全 done(真实模型演示,浏览器双页)]
+- [evidence: 演示页多卡截图 + 单卡时批量栏不出现]
+
+**SHOULD / MAY**(同原 todo 清单:部分失效、移动端长按多选、中英文案、批量 allowSession 免重复出卡、选择集自动清空)
+
+## [T-013] daemon:`permission.respondMany` + `session.permission.settled`(子票) (ready-for-agent)
+
+- **Parent**: T-012
+- **Type**: AFK
+- **Blocked by**: T-012
+
+### What to build
+
+协议新增 `permission.respondMany {requestIds: RequestId[], decision}` → `{settled: RequestId[], unknown: RequestId[]}`;事件新增 `session.permission.settled {sessionId, requestId, source: "user" | "timeout" | "dispose"}`。daemon gate 加 respondMany(逐 id:删 pending + 清 timer + resolve;unknown 聚合报告)+ settled 发布(新发布通迳,三来源:respond/respondMany / timeout 到期 / dispose denyAll)。同时修 decision 校验:server 盲转型收下任意字符串、gate 现在非 "deny" 一律按放行结算——收紧为字面量枚举拒绝非法值。
+
+### Acceptance criteria
+
+- [ ] [check: wire 测试 —— respondMany 命令管道 + unknown 报告(全 unknown 批:settled 空、unknown 齐)]
+- [ ] [check: 单元测试 —— respondMany 多 id 结算/unknown 拆分/单 respond 回归/拒绝后 pending 空]
+- [ ] [check: 单元测试 —— settled 三来源+ allowSession 批量记入会话允许集]
+- [ ] [check: 单元测试 —— decision 非法值被拒]
+- [ ] [check: npm run check 全绿]
+
+- [skip_test: 真实多卡需真实模型(无 LLM 无法触发 permission.request)——wire 层验命令管道 + 单元层验 gate 语义]
+
+## [T-014] app store:权限卡列表化 + 选择集(子票) (ready-for-agent)
+
+- **Parent**: T-012
+- **Type**: AFK
+- **Blocked by**: T-013
+
+### What to build
+
+`connection-store` 权限态从单对象改列表(含 timeoutMs,现被丢弃);叠加选择集(增删/清除);动作:单卡 respond 保持,新增 respondMany 决策携带所选项;`session.permission.settled` 到达即从列表+选择集移除各 id。
+
+### Acceptance criteria
+
+- [ ] [check: store 测试 —— 多请求 append(不互覆盖)]
+- [ ] [check: store 测试 —— settled 到达移行+选择集同步]
+- [ ] [check: store 测试 —— 批量携带所选 id;单卡 respond 等价(路径不变)]
+- [ ] [check: store 测试 —— 超时/写锁语义不回归(既有用例全绿)]
+- [ ] [check: npm run check 全绿]
+
+## [T-015] app UI + 演示页:多卡 + 多选 + 批量栏(子票) (ready-for-agent)
+
+- **Parent**: T-012
+- **Type**: AFK
+- **Blocked by**: T-014
+
+### What to build
+
+聊天流多卡渲染(替代单卡);多卡时每卡出选择复选 + 底部批量栏「全部允许(所选)/全部拒绝(所选)/取消」——单卡时复选与批量栏不出现;单卡仍可直接点卡上按钮。移动端长按卡进入选择。演示页(index.html)同步:复选 + 批量栏 + respondMany 调用。i18n en/zh-CN。
+
+### Acceptance criteria
+
+- [ ] [check: npm run check 全绿 + walkthrough 26 步复绿(无回归)]
+- [ ] [evidence: 多卡同屏全选全部允许(真实模型,浏览器双页,收尾演示)]
+- [ ] [evidence: 演示页多卡截图 + 单卡时批量栏不出现]
+- [ ] [should: 移动端长按多选批量批复 —— 事件入口可用]
+- [ ] [should: 中英文案切换正确]
+
+## [T-016] diff 旧渲染器死码清理 (ready-for-agent)
+
+- **Parent**: spec/2026-10-batch-permission-diff-finish.md
+- **Type**: AFK
+- **Blocked by**: T-012
+
+### What to build
+
+删 `packages/app/src/components/panels/diff-view.tsx` + `diff-model.ts`——W3c 后零引用(ingrep 已证:无 from-import)。
+
+### Acceptance criteria
+
+- [ ] [check: 删后 grep 无引用残留(`grep -rn "diff-view\|diff-model" packages/app/src` 为空)]
+- [ ] [check: npm run check 全绿 + walkthrough 复绿(04 仍过)]
+- [skip_test: 删除票无 RED 阶段——由 check + walkthrough 兕底]
+
+## [T-017] diff displayPreferences:layout/wrap 切换 + 窄屏降级 (ready-for-agent)
+
+- **Parent**: spec/2026-10-batch-permission-diff-finish.md
+- **Type**: AFK
+- **Blocked by**: T-016
+
+### What to build
+
+搬 paseo `use-changes-preferences`(持久化 + 窄屏 split 降级爹则),ChangesPanel 头部加 layout(unified/split)/wrap 切换控件,替换 `changes-panel.tsx:87-89` 硬编码 `displayPreferences`。walkthrough 04 扩断言:切换后布局生效。
+
+### Acceptance criteria
+
+- [ ] [check: store/hook 单测 —— 偏好持久化 + 窄屏降级规则]
+- [ ] [check: npm run check 全绿]
+- [evidence: walkthrough 扩展断言 —— split 切换后视口布局变化]
+
+## [T-011] walkthrough 08 rail resize:headless 基线 FAIL 排查修复 (closed)
 
 ### Problem
 

@@ -99,23 +99,41 @@ Per-task checklists and status. Heading markers are triage roles (see docs/agent
 - [x] demo-permission-card.md 过时表述改正;SKILL.md launch 节提环境变量
 - [x] npm run check 全绿
 
-## T-011 (ready-for-agent)
-- [ ] MUST: daemon wire —— respondMany 全结算 + timer 清除 + pending 清空
-- [ ] MUST: daemon wire —— unknown 报告 + 已知 id 正常结算
-- [ ] MUST: daemon wire —— 批量 allowSession 按 toolName 记入会话允许集
-- [ ] MUST: daemon wire —— 单张 respond 回归 + denyAll 回归
-- [ ] MUST: daemon wire —— settled 事件三来源广播(user/timeout/dispose)
-- [ ] MUST: store —— 列表增删 + 选择集生命周期 + 批量请求携带 + 单卡等价
-- [ ] MUST: npm run check 全绿
-- [ ] MUST: verify-pie 批量旅程 —— 多卡同屏 + 全选全部允许 + toolcard 全 done + ws-probe 取证
-- [ ] MUST: 演示页多卡截图 + 单卡时批量栏不出现
-- [ ] SHOULD: 部分失效演练 —— 一张卡 timeout 过期后其余仍可批量结算
-- [ ] SHOULD: 移动端长按多选批量批复
-- [ ] SHOULD: 中英文案切换
-- [ ] SHOULD: judgment —— 多选手势移动端顺手度(产品确认)
-- [ ] MAY: 批量 allowSession 后同类工具不再出卡
-- [ ] MAY: 选择集随卡结算自动清空
-- [ ] MAY: judgment —— 全部允许/拒绝无需二次确认(产品确认)
+## T-012 (ready-for-agent)
+- [ ] 立票 + 台账修缮：todo 批量批复清单自撞号 T-011 下迁;T-001 伞票结案标注;README「下一站/已知限制」对齐（diff W3c 已落地 + 语音输入缓议）
+- [ ] npm run check 全绿
+
+## T-013 (ready-for-agent)
+- [ ] daemon unit/wire —— respondMany 全结算 + timer 清除 + pending 清空
+- [ ] daemon unit/wire —— unknown 报告 + 已知 id 正常结算
+- [ ] daemon unit —— 批量 allowSession 按 toolName 记入会话允许集
+- [ ] daemon unit —— 单张 respond 回归 + denyAll 回归
+- [ ] daemon unit —— settled 事件三来源广播（user/timeout/dispose）
+- [ ] daemon —— decision 非法值被拒（盲转修复：现在非 "deny" 一律按放行）
+- [ ] npm run check 全绿
+- [ ] skip-test：真实多卡需真实模型，wire 层验命令管道 + 单元层验 gate 语义（如实入账）
+
+## T-014 (ready-for-agent)
+- [ ] store —— 权限态列表化（多请求 append 不互覆盖）+ timeoutMs 保留
+- [ ] store —— 选择集生命周期（增删/清除）+ 批量携带所选 id + 单卡 respond 等价
+- [ ] store —— session.permission.settled 到达移行 + 选择集同步
+- [ ] npm run check 全绿
+
+## T-015 (ready-for-agent)
+- [ ] UI —— 多卡渲染 + 多选 + 批量栏（单卡时不出现）滑动端长按多选入口（SHOULD）
+- [ ] i18n —— 中英文案切换正确
+- [ ] 演示页 —— 多选复选 + 批量栏 + respondMany 调用；单卡时栏隐藏
+- [ ] npm run check + ui-walkthrough 复绿（无回归）
+- [ ] 多卡证据：收尾演示（真实模型，浏览器双页）+ 截图
+
+## T-016 (ready-for-agent)
+- [ ] 删 diff-view.tsx + diff-model.ts（零引用已 grep 证）
+- [ ] 删后 grep 无引用残留 + npm run check + walkthrough 复绿（04 仍过）
+
+## T-017 (ready-for-agent)
+- [ ] 搬 paseo use-changes-preferences + 硬编码替换 + 布局切换 UI
+- [ ] 窄屏降级规则单测 + walkthrough 04 扩断言（split 切换生效）
+- [ ] npm run check 全绿
 
 ## T-008 进度(过夜演练)
 - [x] launch + doctor + serve + drive 全链跑通(11/11 steps;首跑按原配方 4 步 RED,抓出两处挂账漂移)

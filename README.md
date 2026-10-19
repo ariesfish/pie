@@ -91,7 +91,7 @@ npm run daemon            # 前台启动 daemon（首次运行会打印浏览器
   - daemon 新增 `services/fs-service`（层级列表 + 观察器，workspace 级订阅复用 connection.subscribed）与 `services/git-service`（spawn git、错误分类 not_a_repo/git_unavailable/timeout）
   - app 三个工作区面板：会话（P2a 聊天）、文件（目录导航 + 等宽查看）、变更（git status 列表 + 单文件 unified diff 着色展开；变更刷新由 fs.changed 事件驱动）
   - `workspace-store`（zustand）：fs/git 数据 + watch 失效联动；smoke 新增 fs/git/事件流端到端 9 步断言
-  - 已知限制（P2b-2 补齐）：文件查看无 CodeMirror/编辑/markdown 预览；diff 无 Skia 渲染器；桌面三栏布局与 tab 拖拽未做
+  - 已知限制（P2b-2 补齐）：文件查看无 CodeMirror/编辑/markdown 预览；diff 无 Skia 渲染器；桌面三栏布局与 tab 拖拽未做 ——其中 diff 渲染器已由 W3c 差整 canvas 引擎补齐（见下文 W3c 行与状态节），其余两项已由 P2b-2/P2b-3/W1 落地
 - **P2b-2 文件查看/编辑正式版**（CM 展示与 markdown 预览针对性超越 Paseo 同期形态）：
   - Web/桌面：**CodeMirror 6 完整集成**（`@getpaseo/highlight` 语言映射，lezer 语系覆盖广）——阅读优化的行高/边距测度、active line + gutter 高亮、主题热切换（compartment 重配不重挂载）、live-file 内容热替换（pristine 编辑态才覆盖，dirty 不吞用户输入）
   - Native：tokens 化自绘查看器（行号 gutter + 逐 token 着色），大文件降级纯文本
@@ -138,4 +138,4 @@ npm run daemon            # 前台启动 daemon（首次运行会打印浏览器
 - **@pie/desktop**：Electron 壳 + sidecar（`ELECTRON_RUN_AS_NODE` spawn、动态端口、崩溃清理），arm64 dmg 打包 + `smoke:packaged` 通过
 - **决策存档**：ADR-0003（移除 session.switch）、ADR-0004（不提供终端通道）；沙箱/凭证面缓议挪 P3 附条件触发；MCP 页跳过
 
-**下一站**：P2 收尾（diff Skia 渲染器升级、语音输入评估）→ P3（relay E2E 公网中继 + 推送、CLI、pi-server 演进观察）。
+**下一站**：本批（批量权限批复 `permission.respondMany` + settled 事件、diff 收尾三件：文档对齐/旧渲染器死码清理/displayPreferences 布局切换）→ P3（relay E2E 公网中继 + 推送、CLI、pi-server 演进观察；W5 diff 行内评论与语音输入评估缓议，挂 P3 附条件触发）。注：diff Skia 渲染器本体已由 W3c 波次落地（`2b7fe08`/`d8d1497`/`df79b1d`：web 单 canvas + sticky header 池、native Skia slab 虚拟化，walkthrough 04 在验）。

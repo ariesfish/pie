@@ -1,0 +1,5 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T012-1	todo.md 悬置的批量批复清单(撞号 T-011)下迁立票:plan.md 新增 T-012 父票 + T-013..T-015 子票,T-016/T-017 附于 spec 同批;todo.md 对应重建	rail-resize T-011 已关闭且 ids never renumber,攀号任务按追加新号正式立票	tasks/plan.md T-012..T-017 节;tasks/todo.md 重建节	green		tasks/plan.md
+T012-2	决策 TSV 随票 force-add 入库,恢复 T-002..T-005 先例;/.audit/ 规则维持只拦 bulky 证据	过夜批 T-006..T-011 TSV 未入库,跨机克隆即丢失(本机 .audit 仅存 T-002..T-005 为证)	.gitignore /.audit/;git ls-files .audit/	green		git log --diff-filter=A -- .audit/
+T012-3	README 两处过时表述对齐:94 行已知限制注明 diff 渲染器已由 W3c 补齐;141 行「下一站」改为本批(批量批复+diff 收尾三件)+ 语音输入缓议	README 写于 W2/W3 落地前;侦察证实 W3c 引擎在验(walkthrough 04 PASS canvas=3)	README.md:94,141;commits 2b7fe08/d8d1497/df79b1d	green		README.md
+T012-4	T-001 伞票结案标注,两项 judgment(入口可发现性、pi TUI 一致性)挂账不阻塞	子票 T-002..T-005 已全关,伞票状态与台账对齐	tasks/plan.md T-001 Closed 行	green		tasks/plan.md

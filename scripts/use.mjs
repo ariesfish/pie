@@ -38,6 +38,11 @@ const agentDir = resolve(flag("agent", join(homedir(), ".pi", "agent")));
 const webPort = Number(flag("port", "8800"));
 const daemonPort = webPort + 1;
 const token = Math.random().toString(36).slice(2, 10);
+const permission = flag("permission", "off");
+if (!["off", "annotations", "ask"].includes(permission)) {
+	console.error(`✗ invalid --permission "${permission}" (off | annotations | ask)`);
+	process.exit(2);
+}
 
 const dist = join(import.meta.dirname, "..", "packages", "app", "dist");
 if (!existsSync(join(dist, "index.html"))) {
@@ -71,13 +76,16 @@ const daemonArgs = [
 	"--pi",
 	agentDir,
 ];
+if (permission !== "off") daemonArgs.push("--permission", permission);
 const tag = spawnSync(node, ["--version"], { encoding: "utf8" });
 console.log(`πie dogfood
   node       ${tag.stdout.trim()}
   workspace  ${workspacePath}
   agent dir  ${agentDir}
   daemon     ws://127.0.0.1:${daemonPort}  (token: ${token})
+  permission ${permission}
   web        http://127.0.0.1:${webPort}
+  demo page  http://127.0.0.1:${daemonPort}/?token=${token}
 
   Ctrl-C stops both.
 `);

@@ -123,8 +123,9 @@ Per-task checklists and status. Heading markers are triage roles (see docs/agent
 - [x] UI —— 多卡渲染 + 多选复选（多卡时显示）+ 批量栏（单卡时不出现）+ 移动长按多选（SHOULD）
 - [x] i18n —— 中英文案切换正确（selectForBatch/batch.* 七键双语）
 - [x] 演示页 —— 多选复选 + 批量栏 + respondMany 调用；单卡时栏隐藏 + settled 权威撤卡
-- [x] npm run check + ui-walkthrough 复绿（27 PASS / 0 FAIL）
-- [ ] 多卡证据：收尾演示（真实模型，浏览器双页）+ 截图
+- [x] 组件测试 —— 批量栏可见性/选集纯函数/禁用态 6 例（多卡 UI 语义的机器覆盖）
+- [x] 单卡真模型证据：卡+Deny 后接棒卡截图（t15-2/t15-4）；真实模型「多卡同屏」不可达（pi 串行 prepare，见 TSV T015-7）——skip 换组件测试 + wire/store 层覆盖
+- [x] npm run check + ui-walkthrough 复绿（27 PASS / 0 FAIL；补证后 910 用例全绿）
 
 ## T-016 (ready-for-agent)
 - [x] 删 diff-view.tsx + diff-model.ts（零引用已 grep 证）+ 孤儿测 packages/app/test/diff-model.test.ts

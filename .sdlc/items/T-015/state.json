@@ -7,9 +7,9 @@
     "tdd": {
       "class": "D",
       "pass": true,
-      "runs": 1,
+      "runs": 2,
       "first_pass": true,
-      "ts": "2026-10-19T03:38:35Z"
+      "ts": "2026-10-19T04:17:57Z"
     },
     "check": {
       "class": "D",
@@ -62,6 +62,23 @@
       "ts": "2026-10-19T03:40:57Z",
       "type": "close",
       "note": "多卡+选择+批量栏+i18n+演示页批量:全 suite 906 绿 + walkthrough 27 PASS(代码面);真实模型多卡证据留收尾演示"
+    },
+    {
+      "step": 5,
+      "ts": "2026-10-19T04:17:57Z",
+      "type": "run",
+      "gate": "tdd",
+      "class": "D",
+      "argv": [
+        "npx",
+        "vitest",
+        "run",
+        "packages/app/src/components/chat/permission-batch-bar.test.tsx"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "\n RUN  v3.2.7 /Users/ariesfish/Projects/github/pie/pie\n\n ✓ packages/app/src/components/chat/permission-batch-bar.test.tsx (6 tests) 61ms\n\n Test Files  1 passed (1)\n      Tests  6 passed (6)\n   Start at  12:17:56\n   Duration  667ms (transform 167ms, setup 12ms, collect 338ms, tests 61ms, environment 105ms, prepare 30ms)\n\n"
     }
   ]
 }

@@ -1,12 +1,21 @@
 // [pie] T-015: batch approval bar — shown only while more than one permission
 // card is pending. Settles every selected card with one decision via
 // respondPermissions (permission.respondMany on the wire).
+import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { ShieldCheck, ShieldX, X } from "lucide-react-native";
 
-import { useConnectionStore } from "@/stores/connection-store";
+import { useConnectionStore, type PermissionCard } from "@/stores/connection-store";
+
+/** Ids that are both selected and still pending (settled cards drop out). */
+export function filterSelectedPermissions(
+	permissions: PermissionCard[],
+	selection: string[],
+): string[] {
+	return selection.filter((id) => permissions.some((c) => c.requestId === id));
+}
 
 export function PermissionBatchBar() {
 	const { t } = useTranslation();
@@ -18,20 +27,26 @@ export function PermissionBatchBar() {
 	const clearPermissionSelection = useConnectionStore((s) => s.clearPermissionSelection);
 	if (permissions.length <= 1) return null;
 
-	const selected = selection.filter((id) => permissions.some((c) => c.requestId === id));
+	const selected = filterSelectedPermissions(permissions, selection);
 
 	return (
 		<View style={styles.bar} testID="permission-batch-bar">
 			<Text style={styles.count}>
 				{t("permission.batch.count", { total: permissions.length, selected: selected.length })}
 			</Text>
-			<Pressable style={styles.ghost} accessibilityLabel={t("permission.batch.clear")} onPress={clearPermissionSelection}>
+			<Pressable
+				style={styles.ghost}
+				accessibilityRole="button"
+				accessibilityLabel={t("permission.batch.clear")}
+				onPress={clearPermissionSelection}
+			>
 				<X size={13} color={theme.colors.foregroundMuted} strokeWidth={1.75} />
 				<Text style={[styles.ghostText]}>{t("permission.batch.clear")}</Text>
 			</Pressable>
 			<Pressable
 				style={[styles.btn, styles.deny, selected.length === 0 && styles.disabled]}
-				accessibilityLabel={t("permission.batch.deny")}
+				accessibilityRole="button"
+				accessibilityLabel={t("permission.batch.deny", { count: selected.length })}
 				disabled={selected.length === 0}
 				onPress={() => void respondPermissions(selected, "deny")}
 			>
@@ -42,7 +57,8 @@ export function PermissionBatchBar() {
 			</Pressable>
 			<Pressable
 				style={[styles.btn, styles.allow, selected.length === 0 && styles.disabled]}
-				accessibilityLabel={t("permission.batch.allow")}
+				accessibilityRole="button"
+				accessibilityLabel={t("permission.batch.allow", { count: selected.length })}
 				disabled={selected.length === 0}
 				onPress={() => void respondPermissions(selected, "allow")}
 			>
@@ -51,7 +67,12 @@ export function PermissionBatchBar() {
 					{t("permission.batch.allow", { count: selected.length })}
 				</Text>
 			</Pressable>
-			<Pressable style={styles.ghost} accessibilityLabel={t("permission.batch.selectAll")} onPress={selectAllPermissions}>
+			<Pressable
+				style={styles.ghost}
+				accessibilityRole="button"
+				accessibilityLabel={t("permission.batch.selectAll")}
+				onPress={selectAllPermissions}
+			>
 				<Text style={[styles.ghostText]}>{t("permission.batch.selectAll")}</Text>
 			</Pressable>
 		</View>

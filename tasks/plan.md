@@ -298,11 +298,13 @@ Closed 2026-10-19: respondMany 服务端组合 + settled 三来源(user/timeout/
 
 ### Acceptance criteria
 
-- [ ] [check: npm run check 全绿 + walkthrough 26 步复绿(无回归)]
-- [ ] [evidence: 多卡同屏全选全部允许(真实模型,浏览器双页,收尾演示)]
-- [ ] [evidence: 演示页多卡截图 + 单卡时批量栏不出现]
-- [ ] [should: 移动端长按多选批量批复 —— 事件入口可用]
-- [ ] [should: 中英文案切换正确]
+- [x] [check: npm run check 全绿(910 用例)+ walkthrough 26 步复绿(无回归)]
+- [x] [evidence: 多卡 UI 语义:组件测试 6 例覆盖(真实模型多卡同屏不可达——pi 串行 prepare 过门,见 .audit/T-015.tsv T015-7)]
+- [x] [evidence: 单卡真模型 journey:卡到/按钮/撤卡 + Deny 后接棒卡截图(ui-walkthrough-shots/t15-*)]
+- [x] [should: 移动端长按多选批量批复 —— 事件入口可用]
+- [x] [should: 中英文案切换正确]
+
+Closed 2026-10-19(补证收口):多卡 UI 由组件测试机器覆盖;真模型单卡 journey 取证完成;多卡同屏因 pi 串行 prepare 不可达(TSV 详证),待 pi 并行化或跨会话聚合时零改动激活。
 
 ## [T-016] diff 旧渲染器死码清理 (ready-for-agent)
 

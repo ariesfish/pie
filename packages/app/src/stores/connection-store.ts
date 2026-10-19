@@ -9,6 +9,7 @@ import { PieConnection, SessionTreeStore } from "@pie/client";
 import { createWsTransportFactory } from "@pie/client/ws";
 import type { ContextUsage, SessionEntry } from "@pie/protocol";
 import type { ModelCatalogItem, ModelRef, ThinkingLevel } from "@pie/protocol";
+import type { PermissionSettledData } from "@pie/protocol";
 
 import { useSessionListStore } from "./session-list-store";
 import { useWorkspaceStore } from "./workspace-store";
@@ -56,15 +57,11 @@ interface ConnectionState {
 	timeline: Array<{ ts: number; kind: string; text: string }>;
 	/** Tool calls keyed by toolCallId; nested calls link via parentToolCallId. */
 	toolCalls: Record<string, ToolCallRecord>;
-	/** Pending permission request for the active session (W4c). */
-	permission: {
-		sessionId: string;
-		requestId: string;
-		toolName: string;
-		argsPreview: Record<string, unknown>;
-		annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean };
-		reason: string;
-	} | null;
+	/** Pending permission requests for the active session (T-014, batchable);
+	 * arrival order; session.permission.settled prunes authoritatively. */
+	permissions: PermissionCard[];
+	/** requestIds selected for batch approval (subset of permissions). */
+	permissionSelection: string[];
 
 	connect: (wsUrl: string, token: string) => Promise<void>;
 	startSession: (
@@ -92,11 +89,28 @@ interface ConnectionState {
 		images?: { data: string; mimeType: string }[],
 	) => Promise<SendDisposition>;
 	abortRun: () => Promise<void>;
-	/** Answer the pending permission request (W4c). */
-	respondPermission: (
-		decision: "allow" | "allowSession" | "deny",
-	) => Promise<void>;
+	/** Answer one pending permission request (single-card path, W4c). */
+	respondPermission: (requestId: string, decision: PermissionDecision) => Promise<void>;
+	/** Batch-settle many pending requests with one decision (T-014). */
+	respondPermissions: (requestIds: string[], decision: PermissionDecision) => Promise<void>;
+	/** Selection lifecycle for batch approval. */
+	togglePermissionSelection: (requestId: string) => void;
+	selectAllPermissions: () => void;
+	clearPermissionSelection: () => void;
 	clearError: () => void;
+}
+
+export type PermissionDecision = "allow" | "allowSession" | "deny";
+
+/** One pending permission card (active session only). */
+export interface PermissionCard {
+	sessionId: string;
+	requestId: string;
+	toolName: string;
+	argsPreview: Record<string, unknown>;
+	annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean };
+	reason: string;
+	timeoutMs: number;
 }
 
 export const useConnectionStore = create<ConnectionState>((set, get) => ({
@@ -105,7 +119,8 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 	sessionId: null,
 	revision: 0,
 	streaming: false,
-	permission: null,
+	permissions: [],
+	permissionSelection: [],
 	deltaText: "",
 	deltaKind: null,
 	queue: { steering: [], followUp: [] },
@@ -201,18 +216,70 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 		}
 	},
 
-	respondPermission: async (decision) => {
-		const { conn, permission } = get();
-		if (!conn || !permission) return;
-		const requestId = permission.requestId;
-		useConnectionStore.setState({ permission: null });
+	respondPermission: async (requestId, decision) => {
+		const { conn, permissions } = get();
+		const card = permissions.find((c) => c.requestId === requestId);
+		if (!conn || !card) return;
+		useConnectionStore.setState((st) => ({
+			permissions: st.permissions.filter((c) => c.requestId !== requestId),
+			permissionSelection: st.permissionSelection.filter((id) => id !== requestId),
+		}));
 		try {
 			await conn.request("permission.respond", { requestId, decision });
 		} catch (err) {
-			useConnectionStore.setState({
+			// 失败还原:卡在服务端仍 pending(settled 事件才是权威撤卡依据)
+			useConnectionStore.setState((st) => ({
+				permissions: st.permissions.some((c) => c.requestId === requestId)
+					? st.permissions
+					: [...st.permissions, card],
 				error: err instanceof Error ? err.message : String(err),
+			}));
+		}
+	},
+
+	respondPermissions: async (requestIds, decision) => {
+		const { conn, permissions, permissionSelection } = get();
+		if (!conn || requestIds.length === 0) return;
+		const removed = permissions.filter((c) => requestIds.includes(c.requestId));
+		const removedSelection = permissionSelection.filter((id) => requestIds.includes(id));
+		useConnectionStore.setState((st) => ({
+			permissions: st.permissions.filter((c) => !requestIds.includes(c.requestId)),
+			permissionSelection: st.permissionSelection.filter((id) => !requestIds.includes(id)),
+		}));
+		try {
+			await conn.request("permission.respondMany", { requestIds, decision });
+		} catch (err) {
+			// 失败还原:卡仍 pending;settled 事件才是权威撤卡依据
+			useConnectionStore.setState((st) => {
+				const present = new Set(st.permissions.map((c) => c.requestId));
+				return {
+					permissions: [...st.permissions, ...removed.filter((c) => !present.has(c.requestId))],
+					permissionSelection: [
+						...st.permissionSelection,
+						...removedSelection.filter((id) => !st.permissionSelection.includes(id)),
+					],
+					error: err instanceof Error ? err.message : String(err),
+				};
 			});
 		}
+	},
+
+	togglePermissionSelection: (requestId) => {
+		useConnectionStore.setState((st) => ({
+			permissionSelection: st.permissionSelection.includes(requestId)
+				? st.permissionSelection.filter((id) => id !== requestId)
+				: [...st.permissionSelection, requestId],
+		}));
+	},
+
+	selectAllPermissions: () => {
+		useConnectionStore.setState((st) => ({
+			permissionSelection: st.permissions.map((c) => c.requestId),
+		}));
+	},
+
+	clearPermissionSelection: () => {
+		useConnectionStore.setState({ permissionSelection: [] });
 	},
 
 	clearError: () => set({ error: null }),
@@ -264,6 +331,8 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 			toolCalls: {},
 			widgets: {},
 			timeline: [],
+			permissions: [],
+			permissionSelection: [],
 			revision: get().revision + 1,
 		});
 		await conn.request("session.attach", {
@@ -332,13 +401,22 @@ export function applyStoreEvent(
 			workspaceApplyFsChanged(event.data);
 			break;
 		case "session.permission.request": {
-			const { sessionId, requestId, toolName, argsPreview, annotations, reason } = event.data;
-			// Only the active session's request surfaces (pie renders one chat at a time).
+			const { sessionId, requestId, toolName, argsPreview, annotations, reason, timeoutMs } = event.data;
+			// Only the active session's requests surface (pie renders one chat at a time).
 			if (sessionId !== useConnectionStore.getState().sessionId) break;
 			timelineEvent("permission", `permission: ${toolName}`);
-			useConnectionStore.setState({
-				permission: { sessionId, requestId, toolName, argsPreview, annotations, reason },
-			});
+			useConnectionStore.setState((st) => ({
+				permissions: [...st.permissions, { sessionId, requestId, toolName, argsPreview, annotations, reason, timeoutMs }],
+			}));
+			break;
+		}
+		case "session.permission.settled": {
+			// Authoritative removal (user / timeout / dispose): prune card + selection.
+			const { requestId } = event.data as PermissionSettledData;
+			useConnectionStore.setState((st) => ({
+				permissions: st.permissions.filter((c) => c.requestId !== requestId),
+				permissionSelection: st.permissionSelection.filter((id) => id !== requestId),
+			}));
 			break;
 		}
 		case "session.tool.started": { // timeline

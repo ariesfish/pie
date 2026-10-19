@@ -30,7 +30,7 @@ export function ChatList() {
 	const queue = useConnectionStore((s) => s.queue);
 	const widgets = useConnectionStore((s) => s.widgets);
 	const toolCalls = useConnectionStore((s) => s.toolCalls);
-	const hasPermission = useConnectionStore((s) => s.permission != null);
+	const hasPermission = useConnectionStore((s) => s.permissions.length > 0);
 	const [nearBottom, setNearBottom] = useState(true);
 	const viewportRef = useRef<StreamViewportHandle | null>(null);
 

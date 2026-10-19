@@ -1,0 +1,68 @@
+{
+  "id": "T-014",
+  "title": "app store:权限卡列表化 + 选择集 + 批量携带 + 单卡等价",
+  "opened": "2026-10-19T03:26:54Z",
+  "closed": "2026-10-19T03:33:54Z",
+  "gates": {
+    "tdd": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "ts": "2026-10-19T03:32:46Z"
+    },
+    "check": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "ts": "2026-10-19T03:32:57Z"
+    }
+  },
+  "history": [
+    {
+      "step": 1,
+      "ts": "2026-10-19T03:26:54Z",
+      "type": "open"
+    },
+    {
+      "step": 2,
+      "ts": "2026-10-19T03:32:46Z",
+      "type": "run",
+      "gate": "tdd",
+      "class": "D",
+      "argv": [
+        "npx",
+        "vitest",
+        "run",
+        "packages/app/src/components/chat/permission-store.test.ts"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "\n RUN  v3.2.7 /Users/ariesfish/Projects/github/pie/pie\n\n ✓ packages/app/src/components/chat/permission-store.test.ts (8 tests) 3ms\n\n Test Files  1 passed (1)\n      Tests  8 passed (8)\n   Start at  11:32:45\n   Duration  514ms (transform 183ms, setup 12ms, collect 349ms, tests 3ms, environment 0ms, prepare 39ms)\n\n"
+    },
+    {
+      "step": 3,
+      "ts": "2026-10-19T03:32:57Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "upport act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal presentation > only replaces when the callsite asks for replacement\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n"
+    },
+    {
+      "step": 4,
+      "ts": "2026-10-19T03:33:54Z",
+      "type": "close",
+      "note": "权限态列表化+选择集+批量:RED 7→GREEN 8,tdd/check 双门 PASS;UI 最小跟随多卡归 T-015"
+    }
+  ]
+}

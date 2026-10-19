@@ -114,10 +114,10 @@ Per-task checklists and status. Heading markers are triage roles (see docs/agent
 - [x] skip-test：UI 多卡视觉/真实模型旅程由收尾演示承担;wire 层经 registry 直驱 gate 接缝验了真实 pending 全管道
 
 ## T-014 (ready-for-agent)
-- [ ] store —— 权限态列表化（多请求 append 不互覆盖）+ timeoutMs 保留
-- [ ] store —— 选择集生命周期（增删/清除）+ 批量携带所选 id + 单卡 respond 等价
-- [ ] store —— session.permission.settled 到达移行 + 选择集同步
-- [ ] npm run check 全绿
+- [x] store —— 权限态列表化（多请求 append 不互覆盖）+ timeoutMs 保留
+- [x] store —— 选择集生命周期（增删/清除）+ 批量携带所选 id + 单卡 respond 等价
+- [x] store —— session.permission.settled 到达移行 + 选择集同步（失败还原：卡仍 pending）
+- [x] npm run check 全绿
 
 ## T-015 (ready-for-agent)
 - [ ] UI —— 多卡渲染 + 多选 + 批量栏（单卡时不出现）滑动端长按多选入口（SHOULD）

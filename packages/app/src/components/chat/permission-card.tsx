@@ -11,7 +11,7 @@ import { useConnectionStore } from "@/stores/connection-store";
 export function PermissionCard() {
 	const { t } = useTranslation();
 	const { theme } = useUnistyles();
-	const permission = useConnectionStore((s) => s.permission);
+	const permission = useConnectionStore((s) => s.permissions[0] ?? null);
 	const respondPermission = useConnectionStore((s) => s.respondPermission);
 	if (!permission) return null;
 
@@ -46,7 +46,7 @@ export function PermissionCard() {
 				<Pressable
 					style={[styles.btn, styles.deny]}
 					accessibilityLabel={t("permission.deny")}
-					onPress={() => void respondPermission("deny")}
+					onPress={() => void respondPermission(permission.requestId, "deny")}
 				>
 					<ShieldX size={13} color={theme.colors.statusDanger} strokeWidth={1.75} />
 					<Text style={[styles.btnText, { color: theme.colors.statusDanger }]}>
@@ -56,7 +56,7 @@ export function PermissionCard() {
 				<Pressable
 					style={styles.btn}
 					accessibilityLabel={t("permission.allowSession")}
-					onPress={() => void respondPermission("allowSession")}
+					onPress={() => void respondPermission(permission.requestId, "allowSession")}
 				>
 					<ShieldCheck size={13} color={theme.colors.accentBright} strokeWidth={1.75} />
 					<Text style={[styles.btnText, { color: theme.colors.accentBright }]}>
@@ -66,7 +66,7 @@ export function PermissionCard() {
 				<Pressable
 					style={[styles.btn, styles.allow]}
 					accessibilityLabel={t("permission.allow")}
-					onPress={() => void respondPermission("allow")}
+					onPress={() => void respondPermission(permission.requestId, "allow")}
 				>
 					<ShieldCheck size={13} color={theme.colors.accentForeground} strokeWidth={1.75} />
 					<Text style={[styles.btnText, { color: theme.colors.accentForeground }]}>

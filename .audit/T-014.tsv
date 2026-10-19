@@ -1,0 +1,5 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T014-1	状态模型:s.permission 单对象 → s.permissions 列表(到达序)+ permissionSelection id 数组;PermissionCard 导出类型含 timeoutMs(事件里有,旧状态丢弃了)	批量批复底座;settled 三来源都能用时移卡	packages/app/src/stores/connection-store.ts permissions 字段	green		connection-store.ts
+T014-2	动作面:respondPermission(requestId, decision) 保持 permission.respond 单卡路径;新增 respondPermissions(requestIds, decision) 走 respondMany;toggle/selectAll/clear 选择集	单卡路径不变即为等价(服务端同一 gate 语义);批量由 UI 按选择集携带	connection-store.ts 动作组;测试 5/6 用例	green		permission-store.test.ts
+T014-3	撤卡权威 = session.permission.settled(request/timeout/dispose 任来源);respond 仅乐观移除,wire 失败还原卡 + error(旧实现失败即丢卡,服务端仍 pending)	双端一致且失败不丢待审;修旧丢卡缺陷	respondPermissions catch 还原分支;测试 7/8 用例	green		permission-store.test.ts
+T014-4	UI 最小跟随(T-014 内不动多卡 UI):PermissionCard 读 permissions[0],respond 按钮带 requestId;ChatList hasPermission 改 length>0	每票独立可交付:本票只换 store 面,多卡/批量栏归 T-015	permission-card.tsx:14;chat-list.tsx:33	green		permission-card.tsx

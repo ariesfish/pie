@@ -1,33 +1,39 @@
-// [pie] W4c: pending-permission card — the agent asking to run a gated
+// [pie] W4c → T-015: pending-permission card — the agent asking to run a gated
 // tool surfaces in the chat's live auxiliary area with the protocol's
-// three-way answer (allow once / allow for session / deny).
+// three-way answer (allow once / allow for session / deny). With more than one
+// pending card each card gains a "join batch" checkbox (and long-press on
+// mobile); the batch bar itself lives in chat-list (single card → no bar).
 import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
-import { ShieldAlert, ShieldCheck, ShieldX } from "lucide-react-native";
+import { Check, ShieldAlert, ShieldCheck, ShieldX } from "lucide-react-native";
 
+import type { PermissionCard as PermissionCardData } from "@/stores/connection-store";
 import { useConnectionStore } from "@/stores/connection-store";
 
-export function PermissionCard() {
+export function PermissionCard({ card }: { card: PermissionCardData }) {
 	const { t } = useTranslation();
 	const { theme } = useUnistyles();
-	const permission = useConnectionStore((s) => s.permissions[0] ?? null);
+	const permissive = useConnectionStore((s) => s.permissions.length > 1);
+	const selected = useConnectionStore((s) => s.permissionSelection.includes(card.requestId));
 	const respondPermission = useConnectionStore((s) => s.respondPermission);
-	if (!permission) return null;
+	const togglePermissionSelection = useConnectionStore((s) => s.togglePermissionSelection);
 
-	const argEntries = Object.entries(permission.argsPreview ?? {}).slice(0, 6);
+	const argEntries = Object.entries(card.argsPreview ?? {}).slice(0, 6);
 
 	return (
-		<View style={styles.card} testID="permission-card">
+		<Pressable
+			style={[styles.card, selected && styles.selectedCard]}
+			testID="permission-card"
+			onLongPress={permissive ? () => togglePermissionSelection(card.requestId) : undefined}
+		>
 			<View style={styles.header}>
 				<ShieldAlert size={15} color={theme.colors.statusWarning} strokeWidth={1.75} />
 				<Text style={styles.title} numberOfLines={1}>
-					{t("permission.title", { tool: permission.toolName })}
+					{t("permission.title", { tool: card.toolName })}
 				</Text>
 			</View>
-			{permission.reason ? (
-				<Text style={styles.reason}>{permission.reason}</Text>
-			) : null}
+			{card.reason ? <Text style={styles.reason}>{card.reason}</Text> : null}
 			{argEntries.length > 0 ? (
 				<View style={styles.args}>
 					{argEntries.map(([key, value]) => (
@@ -42,11 +48,24 @@ export function PermissionCard() {
 					))}
 				</View>
 			) : null}
+			{permissive ? (
+				<Pressable
+					style={styles.selectRow}
+					accessibilityLabel={t("permission.selectForBatch")}
+					onPress={() => togglePermissionSelection(card.requestId)}
+					testID={`permission-select-${card.requestId}`}
+				>
+					<View style={[styles.checkbox, selected && styles.checkboxOn]}>
+						{selected ? <Check size={12} color={theme.colors.accentForeground} strokeWidth={2.5} /> : null}
+					</View>
+					<Text style={styles.selectText}>{t("permission.selectForBatch")}</Text>
+				</Pressable>
+			) : null}
 			<View style={styles.actions}>
 				<Pressable
 					style={[styles.btn, styles.deny]}
 					accessibilityLabel={t("permission.deny")}
-					onPress={() => void respondPermission(permission.requestId, "deny")}
+					onPress={() => void respondPermission(card.requestId, "deny")}
 				>
 					<ShieldX size={13} color={theme.colors.statusDanger} strokeWidth={1.75} />
 					<Text style={[styles.btnText, { color: theme.colors.statusDanger }]}>
@@ -56,7 +75,7 @@ export function PermissionCard() {
 				<Pressable
 					style={styles.btn}
 					accessibilityLabel={t("permission.allowSession")}
-					onPress={() => void respondPermission(permission.requestId, "allowSession")}
+					onPress={() => void respondPermission(card.requestId, "allowSession")}
 				>
 					<ShieldCheck size={13} color={theme.colors.accentBright} strokeWidth={1.75} />
 					<Text style={[styles.btnText, { color: theme.colors.accentBright }]}>
@@ -66,7 +85,7 @@ export function PermissionCard() {
 				<Pressable
 					style={[styles.btn, styles.allow]}
 					accessibilityLabel={t("permission.allow")}
-					onPress={() => void respondPermission(permission.requestId, "allow")}
+					onPress={() => void respondPermission(card.requestId, "allow")}
 				>
 					<ShieldCheck size={13} color={theme.colors.accentForeground} strokeWidth={1.75} />
 					<Text style={[styles.btnText, { color: theme.colors.accentForeground }]}>
@@ -74,7 +93,7 @@ export function PermissionCard() {
 					</Text>
 				</Pressable>
 			</View>
-		</View>
+		</Pressable>
 	);
 }
 
@@ -96,6 +115,9 @@ const styles = StyleSheet.create((theme) => ({
 		borderColor: theme.colors.statusWarning,
 		padding: theme.spacing[3],
 		gap: theme.spacing[2],
+	},
+	selectedCard: {
+		borderColor: theme.colors.accent,
 	},
 	header: {
 		flexDirection: "row",
@@ -135,6 +157,28 @@ const styles = StyleSheet.create((theme) => ({
 		flex: 1,
 		color: theme.colors.foreground,
 		fontFamily: theme.fontFamily.mono,
+		fontSize: theme.fontSize.sm,
+	},
+	selectRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: theme.spacing[2],
+	},
+	checkbox: {
+		width: 16,
+		height: 16,
+		borderRadius: theme.borderRadius.sm,
+		borderWidth: theme.borderWidth[1],
+		borderColor: theme.colors.border,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	checkboxOn: {
+		backgroundColor: theme.colors.accent,
+		borderColor: theme.colors.accent,
+	},
+	selectText: {
+		color: theme.colors.foregroundMuted,
 		fontSize: theme.fontSize.sm,
 	},
 	actions: {

@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { deriveTimeline, useConnectionStore } from "@/stores/connection-store";
 import { StreamItemRow } from "@/components/chat/stream-row";
 import { PermissionCard } from "@/components/chat/permission-card";
+import { PermissionBatchBar } from "@/components/chat/permission-batch-bar";
 import { WidgetView } from "@/components/widgets/widget-view";
 import { buildStreamItems } from "@/agent-stream/adapter";
 import { buildAgentStreamRenderModel } from "@/agent-stream/model";
@@ -31,6 +32,7 @@ export function ChatList() {
 	const widgets = useConnectionStore((s) => s.widgets);
 	const toolCalls = useConnectionStore((s) => s.toolCalls);
 	const hasPermission = useConnectionStore((s) => s.permissions.length > 0);
+	const permissions = useConnectionStore((s) => s.permissions);
 	const [nearBottom, setNearBottom] = useState(true);
 	const viewportRef = useRef<StreamViewportHandle | null>(null);
 
@@ -116,7 +118,10 @@ export function ChatList() {
 						!(queued > 0 && !streaming) &&
 						!hasPermission ? null : (
 							<View style={styles.aux}>
-								<PermissionCard />
+								<PermissionBatchBar />
+								{permissions.map((card) => (
+									<PermissionCard key={card.requestId} card={card} />
+								))}
 								{queued > 0 && !streaming ? (
 									<View style={styles.queueBadge}>
 										<Text style={styles.queueText}>

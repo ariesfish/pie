@@ -103,6 +103,14 @@
 		padding: 10px 16px 14px;
 	}
 	#widgets { display: flex; flex-direction: column; gap: 6px; max-width: 860px; margin: 0 auto 8px; }
+	.permbatch {
+		display: none; align-items: center; gap: 8px; flex-wrap: wrap;
+		background: var(--bg3); border: 1px solid #3a4356; border-radius: 8px;
+		padding: 6px 10px; font-size: 12px; color: #b7c0d4;
+	}
+	.permbatch .count { color: var(--muted); }
+	.permsel { display: none; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+	.permcard .permsel { margin-top: 4px; }
 	.widget {
 		background: var(--bg3); border: 1px dashed #323a4b; border-radius: 8px;
 		padding: 4px 10px; font: 12px/1.5 ui-monospace, monospace; color: #b7c0d4;
@@ -359,6 +367,7 @@ function onEvent(ev, data) {
 		case "session.ext.widget": return setWidget(data.key, data.lines, data.clear);
 		case "session.ext.title": return (document.title = data.title);
 		case "session.permission.request": return showPermissionCard(data);
+		case "session.permission.settled": return settlePermissionCard(data);
 		case "session.contextUsage.changed": return setUsageBadge(data.usage?.percent);
 		case "session.model.changed": return; // badge updated on next snapshot
 		case "session.ext.editorText":
@@ -870,6 +879,72 @@ function openBranchMenu(parentId, siblings) {
 }
 
 // --- permission cards ------------------------------------------------------
+let permBatch = null;             // batch bar (shown when >1 card)
+let permBatchCount = null;        // "N 张 · 已选 M 张" label
+let permChecked = new Set();       // requestIds selected for batch settlement
+
+function permBatchRespond(decision) {
+	const ids = [...permChecked];
+	if (ids.length === 0) return;
+	for (const id of ids) {
+		const card = permCards.get(id);
+		if (card) card.remove();
+		permCards.delete(id);
+		permChecked.delete(id);
+	}
+	refreshPermBatch();
+	request("permission.respondMany", { requestIds: ids, decision });
+}
+
+function refreshPermBatch() {
+	const multi = permCards.size > 1;
+	for (const [id, card] of permCards) {
+		const sel = card.querySelector(".permsel");
+		if (sel) {
+			sel.style.display = multi ? "flex" : "none";
+			sel.querySelector("input").checked = permChecked.has(id);
+		}
+	}
+	if (!permBatch) {
+		permBatch = el("div", "permbatch");
+		permBatchCount = el("span", "count");
+		const selectAll = el("button", "ghost", "全选");
+		selectAll.onclick = () => {
+			for (const id of permCards.keys()) permChecked.add(id);
+			refreshPermBatch();
+		};
+		const clearSel = el("button", "ghost", "取消选择");
+		clearSel.onclick = () => {
+			permChecked.clear();
+			refreshPermBatch();
+		};
+		const allow = el("button", "primary", "允许所选");
+		allow.onclick = () => permBatchRespond("allow");
+		const deny = el("button", "danger", "拒绝所选");
+		deny.onclick = () => permBatchRespond("deny");
+		permBatch.append(permBatchCount, selectAll, clearSel, allow, deny);
+		permBatch.style.display = "none";
+		$("widgets").prepend(permBatch);
+	} else if (!permBatch.isConnected) {
+		$("widgets").prepend(permBatch);
+	}
+	permBatch.style.display = multi ? "flex" : "none";
+	if (multi) permBatchCount.textContent = `待审 ${permCards.size} 张 · 已选 ${permChecked.size} 张`;
+}
+
+function removePermissionCard(requestId) {
+	const card = permCards.get(requestId);
+	if (card) card.remove();
+	permCards.delete(requestId);
+	permChecked.delete(requestId);
+	refreshPermBatch();
+}
+
+function settlePermissionCard(d) {
+	// Authoritative removal (user / timeout / dispose) — any source.
+	removePermissionCard(d.requestId);
+}
+
 function showPermissionCard(d) {
 	const card = el("div", "permcard");
 	const title = el("div", "ptitle");
@@ -891,6 +966,8 @@ function showPermissionCard(d) {
 	const respond = (decision) => {
 		card.remove();
 		permCards.delete(d.requestId);
+		permChecked.delete(d.requestId);
+		refreshPermBatch();
 		request("permission.respond", { requestId: d.requestId, decision });
 	};
 	deny.onclick = () => respond("deny");
@@ -898,8 +975,19 @@ function showPermissionCard(d) {
 	always.onclick = () => respond("allowSession");
 	actions.append(deny, once, always);
 	card.appendChild(actions);
+	const sel = el("label", "permsel");
+	const box = document.createElement("input");
+	box.type = "checkbox";
+	box.onchange = () => {
+		if (box.checked) permChecked.add(d.requestId);
+		else permChecked.delete(d.requestId);
+		refreshPermBatch();
+	};
+	sel.append(box, el("span", "", "加入批量"));
+	card.appendChild(sel);
 	$("widgets").appendChild(card);
 	permCards.set(d.requestId, card);
+	refreshPermBatch();
 	scrollDown();
 }
 function safeJson(v) {

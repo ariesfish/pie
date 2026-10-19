@@ -146,6 +146,14 @@ export const zhCN = {
 		deny: "拒绝",
 		allowSession: "本会话允许",
 		allow: "允许一次",
+		selectForBatch: "加入批量",
+		batch: {
+			count: "待审 {{total}} 张 · 已选 {{selected}} 张",
+			selectAll: "全选",
+			clear: "取消选择",
+			allow: "允许所选（{{count}}）",
+			deny: "拒绝所选（{{count}}）",
+		},
 	},
 	conflict: {
 		changedOnDisk: "文件在磁盘上已更改",

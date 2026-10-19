@@ -146,6 +146,14 @@ export const en = {
 		deny: "Deny",
 		allowSession: "Allow for session",
 		allow: "Allow once",
+		selectForBatch: "Add to batch",
+		batch: {
+			count: "{{total}} pending · {{selected}} selected",
+			selectAll: "Select all",
+			clear: "Clear",
+			allow: "Allow selected ({{count}})",
+			deny: "Deny selected ({{count}})",
+		},
 	},
 	conflict: {
 		changedOnDisk: "File changed on disk",

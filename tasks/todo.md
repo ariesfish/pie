@@ -120,10 +120,10 @@ Per-task checklists and status. Heading markers are triage roles (see docs/agent
 - [x] npm run check 全绿
 
 ## T-015 (ready-for-agent)
-- [ ] UI —— 多卡渲染 + 多选 + 批量栏（单卡时不出现）滑动端长按多选入口（SHOULD）
-- [ ] i18n —— 中英文案切换正确
-- [ ] 演示页 —— 多选复选 + 批量栏 + respondMany 调用；单卡时栏隐藏
-- [ ] npm run check + ui-walkthrough 复绿（无回归）
+- [x] UI —— 多卡渲染 + 多选复选（多卡时显示）+ 批量栏（单卡时不出现）+ 移动长按多选（SHOULD）
+- [x] i18n —— 中英文案切换正确（selectForBatch/batch.* 七键双语）
+- [x] 演示页 —— 多选复选 + 批量栏 + respondMany 调用；单卡时栏隐藏 + settled 权威撤卡
+- [x] npm run check + ui-walkthrough 复绿（27 PASS / 0 FAIL）
 - [ ] 多卡证据：收尾演示（真实模型，浏览器双页）+ 截图
 
 ## T-016 (ready-for-agent)

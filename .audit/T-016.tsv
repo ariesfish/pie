@@ -1,0 +1,3 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T016-1	删 packages/app/src/components/panels/{diff-view.tsx, diff-model.ts} + packages/app/test/diff-model.test.ts	W3c 引擎落地后三者零引用(首轮 grep 证 view/model;首跑 check 抓出孤儿测)	git rm 85ea.. 本 commit;grep 引用残留为零	green		git log --diff-filter=D --stat
+T016-2	删除票无 RED 阶段,由 check + walkthrough 双门兕底(check 首跑 FAIL 抓孤儿测,修正后复绿)	删除类变更的可执行证据 = 全 suite + 走查不回归;.sdlc/state.json history 记 FAIL→PASS 过程	.sdlc/items/T-016/state.json	check 门首跑 FAIL 留在 history(诚实记录);walkthrough 27 PASS	green	git log

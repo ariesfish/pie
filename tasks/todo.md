@@ -127,8 +127,8 @@ Per-task checklists and status. Heading markers are triage roles (see docs/agent
 - [ ] 多卡证据：收尾演示（真实模型，浏览器双页）+ 截图
 
 ## T-016 (ready-for-agent)
-- [ ] 删 diff-view.tsx + diff-model.ts（零引用已 grep 证）
-- [ ] 删后 grep 无引用残留 + npm run check + walkthrough 复绿（04 仍过）
+- [x] 删 diff-view.tsx + diff-model.ts（零引用已 grep 证）+ 孤儿测 packages/app/test/diff-model.test.ts
+- [x] 删后 grep 无引用残留 + npm run check + walkthrough 复绿（04 仍过，27 PASS）
 
 ## T-017 (ready-for-agent)
 - [ ] 搬 paseo use-changes-preferences + 硬编码替换 + 布局切换 UI

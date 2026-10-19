@@ -1,0 +1,76 @@
+{
+  "id": "T-016",
+  "title": "删 diff-view.tsx+diff-model.ts 零引用死码",
+  "opened": "2026-10-19T03:41:04Z",
+  "closed": "2026-10-19T03:43:42Z",
+  "gates": {
+    "check": {
+      "class": "D",
+      "pass": true,
+      "runs": 3,
+      "first_pass": false,
+      "ts": "2026-10-19T03:43:42Z"
+    }
+  },
+  "history": [
+    {
+      "step": 1,
+      "ts": "2026-10-19T03:41:04Z",
+      "type": "open"
+    },
+    {
+      "step": 2,
+      "ts": "2026-10-19T03:41:42Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 1,
+      "pass": false,
+      "evidence": "olated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n\n⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  packages/app/test/diff-model.test.ts [ packages/app/test/diff-model.test.ts ]\nError: Cannot find module '../src/components/panels/diff-model.js' imported from '/Users/ariesfish/Projects/github/pie/pie/packages/app/test/diff-model.test.ts'\n ❯ packages/app/test/diff-model.test.ts:4:1\n      2| import { describe, expect, it } from \"vitest\";\n      3| \n      4| import { buildDiffModel, intraLine, lcsOps } from \"../src/components/p…\n       | ^\n      5| \n      6| const SAMPLE = [\n\nCaused by: Error: Failed to load url ../src/components/panels/diff-model.js (resolved id: ../src/components/panels/diff-model.js) in /Users/ariesfish/Projects/github/pie/pie/packages/app/test/diff-model.test.ts. Does the file exist?\n ❯ loadAndTransform node_modules/vite/dist/node/chunks/config.js:22907:33\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n"
+    },
+    {
+      "step": 3,
+      "ts": "2026-10-19T03:42:28Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "ui-walkthrough"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "b/pie/pie/ui-walkthrough-shots)\n\n=== UI WALKTHROUGH ===\nPASS  01 connect → workspace header\nPASS  02 rail open → files tree shows src/\nPASS  03 open app.ts → files tab + CodeMirror mounted — cm-editors=1\nPASS  03b README.md → md preview (frontmatter + code copy + mermaid) — heading=true copyBtn=1 svg=1 fm=1\nPASS  03c edit → autosave CAS write lands on disk — editor=true disk=true\nPASS  04 changes tab → diff document renders (canvas + sticky headers) — headers=2 canvas=3\nPASS  05a sticky creator + entry present\nPASS  05b creator panel shows Start session\nPASS  05c session created → session tab + composer — composer=true\nPASS  05d usage rail → token quartet + message stats — tokens=true counts=true\nPASS  06 split pane → two pane headers — split=2 close=2\nPASS  07 drag drop → files tab still present — app.ts nodes=1\nPASS  08 rail resize handle widens rail — x 1174 → 1106\nPASS  09 compact → sessions drawer opens (edge swipe)\nPASS  09b sessions drawer closes (push-away swipe) — backdrop=0\nPASS  10 compact → explorer drawer opens (right edge swipe) — backdrop=1 filesTab=1\nPASS  R1 fork inherits the name at the fork point — fork=分叉源名字\nPASS  R2 renaming the parent does not affect the fork — parent=改父名 fork=分叉源名字\nPASS  R3 rename leaves the branch label entry intact — label={\"type\":\"label\",\"id\":\"l0000001\",\"parentI…\nPASS  R4 labeled session renamed\nPASS  R5 renamed parent row visible in sidebar\nPASS  R6 UI rename: row shows the new name\nPASS  R7 wire state matches UI rename\nPASS  R8 UI clear: row falls back to the first message\nPASS  R9 wire state matches UI clear\nPASS  R10 desktop row updates live after an off-device rename (no reload)\nPASS  R11 phone shows the same session name as the desktop\nscreenshots: /Users/ariesfish/Projects/github/pie/pie/ui-walkthrough-shots\nnpm warn install-scripts .npmrc allow-scripts setting is being ignored because --allow-scripts was passed on the command line\nFavicon source file in Expo config (web.favicon) does not exist: ./assets/favicon.png\n"
+    },
+    {
+      "step": 4,
+      "ts": "2026-10-19T03:43:42Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "upport act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal presentation > only replaces when the callsite asks for replacement\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n"
+    },
+    {
+      "step": 5,
+      "ts": "2026-10-19T03:43:42Z",
+      "type": "close",
+      "note": "删 diff-view/diff-model+其 test:check FAIL→发现孤儿测 diff-model.test.ts→删后全过;walkthrough 04 仍过(断言零放宽);"
+    }
+  ]
+}

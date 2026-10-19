@@ -1,0 +1,7 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T013-1	wire 层 respondMany 用服务端组合:逐 id 过 registry open 扫描复用单张 respond 语义,gate 不新增批量方法	批量结算 = 循环单张;三来源收口在 gate 一处	packages/daemon/src/server/server.ts respondMany handler	green		packages/daemon/src/server/server.ts
+T013-2	gate 新增 publishSettled 通道,respond/timeout/denyAll 三来源统一 settle() 发布 session.permission.settled {sessionId, requestId, source}	客户端权威撤卡依据;timeout 仍 fail-safe deny 不变	packages/daemon/src/pi/permissions.ts settle();packages/protocol/src/events.ts PermissionSettledData	green		permissions.test.ts settled describe
+T013-3	decision 枚举校验(permissionDecision helper,respond/respondMany 共用):修复盲转——此前任意非 "deny" 字符串按放行结算	permission 面 correctness:typo 不可静默放行	server.ts permissionDecision;两个非法值用例	green		permission-respond-many.test.ts
+T013-4	纯 unknown 批返回 {settled:[], unknown:[...]} 不抛错(单张 respond 保持 request_not_found 兼容)	批量语义按「报告不报错」;单张错误语义是既有契约	commands.ts respondMany 注释 + 混合批用例	green		permission-respond-many.test.ts
+T013-5	wire 测试接缝:registry 直驱 host.permissionGate.intercept 造真实 pending（照 summary-broadcast appendMessage 先例）	无模型环境不可触发 tool_call;直驱生产路径覆盖真 pending 全管道(出卡→批量结算→settled 广播)	permission-respond-many.test.ts openSession;summary-broadcast.test.ts 先例	green		permission-respond-many.test.ts
+T013-6	新测试文件独立端口 8881	projects.test.ts 占 8878,并行 vitest worker 撞 EADDRINUSE	permission-respond-many.test.ts listenPort;projects.test.ts:75	green		permission-respond-many.test.ts

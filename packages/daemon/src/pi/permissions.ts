@@ -29,6 +29,12 @@ export interface WirePermissionRequest {
 	timeoutMs: number;
 }
 
+export interface WirePermissionSettled {
+	requestId: string;
+	sessionId: string;
+	source: "user" | "timeout" | "dispose";
+}
+
 export type PermissionDecision = "allow" | "allowSession" | "deny";
 
 interface PendingPermission {
@@ -47,6 +53,8 @@ export class PermissionGate {
 			/** Late-bound: the gate is created before the session exists. */
 			sessionId: () => string;
 			publish: (request: WirePermissionRequest) => void;
+			/** Verdict broadcast (session.permission.settled): user / timeout / dispose. */
+			publishSettled: (settled: WirePermissionSettled) => void;
 		},
 	) {}
 
@@ -89,6 +97,7 @@ export class PermissionGate {
 		return new Promise<PermissionDecision>((resolve) => {
 			const timer = setTimeout(() => {
 				this.pending.delete(requestId);
+				this.settle(requestId, "timeout");
 				resolve("deny"); // fail-safe (timeout = deny, §5.9)
 			}, this.opts.timeoutMs ?? PERMISSION_TIMEOUT_MS);
 			this.pending.set(requestId, {
@@ -116,17 +125,24 @@ export class PermissionGate {
 		if (!pending) return false;
 		this.pending.delete(requestId);
 		clearTimeout(pending.timer);
+		this.settle(requestId, "user");
 		pending.resolve(decision);
 		return true;
 	}
 
 	/** Resolve everything as deny (session dispose / shutdown). */
 	denyAll(): void {
-		for (const [, p] of this.pending) {
+		for (const [requestId, p] of this.pending) {
 			clearTimeout(p.timer);
+			this.settle(requestId, "dispose");
 			p.resolve("deny");
 		}
 		this.pending.clear();
+	}
+
+	/** Broadcast one settled verdict (wire event, three sources). */
+	private settle(requestId: string, source: WirePermissionSettled["source"]): void {
+		this.opts.publishSettled({ requestId, sessionId: this.opts.sessionId(), source });
 	}
 }
 

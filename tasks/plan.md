@@ -264,7 +264,9 @@ wire 只加不改:新命令 `permission.respondMany`(批量结算 + unknown id �
 - [ ] [check: 单元测试 —— decision 非法值被拒]
 - [ ] [check: npm run check 全绿]
 
-- [skip_test: 真实多卡需真实模型(无 LLM 无法触发 permission.request)——wire 层验命令管道 + 单元层验 gate 语义]
+Closed 2026-10-19: respondMany 服务端组合 + settled 三来源(user/timeout/dispose)广播 + decision 枚举校验(盲转修复)落地;新增 6 单元 + 8 wire 用例全绿,900 用例 = 886 基线 + 14 新增;check 门 PASS(commit 见 git log)。
+
+- [skip_test: UI 多卡视觉与真实模型旅程由收尾演示与 T-015 证据承担;wire 层经 registry 直驱 gate 接缝验证了真实 pending 全管道]
 
 ## [T-014] app store:权限卡列表化 + 选择集(子票) (ready-for-agent)
 

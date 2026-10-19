@@ -740,10 +740,23 @@ export class DaemonServer {
 
 		r.register("permission.respond", async (args) => {
 			const requestId = requiredString(args, "requestId");
-			const decision = requiredString(args, "decision") as "allow" | "allowSession" | "deny";
+			const decision = permissionDecision(args);
 			const answered = [...self.registry.open].some((h) => h.permissionGate.respond(requestId, decision));
 			if (!answered) throw new HostSessionError(`No pending permission: ${requestId}`, "request_not_found");
 			return {};
+		});
+
+		r.register("permission.respondMany", async (args) => {
+			const requestIds = requiredStringArray(args, "requestIds");
+			const decision = permissionDecision(args);
+			const settled: string[] = [];
+			const unknown: string[] = [];
+			for (const requestId of requestIds) {
+				const answered = [...self.registry.open].some((h) => h.permissionGate.respond(requestId, decision));
+				if (answered) settled.push(requestId);
+				else unknown.push(requestId);
+			}
+			return { settled, unknown };
 		});
 
 		r.register("ext.dialog.respond", async (args) => {
@@ -879,4 +892,22 @@ function requiredString(args: Record<string, unknown>, key: string): string {
 		throw new HostSessionError(`Missing required string argument: ${key}`, "invalid_args");
 	}
 	return value;
+}
+
+function requiredStringArray(args: Record<string, unknown>, key: string): string[] {
+	const value = args[key];
+	if (!Array.isArray(value) || !value.every((v) => typeof v === "string" && v.length > 0)) {
+		throw new HostSessionError(`Missing required string array argument: ${key}`, "invalid_args");
+	}
+	return value as string[];
+}
+
+const PERMISSION_DECISIONS = new Set(["allow", "allowSession", "deny"]);
+
+function permissionDecision(args: Record<string, unknown>): "allow" | "allowSession" | "deny" {
+	const decision = requiredString(args, "decision");
+	if (!PERMISSION_DECISIONS.has(decision)) {
+		throw new HostSessionError(`Invalid permission decision: ${decision}`, "invalid_args");
+	}
+	return decision as "allow" | "allowSession" | "deny";
 }

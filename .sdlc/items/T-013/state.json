@@ -1,0 +1,85 @@
+{
+  "id": "T-013",
+  "title": "permission.respondMany + session.permission.settled(三来源) + decision 校验",
+  "opened": "2026-10-19T03:11:41Z",
+  "closed": "2026-10-19T03:26:46Z",
+  "gates": {
+    "tdd": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "ts": "2026-10-19T03:21:47Z"
+    },
+    "check": {
+      "class": "D",
+      "pass": true,
+      "runs": 2,
+      "first_pass": false,
+      "ts": "2026-10-19T03:25:34Z"
+    }
+  },
+  "history": [
+    {
+      "step": 1,
+      "ts": "2026-10-19T03:11:41Z",
+      "type": "open"
+    },
+    {
+      "step": 2,
+      "ts": "2026-10-19T03:21:47Z",
+      "type": "run",
+      "gate": "tdd",
+      "class": "D",
+      "argv": [
+        "npx",
+        "vitest",
+        "run",
+        "packages/daemon/test/permissions.test.ts",
+        "packages/daemon/test/permission-respond-many.test.ts"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "\n RUN  v3.2.7 /Users/ariesfish/Projects/github/pie/pie\n\n ✓ packages/daemon/test/permissions.test.ts (21 tests) 176ms\n ✓ packages/daemon/test/permission-respond-many.test.ts (8 tests) 698ms\n\n Test Files  2 passed (2)\n      Tests  29 passed (29)\n   Start at  11:21:45\n   Duration  1.20s (transform 113ms, setup 34ms, collect 377ms, tests 874ms, environment 0ms, prepare 68ms)\n\n"
+    },
+    {
+      "step": 3,
+      "ts": "2026-10-19T03:22:14Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 1,
+      "pass": false,
+      "evidence": "when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n\n⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  packages/daemon/test/projects.test.ts [ packages/daemon/test/projects.test.ts ]\nError: Hook timed out in 20000ms.\nIf this is a long-running hook, pass a timeout value as the last argument or configure it globally with \"hookTimeout\".\n ❯ packages/daemon/test/projects.test.ts:71:1\n     69| }\n     70| \n     71| beforeAll(async () => {\n       | ^\n     72|  vi.stubEnv(\"PI_CODING_AGENT_DIR\", agentHome);\n     73|  server = new DaemonServer({\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯\n\nVitest caught 1 unhandled error during the test run.\nThis might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.\n\n⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯\nError: listen EADDRINUSE: address already in use 127.0.0.1:8878\n ❯ Server.setupListenHandle [as _listen2] node:net:2328:16\n ❯ listenInCluster node:net:2437:12\n ❯ node:net:2666:7\n ❯ processTicksAndRejections node:internal/process/task_queues:90:21\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\nSerialized Error: { code: 'EADDRINUSE', errno: -48, syscall: 'listen', address: '127.0.0.1', port: 8878 }\nThis error originated in \"packages/daemon/test/projects.test.ts\" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n"
+    },
+    {
+      "step": 4,
+      "ts": "2026-10-19T03:25:34Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "upport act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal presentation > only replaces when the callsite asks for replacement\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n"
+    },
+    {
+      "step": 5,
+      "ts": "2026-10-19T03:26:46Z",
+      "type": "close",
+      "note": "respondMany+settled 三来源+decision 校验:RED 12→GREEN,tdd/check 双门 PASS"
+    }
+  ]
+}

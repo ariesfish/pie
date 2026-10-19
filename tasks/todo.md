@@ -104,14 +104,14 @@ Per-task checklists and status. Heading markers are triage roles (see docs/agent
 - [ ] npm run check 全绿
 
 ## T-013 (ready-for-agent)
-- [ ] daemon unit/wire —— respondMany 全结算 + timer 清除 + pending 清空
-- [ ] daemon unit/wire —— unknown 报告 + 已知 id 正常结算
-- [ ] daemon unit —— 批量 allowSession 按 toolName 记入会话允许集
-- [ ] daemon unit —— 单张 respond 回归 + denyAll 回归
-- [ ] daemon unit —— settled 事件三来源广播（user/timeout/dispose）
-- [ ] daemon —— decision 非法值被拒（盲转修复：现在非 "deny" 一律按放行）
-- [ ] npm run check 全绿
-- [ ] skip-test：真实多卡需真实模型，wire 层验命令管道 + 单元层验 gate 语义（如实入账）
+- [x] daemon unit/wire —— respondMany 全结算 + timer 清除 + pending 清空
+- [x] daemon unit/wire —— unknown 报告 + 已知 id 正常结算
+- [x] daemon unit —— 批量 allowSession 按 toolName 记入会话允许集
+- [x] daemon unit —— 单张 respond 回归 + denyAll 回归
+- [x] daemon unit —— settled 事件三来源广播（user/timeout/dispose）
+- [x] daemon —— decision 非法值被拒（盲转修复：现在非 "deny" 一律按放行）
+- [x] npm run check 全绿（900 用例 = 886 基线 + 14 新增）
+- [x] skip-test：UI 多卡视觉/真实模型旅程由收尾演示承担;wire 层经 registry 直驱 gate 接缝验了真实 pending 全管道
 
 ## T-014 (ready-for-agent)
 - [ ] store —— 权限态列表化（多请求 append 不互覆盖）+ timeoutMs 保留

@@ -236,6 +236,15 @@ export interface PermissionRequestData {
 	timeoutMs: number;
 }
 
+/** A pending permission request reached its verdict. Sources: `user` (respond/
+ * respondMany settled it), `timeout` (card expired, resolved as deny), `dispose`
+ * (session torn down, denyAll). Authoritative: clients drop the card on receipt. */
+export interface PermissionSettledData {
+	sessionId: SessionId;
+	requestId: RequestId;
+	source: "user" | "timeout" | "dispose";
+}
+
 // --- daemon-level ----------------------------------------------------------------
 
 /** Session list (for some workspace, or all) changed; clients refetch. */
@@ -282,6 +291,7 @@ export interface EventPayloadMap {
 	"session.ext.title": ExtTitleData;
 	"session.ext.editorText": ExtEditorTextData;
 	"session.permission.request": PermissionRequestData;
+	"session.permission.settled": PermissionSettledData;
 	"daemon.sessions.changed": SessionsChangedData;
 	/** Watched workspace files changed (batched paths, relative POSIX). */
 	"workspace.fs.changed": FsChangedData;

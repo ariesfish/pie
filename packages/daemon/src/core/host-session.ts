@@ -39,7 +39,13 @@ import {
 import type { WireEvent } from "../pi/events.js";
 import { PartialCoalescer, mapSessionEvent, partialDeltaFromUpdate } from "../pi/events.js";
 import { createHostUiContext, type DialogRegistry } from "../pi/ui-context.js";
-import { PermissionGate, createPermissionExtension, type PermissionMode, type WirePermissionRequest } from "../pi/permissions.js";
+import {
+	PermissionGate,
+	createPermissionExtension,
+	type PermissionMode,
+	type WirePermissionRequest,
+	type WirePermissionSettled,
+} from "../pi/permissions.js";
 
 export type EmitFn = (ev: WireEvent) => void;
 
@@ -175,6 +181,7 @@ export class HostSession {
 			timeoutMs: opts.permissionTimeoutMs,
 			sessionId: () => holder.host?.sessionId ?? "(pending)",
 			publish: (request: WirePermissionRequest) => holder.host?.emitPermissionRequest(request),
+			publishSettled: (settled: WirePermissionSettled) => holder.host?.emitPermissionSettled(settled),
 		});
 
 		const resourceLoader = new DefaultResourceLoader({
@@ -227,6 +234,11 @@ export class HostSession {
 	/** PermissionGate publish target (wire routing lives here, not in the gate). */
 	emitPermissionRequest(request: WirePermissionRequest): void {
 		this.emitDirect({ ev: "session.permission.request", data: request as EventData<"session.permission.request"> });
+	}
+
+	/** PermissionGate settled broadcast target (same routing rule as requests). */
+	emitPermissionSettled(settled: WirePermissionSettled): void {
+		this.emitDirect({ ev: "session.permission.settled", data: settled as EventData<"session.permission.settled"> });
 	}
 
 	/** Emit an event derived from a Pi event, flushing pending deltas first. */

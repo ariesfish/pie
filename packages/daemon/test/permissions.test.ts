@@ -1,17 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
 import { PermissionGate, createPermissionExtension } from "../src/pi/permissions.js";
-import type { WirePermissionRequest, PermissionDecision } from "../src/pi/permissions.js";
+import type { WirePermissionRequest, WirePermissionSettled, PermissionDecision } from "../src/pi/permissions.js";
 
 function makeGate(opts: Partial<ConstructorParameters<typeof PermissionGate>[0]> = {}) {
 	const published: WirePermissionRequest[] = [];
+	const settled: WirePermissionSettled[] = [];
 	const gate = new PermissionGate({
 		mode: "ask",
 		sessionId: () => "s-1",
 		publish: (request) => published.push(request),
+		publishSettled: (s) => settled.push(s),
 		timeoutMs: 500,
 		...opts,
 	});
-	return { gate, published };
+	return { gate, published, settled };
 }
 
 /** Drive one intercept; optionally auto-answer from the "client" when published. */
@@ -151,6 +153,70 @@ describe("PermissionGate", () => {
 		expect((request.argsPreview["content"] as string).length).toBeLessThanOrEqual(2001);
 		gate.respond(request.requestId, "deny");
 		await pending;
+	});
+});
+
+describe("PermissionGate settled events (session.permission.settled)", () => {
+	it("respond 结算 → settled source=user,后续不再有 timeout settled", async () => {
+		const { gate, published, settled } = makeGate({ mode: "ask", timeoutMs: 50 });
+		const pending = gate.intercept("bash", { command: "ls" });
+		await vi.waitFor(() => expect(published.length).toBe(1), { timeout: 500 });
+		expect(gate.respond(published[0]!.requestId, "allow")).toBe(true);
+		expect(await pending).toBeUndefined();
+		expect(settled).toEqual([{ requestId: published[0]!.requestId, sessionId: "s-1", source: "user" }]);
+		// timer 已清:等到超时点过后,不再新增事件(无 timeout settled、无重复结算)
+		await new Promise((r) => setTimeout(r, 90));
+		expect(settled).toHaveLength(1);
+	});
+
+	it("timeout 到期 → settled source=timeout + deny(fail-safe 不变)", async () => {
+		const { gate, published, settled } = makeGate({ mode: "ask", timeoutMs: 40 });
+		const pending = gate.intercept("bash", { command: "ls" });
+		await vi.waitFor(() => expect(published.length).toBe(1), { timeout: 500 });
+		expect(await pending).toEqual({ block: true, reason: "bash was not approved by the user" });
+		expect(settled).toEqual([{ requestId: published[0]!.requestId, sessionId: "s-1", source: "timeout" }]);
+	});
+
+	it("denyAll → 每张 pending 一条 settled source=dispose", async () => {
+		const { gate, published, settled } = makeGate({ mode: "ask" });
+		const p1 = gate.intercept("bash", { command: "a" });
+		const p2 = gate.intercept("write", { path: "x" });
+		await vi.waitFor(() => expect(published.length).toBe(2), { timeout: 500 });
+		gate.denyAll();
+		expect(await p1).toEqual({ block: true, reason: "bash was not approved by the user" });
+		expect(await p2).toEqual({ block: true, reason: "write was not approved by the user" });
+		expect(settled.map((s) => s.source)).toEqual(["dispose", "dispose"]);
+		expect(new Set(settled.map((s) => s.requestId))).toEqual(new Set(published.map((p) => p.requestId)));
+	});
+
+	it("allowSession → settled source=user + 会话允许集记忆(同工具不再出卡)", async () => {
+		const { gate, published, settled } = makeGate({ mode: "ask" });
+		const p1 = gate.intercept("bash", { command: "a" });
+		await vi.waitFor(() => expect(published.length).toBe(1), { timeout: 500 });
+		expect(gate.respond(published[0]!.requestId, "allowSession")).toBe(true);
+		expect(await p1).toBeUndefined();
+		// 第二次同工具:直接放行,无新请求、无新 settled
+		expect(await gate.intercept("bash", { command: "b" })).toBeUndefined();
+		expect(published).toHaveLength(1);
+		expect(settled).toEqual([{ requestId: published[0]!.requestId, sessionId: "s-1", source: "user" }]);
+	});
+
+	it("多张卡逐 respond 排空 pending(批量结算的 gate 底座)", async () => {
+		const { gate, published, settled } = makeGate({ mode: "ask" });
+		const p1 = gate.intercept("bash", { command: "a" });
+		const p2 = gate.intercept("write", { path: "x" });
+		const p3 = gate.intercept("edit", { path: "y" });
+		await vi.waitFor(() => expect(published.length).toBe(3), { timeout: 500 });
+		for (const p of published) expect(gate.respond(p.requestId, "allow")).toBe(true);
+		expect(await Promise.all([p1, p2, p3])).toEqual([undefined, undefined, undefined]);
+		expect(settled).toHaveLength(3);
+		expect(settled.every((s) => s.source === "user")).toBe(true);
+	});
+
+	it("respond unknown id → false 且无 settled", () => {
+		const { gate, settled } = makeGate({ mode: "ask" });
+		expect(gate.respond("perm-unknown", "allow")).toBe(false);
+		expect(settled).toHaveLength(0);
 	});
 });
 

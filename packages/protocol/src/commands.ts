@@ -355,6 +355,19 @@ export interface CommandMap {
 		};
 		result: Record<string, never>;
 	};
+	/** Batch settlement: settle many pending permission requests with one decision.
+	 * Unknown/expired ids are reported, not errored (single respond keeps its
+	 * request_not_found error for compat). */
+	"permission.respondMany": {
+		args: {
+			requestIds: RequestId[];
+			decision: "allow" | "allowSession" | "deny";
+		};
+		result: {
+			settled: RequestId[];
+			unknown: RequestId[];
+		};
+	};
 }
 
 export type CommandName = keyof CommandMap;

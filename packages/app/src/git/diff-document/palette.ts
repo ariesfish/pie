@@ -3,17 +3,28 @@ import type { Theme } from "@/styles/theme";
 import { hexColorWithAlpha } from "@/utils/color";
 import type { DiffCell, DiffPalette } from "./types";
 
+/**
+ * DESIGN.md §Colors names the diff row tints (`diff-add` / `diff-del`), but the
+ * theme module carries no diff group, so DESIGN.md's stated fallback applies:
+ * the semantic status colours at a low alpha.
+ */
+const DIFF_ADD_ALPHA = 0.15;
+const DIFF_DEL_ALPHA = 0.1;
+
 export function createDiffPalette(theme: Theme): DiffPalette {
   return {
     surface: theme.colors.surface0,
     headerSurface: theme.colors.surface0,
     border: theme.colors.border,
     foreground: theme.colors.foreground,
-    foregroundMuted: theme.colors.foregroundMuted,
+    // Line numbers are the quietest text in the diff: ink-3 (DESIGN.md
+    // §Components/Cards: "行号 ink-3"). This field names the gutter tone, so it
+    // carries ink-3; last line/header text uses `foreground`/`foregroundMuted`.
+    foregroundMuted: theme.colors.foregroundExtraMuted,
     addition: theme.colors.statusSuccess,
     deletion: theme.colors.statusDanger,
-    additionBackground: hexColorWithAlpha(theme.colors.statusSuccess, 0.15),
-    deletionBackground: hexColorWithAlpha(theme.colors.statusDanger, 0.1),
+    additionBackground: hexColorWithAlpha(theme.colors.statusSuccess, DIFF_ADD_ALPHA),
+    deletionBackground: hexColorWithAlpha(theme.colors.statusDanger, DIFF_DEL_ALPHA),
     emptyBackground: theme.colors.surface0,
     // [pie] paseo reads xterm-blue from its ANSI terminal palette; pie's
     // theme carries no terminal group (W4 terminal ADR) — the accent plays
@@ -65,7 +76,9 @@ export function codeTextColor(cell: DiffCell, palette: DiffPalette): string {
 
 export function codeLineNumberTone(cell: DiffCell): "addition" | "deletion" | "foregroundMuted" {
   "worklet";
-  if (cell.type === "add") return "addition";
-  if (cell.type === "remove") return "deletion";
+  // Every gutter uses the quiet text tone: the row tint already carries the
+  // semantics, and a coloured gutter would spend the limited chroma budget on
+  // decoration (DESIGN.md §Components/Cards: "行号 ink-3").
+  void cell;
   return "foregroundMuted";
 }

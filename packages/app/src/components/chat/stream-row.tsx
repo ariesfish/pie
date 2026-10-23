@@ -6,6 +6,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import {
+	ChevronDown,
+	ChevronRight,
 	Clock,
 	FileText,
 	MessageCircleQuestion,
@@ -18,6 +20,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
 import { MarkdownRenderer } from "@/components/markdown/renderer";
+import { StatusBadge } from "@/components/ui/status-badge";
 import type { StreamItem } from "@/types/stream";
 
 export function StreamItemRow({ item }: { item: StreamItem }) {
@@ -75,6 +78,11 @@ function ThoughtRow({ text, loading }: { text: string; loading: boolean }) {
 				<Text style={styles.thoughtLabel} numberOfLines={1}>
 					{loading ? t("chat.thinking") : t("chat.thought")}
 				</Text>
+				{open ? (
+					<ChevronDown size={12} color={theme.colors.foregroundExtraMuted} strokeWidth={1.5} />
+				) : (
+					<ChevronRight size={12} color={theme.colors.foregroundExtraMuted} strokeWidth={1.5} />
+				)}
 			</Pressable>
 			{/* While streaming, expanding shows the partial thought live. */}
 			{open && text ? (
@@ -86,9 +94,10 @@ function ThoughtRow({ text, loading }: { text: string; loading: boolean }) {
 	);
 }
 
-/** paseo.png tool rows: borderless single line (type icon + tool name +
- *  argument snippet), orange warning glyph when the call failed. Tap to
- *  expand parameters/result (pie keeps that affordance). */
+/** Tool card (DESIGN.md §Components/Cards): header strip on the code paper
+ *  (`surface1` stands in for `surface-code` in this theme) with the tool
+ *  name, a mono argument digest and a semantic status chip; the expanded
+ *  body is mono on the canvas. Tap the header to expand parameters/result. */
 function toolIcon(name: string): typeof Wrench {
 	const n = name.toLowerCase();
 	if (n.startsWith("bash") || n.startsWith("shell") || n.includes("exec"))
@@ -122,6 +131,13 @@ function ToolCallRow({ item }: { item: StreamItem & { kind: "tool_call" } }) {
 	const failed = status === "failed" || status === "canceled";
 	const Icon = toolIcon(toolName);
 	const snippet = toolArgSnippet(data?.arguments);
+	// Status chip vocabulary (DESIGN.md §Components/Cards): semantic soft
+	// tint background + the matching status colour as text.
+	const chip: { label: string; variant: "success" | "warning" | "error" } = failed
+		? { label: t("chat.statusFailed"), variant: "error" }
+		: running
+			? { label: t("chat.statusRunning"), variant: "warning" }
+			: { label: t("chat.statusDone"), variant: "success" };
 	const argText = useMemo(() => {
 		try {
 			return JSON.stringify(data?.arguments ?? {}, null, 2);
@@ -136,14 +152,14 @@ function ToolCallRow({ item }: { item: StreamItem & { kind: "tool_call" } }) {
 				: JSON.stringify(data.result, null, 2)
 			: null;
 	return (
-		<View style={styles.processWrap}>
-			<Pressable style={styles.processHeader} onPress={() => setOpen((v) => !v)} hitSlop={6}>
-				{/* Status-aware glyph: spinner while the call runs, orange warning
+		<View style={styles.toolCard}>
+			<Pressable style={styles.toolCardHeader} onPress={() => setOpen((v) => !v)} hitSlop={6}>
+				{/* Status-aware glyph: spinner while the call runs, a danger triangle
 				 *  when it failed/was canceled, the tool's own icon when done. */}
 				{running ? (
 					<ActivityIndicator size={12} color={theme.colors.foregroundMuted} />
 				) : failed ? (
-					<TriangleAlert size={13} color={theme.colors.statusWarning} strokeWidth={1.75} />
+					<TriangleAlert size={13} color={theme.colors.statusDanger} strokeWidth={1.75} />
 				) : (
 					<Icon size={12} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 				)}
@@ -154,7 +170,15 @@ function ToolCallRow({ item }: { item: StreamItem & { kind: "tool_call" } }) {
 					<Text style={styles.toolSnippet} numberOfLines={1}>
 						{snippet}
 					</Text>
-				) : null}
+				) : (
+					<View style={styles.toolSnippetSpacer} />
+				)}
+				<StatusBadge key={chip.variant} label={chip.label} variant={chip.variant} size="xs" />
+				{open ? (
+					<ChevronDown size={12} color={theme.colors.foregroundExtraMuted} strokeWidth={1.5} />
+				) : (
+					<ChevronRight size={12} color={theme.colors.foregroundExtraMuted} strokeWidth={1.5} />
+				)}
 			</Pressable>
 			{open ? (
 				<View style={styles.toolBody}>
@@ -203,7 +227,7 @@ const styles = StyleSheet.create((theme) => ({
 	userText: {
 		color: theme.colors.foreground,
 		fontSize: theme.fontSize.content,
-		lineHeight: 20,
+		lineHeight: Math.round(theme.fontSize.content * 1.62),
 	},
 	assistantWrap: { alignSelf: "stretch", maxWidth: "100%" },
 	// Quiet rail shared by thought + tool rows: process chrome reads as one
@@ -224,34 +248,64 @@ const styles = StyleSheet.create((theme) => ({
 		paddingVertical: 2,
 		minHeight: 24,
 	},
+	// UI labels inside the transcript sit on the 13px "ui" tier; the type
+	// scale's floor (12) is what the theme exposes, so labels ride on the
+	// body tier's sibling `base` (14) instead of an uncatalogued 13.
 	thoughtLabel: {
 		color: theme.colors.foregroundExtraMuted,
-		fontSize: theme.fontSize.sm,
+		fontSize: theme.fontSize.base,
 	},
 	thoughtText: {
 		color: theme.colors.foregroundMuted,
-		fontSize: theme.fontSize.sm,
-		lineHeight: 18,
+		fontSize: theme.fontSize.base,
+		lineHeight: Math.round(theme.fontSize.base * 1.5),
 		// Aligns under the header label (rail + chevron + gap ≈ 26px).
 		paddingLeft: theme.spacing[4],
 	},
 	noteWrap: { alignSelf: "center", paddingVertical: theme.spacing[1] },
 	noteText: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
-	toolName: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm },
+	toolName: {
+		flexShrink: 0,
+		color: theme.colors.foreground,
+		fontSize: theme.fontSize.base,
+		fontWeight: theme.fontWeight.medium,
+	},
 	toolSnippet: {
 		flex: 1,
+		minWidth: 0,
 		color: theme.colors.foregroundExtraMuted,
-		fontSize: theme.fontSize.sm,
+		fontFamily: theme.fontFamily.mono,
+		fontSize: theme.fontSize.code,
+		textAlign: "right",
+	},
+	toolSnippetSpacer: { flex: 1, minWidth: 0 },
+	// Tool card: header strip on the code paper (surface1 stands in for
+	// DESIGN's surface-code in this theme), body mono on the canvas.
+	toolCard: {
+		alignSelf: "stretch",
+		backgroundColor: theme.colors.surface0,
+		borderRadius: theme.borderRadius.lg,
+		borderWidth: theme.borderWidth[1],
+		borderColor: theme.colors.border,
+		overflow: "hidden",
+		marginBottom: theme.spacing[1],
+	},
+	toolCardHeader: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: theme.spacing[2],
+		paddingHorizontal: theme.spacing[2],
+		paddingVertical: theme.spacing[1.5],
+		minHeight: 28,
+		backgroundColor: theme.colors.surface1,
+		borderBottomWidth: theme.borderWidth[1],
+		borderBottomColor: theme.colors.border,
 	},
 	toolBody: {
 		paddingHorizontal: theme.spacing[2],
 		paddingVertical: theme.spacing[2],
 		gap: theme.spacing[2],
-		backgroundColor: theme.colors.surface1,
-		borderRadius: theme.borderRadius.md,
-		borderWidth: theme.borderWidth[1],
-		borderColor: theme.colors.border,
-		marginBottom: theme.spacing[1],
+		backgroundColor: theme.colors.surface0,
 	},
 	toolSection: { gap: theme.spacing[0.5] },
 	toolSectionLabel: {
@@ -268,14 +322,20 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	toolArgs: {
 		color: theme.colors.foregroundMuted,
-		fontSize: theme.fontSize.sm,
+		fontFamily: theme.fontFamily.mono,
+		fontSize: theme.fontSize.code,
+		lineHeight: Math.round(theme.fontSize.code * 1.7),
 	},
 	toolResult: {
 		color: theme.colors.foreground,
-		fontSize: theme.fontSize.sm,
+		fontFamily: theme.fontFamily.mono,
+		fontSize: theme.fontSize.code,
+		lineHeight: Math.round(theme.fontSize.code * 1.7),
 	},
 	toolError: {
 		color: theme.colors.statusDanger,
-		fontSize: theme.fontSize.sm,
+		fontFamily: theme.fontFamily.mono,
+		fontSize: theme.fontSize.code,
+		lineHeight: Math.round(theme.fontSize.code * 1.7),
 	},
 }));

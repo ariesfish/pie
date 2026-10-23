@@ -784,7 +784,7 @@ const detailsStyles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.surface2,
   },
   flowImageFallbackText: {
-    fontSize: 10,
+    fontSize: theme.fontSize.sm,
     lineHeight: 14,
     color: theme.colors.foregroundMuted,
   },

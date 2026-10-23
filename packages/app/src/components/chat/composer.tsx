@@ -120,7 +120,7 @@ export function Composer() {
 				    the bottom edge of the card. */}
 				<TextInput
 					placeholder={streaming ? t("chat.placeholderStreaming") : t("chat.placeholder")}
-					placeholderTextColor={theme.colors.foregroundMuted}
+					placeholderTextColor={theme.colors.foregroundExtraMuted}
 					multiline
 					value={draft}
 					onChangeText={setDraft}
@@ -168,7 +168,7 @@ export function Composer() {
 								accessibilityLabel={t("chat.stop")}
 								onPress={() => void abortRun()}
 							>
-								<X size={15} color={theme.colors.onStrong} strokeWidth={1.75} />
+								<X size={15} color={theme.colors.foreground} strokeWidth={1.75} />
 							</Pressable>
 							<Pressable
 								style={[styles.choice, styles.steer]}
@@ -191,7 +191,7 @@ export function Composer() {
 							accessibilityLabel={t("common.send")}
 							onPress={() => void submit("auto")}
 						>
-							<CornerDownLeft size={16} color={theme.colors.accentForeground} strokeWidth={1.75} />
+							<CornerDownLeft size={16} color={theme.colors.onStrong} strokeWidth={1.75} />
 						</Pressable>
 					)}
 				</View>
@@ -240,12 +240,12 @@ function AgentControlsRow({
 	const thinkingLabel = pendingThinking ?? t("controls.thinkingDefault");
 	return (
 		<View style={styles.controlsRow}>
-			<Pressable style={styles.controlTrigger} onPress={onToggleModelMenu}>
+			<Pressable style={styles.chip} onPress={onToggleModelMenu}>
 				<Cpu size={12} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
-				<Text style={styles.controlLabel} numberOfLines={1}>
+				<Text style={styles.chipText} numberOfLines={1}>
 					{modelLabel}
 				</Text>
-				<ChevronDown size={10} color={theme.colors.foregroundExtraMuted} strokeWidth={1.5} />
+				<ChevronDown size={12} color={theme.colors.foregroundExtraMuted} strokeWidth={1.5} />
 			</Pressable>
 			{modelMenu ? (
 				<View style={styles.menu}>
@@ -262,10 +262,10 @@ function AgentControlsRow({
 					)}
 				</View>
 			) : null}
-			<Pressable style={styles.controlTrigger} onPress={onToggleThinkingMenu}>
+			<Pressable style={styles.chip} onPress={onToggleThinkingMenu}>
 				<Brain size={12} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
-				<Text style={styles.controlLabel}>{thinkingLabel}</Text>
-				<ChevronDown size={10} color={theme.colors.foregroundExtraMuted} strokeWidth={1.5} />
+				<Text style={styles.chipText}>{thinkingLabel}</Text>
+				<ChevronDown size={12} color={theme.colors.foregroundExtraMuted} strokeWidth={1.5} />
 			</Pressable>
 			{thinkingMenu ? (
 				<View style={[styles.menu, { left: 140 }]}>
@@ -288,12 +288,13 @@ function AgentControlsRow({
 }
 
 const styles = StyleSheet.create((theme) => ({
+	// Element sits on the canvas column; the card is the elevated layer, so
+	// the root itself carries no shadow and no hard seam.
 	root: {
 		gap: theme.spacing[1],
-		// User feedback first flight: the floating composer had no seam against
-		// the transcript — give it the content measure plus a top hairline.
 		paddingHorizontal: theme.spacing[3],
-		paddingTop: theme.spacing[1],
+		paddingTop: theme.spacing[2],
+		paddingBottom: theme.spacing[2],
 		borderTopWidth: theme.borderWidth[1],
 		borderTopColor: theme.colors.border,
 		backgroundColor: theme.colors.background,
@@ -301,13 +302,14 @@ const styles = StyleSheet.create((theme) => ({
 		alignSelf: "center",
 		width: "100%",
 	},
-	// paseo.png composer card: page-white, ~20px radius, hairline border,
-	// soft shadow; the multiline field sits on it with no inner chrome.
+	// The composer card is one of the two elevated surfaces in the
+	// conversation (DESIGN.md §Elevation): canvas + hairline + radius-2xl + one
+	// shadow. The multiline field sits on it with no inner chrome.
 	card: {
 		backgroundColor: theme.colors.background,
 		borderRadius: theme.borderRadius["2xl"],
 		borderWidth: theme.borderWidth[1],
-		borderColor: theme.colors.border,
+		borderColor: theme.colors.borderAccent,
 		paddingBottom: theme.spacing[1],
 		...theme.shadow.md,
 	},
@@ -317,6 +319,7 @@ const styles = StyleSheet.create((theme) => ({
 		paddingBottom: theme.spacing[1],
 		color: theme.colors.foreground,
 		fontSize: theme.fontSize.content,
+		lineHeight: Math.round(theme.fontSize.content * 1.62),
 		textAlignVertical: "top",
 	},
 	cardBar: {
@@ -324,40 +327,35 @@ const styles = StyleSheet.create((theme) => ({
 		alignItems: "center",
 		gap: theme.spacing[2],
 		paddingHorizontal: theme.spacing[2],
-		paddingBottom: 2,
+		paddingBottom: theme.spacing[1],
 	},
 	cardBarSpacer: { flex: 1 },
+	// Send: ink circle with a strong-surface icon — it does not spend the
+	// accent budget (DESIGN.md §Components/Buttons).
 	sendRound: {
 		width: 30,
 		height: 30,
 		borderRadius: theme.borderRadius.full,
-		backgroundColor: theme.colors.accent,
+		backgroundColor: theme.colors.foreground,
 		alignItems: "center",
 		justifyContent: "center",
 	},
-	// Streaming trio (stop/steer/followUp) sits inline where Send lives —
-	// first-flight audit caught them stacked vertically off the input's edge.
+	// Streaming trio (stop/steer/followUp) sits inline where Send lives.
 	choices: { flexDirection: "row", gap: theme.spacing[1] },
 	stop: {
-		backgroundColor: theme.colors.statusDanger,
-		borderColor: theme.colors.statusDanger,
-		borderWidth: 1,
-		borderRadius: 8,
+		borderColor: theme.colors.borderAccent,
 	},
-
-
-
-
 	choice: {
-		backgroundColor: theme.colors.surface2,
-		borderRadius: theme.borderRadius.lg,
+		backgroundColor: theme.colors.surface1,
+		borderRadius: theme.borderRadius.md,
 		borderWidth: theme.borderWidth[1],
 		borderColor: theme.colors.border,
-		paddingVertical: theme.spacing[2],
-		paddingHorizontal: theme.spacing[3],
+		width: 28,
+		height: 28,
 		alignItems: "center",
 		justifyContent: "center",
 	},
+	// Running state is one of the few events allowed the accent.
 	steer: { backgroundColor: theme.colors.accent, borderColor: theme.colors.accent },
 	disabledRow: {
 		backgroundColor: theme.colors.surface1,
@@ -373,38 +371,45 @@ const styles = StyleSheet.create((theme) => ({
 		alignItems: "center",
 		gap: theme.spacing[1.5],
 	},
-	controlTrigger: {
+	// Model / thinking chips: surface1 + radius-md, no accent fill.
+	chip: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 4,
+		gap: theme.spacing[1],
+		height: 24,
 		paddingHorizontal: theme.spacing[2],
-		paddingVertical: 4,
 		borderRadius: theme.borderRadius.md,
 		backgroundColor: theme.colors.surface1,
 		borderWidth: theme.borderWidth[1],
 		borderColor: theme.colors.border,
 		maxWidth: 240,
 	},
-	controlLabel: { color: theme.colors.foregroundMuted, fontSize: 11 },
+	chipText: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm },
 	menu: {
 		position: "absolute",
 		bottom: 30,
 		left: 0,
 		minWidth: 200,
 		maxHeight: 260,
-		backgroundColor: theme.colors.surface2,
-		borderRadius: theme.borderRadius.md,
+		backgroundColor: theme.colors.surface0,
+		borderRadius: theme.borderRadius.lg,
 		borderWidth: theme.borderWidth[1],
-		borderColor: theme.colors.border,
-		padding: 4,
+		borderColor: theme.colors.borderAccent,
+		padding: theme.spacing[1],
 		zIndex: 40,
+		...theme.shadow.md,
 	},
 	menuItem: {
 		paddingHorizontal: theme.spacing[2],
-		paddingVertical: 5,
+		paddingVertical: theme.spacing[1.5],
 		borderRadius: theme.borderRadius.md,
 	},
-	menuItemText: { color: theme.colors.foregroundMuted, fontSize: 11 },
-	menuItemTextOn: { color: theme.colors.accentForeground },
-	menuEmpty: { color: theme.colors.foregroundExtraMuted, fontSize: 11, padding: theme.spacing[2] },
+	menuItemText: { color: theme.colors.foreground, fontSize: theme.fontSize.sm },
+	// Selected menu row uses the neutral raise + ink, not accent text.
+	menuItemTextOn: { color: theme.colors.foreground, fontWeight: theme.fontWeight.medium },
+	menuEmpty: {
+		color: theme.colors.foregroundExtraMuted,
+		fontSize: theme.fontSize.sm,
+		padding: theme.spacing[2],
+	},
 }));

@@ -135,24 +135,28 @@ export function ChangesPanel() {
 				</View>
 			)}
 			{files.length > 0 && (
-				<DiffDocument
-					files={files}
-					displayPreferences={{
-						layout: effectiveLayout,
-						wrapLines: preferences.wrapLines,
-						codeFontSize: theme.fontSize.code,
-						monoFontFamily: theme.fontFamily.mono,
-					}}
-					mode={{
-						kind: "working",
-						focusPath: diffPath ?? undefined,
-						focusRequestId,
-					}}
-					collapseState={{
-						paths: collapsedPaths,
-						onChange: setCollapsedPaths,
-					}}
-				/>
+				// DESIGN.md §Components/Cards: the diff is a card — radius-lg + a
+				// hairline — with the code paper on the code surface.
+				<View style={styles.diffCard}>
+					<DiffDocument
+						files={files}
+						displayPreferences={{
+							layout: effectiveLayout,
+							wrapLines: preferences.wrapLines,
+							codeFontSize: theme.fontSize.code,
+							monoFontFamily: theme.fontFamily.mono,
+						}}
+						mode={{
+							kind: "working",
+							focusPath: diffPath ?? undefined,
+							focusRequestId,
+						}}
+						collapseState={{
+							paths: collapsedPaths,
+							onChange: setCollapsedPaths,
+						}}
+					/>
+				</View>
 			)}
 		</View>
 	);
@@ -160,6 +164,17 @@ export function ChangesPanel() {
 
 const styles = StyleSheet.create((theme) => ({
 	root: { flex: 1, backgroundColor: theme.colors.surface0 },
+	diffCard: {
+		flex: 1,
+		minHeight: 0,
+		marginHorizontal: theme.spacing[2],
+		marginBottom: theme.spacing[2],
+		borderWidth: theme.borderWidth[1],
+		borderColor: theme.colors.border,
+		borderRadius: theme.borderRadius.lg,
+		overflow: "hidden",
+		backgroundColor: theme.colors.surface0,
+	},
 	center: { flex: 1, alignItems: "center", justifyContent: "center" },
 	branchRow: {
 		flexDirection: "row",

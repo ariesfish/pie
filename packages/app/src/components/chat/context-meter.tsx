@@ -26,9 +26,11 @@ export function ContextMeter({ usage, expanded, onToggle }: Props) {
 
 	const ringColor = useMemo(() => {
 		if (percent == null) return theme.colors.border;
+		// A meter is a state readout, not a primary action: it only leaves the
+		// neutral scale once it crosses the warning/danger thresholds.
 		if (percent >= 0.9) return theme.colors.statusDanger;
 		if (percent >= 0.7) return theme.colors.statusWarning;
-		return theme.colors.accentBright;
+		return theme.colors.foregroundMuted;
 	}, [percent, theme]);
 
 	if (percent == null && tokens == null) return null;
@@ -77,8 +79,8 @@ function formatK(value: number): string {
 }
 
 const styles = StyleSheet.create((theme) => ({
-	root: { alignItems: "flex-end", gap: 2 },
-	row: { flexDirection: "row", alignItems: "center", gap: 6 },
+	root: { alignItems: "flex-end", gap: theme.spacing[0.5] },
+	row: { flexDirection: "row", alignItems: "center", gap: theme.spacing[1.5] },
 	label: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm },
 	detail: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
 }));

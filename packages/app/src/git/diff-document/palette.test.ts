@@ -13,12 +13,17 @@ describe("diff text color", () => {
     },
   );
 
-  it.each([
-    ["add", "addition"],
-    ["remove", "deletion"],
-    ["context", "foregroundMuted"],
-  ] as const)("uses the %s gutter tone for native and web line numbers", (type, tone) => {
-    expect(codeLineNumberTone(cell(type))).toBe(tone);
+  // DESIGN.md §Components/Cards: diff line numbers are `ink-3`, i.e. the quiet
+  // foreground tone, on every row type; the row tint carries the semantics.
+  it.each(["add", "remove", "context"] as const)(
+    "keeps the %s line number on the quiet gutter tone",
+    (type) => {
+      expect(codeLineNumberTone(cell(type))).toBe("foregroundMuted");
+    },
+  );
+
+  it("paints the gutter with the ink-3 token (DESIGN.md §Components/Cards)", () => {
+    expect(createDiffPalette(lightTheme).foregroundMuted).toBe(lightTheme.colors.foregroundExtraMuted);
   });
 });
 

@@ -13,6 +13,17 @@ interface StatusBadgeProps {
   size?: "sm" | "xs";
 }
 
+/**
+ * Status chip (DESIGN.md §Components/Cards): the semantic soft tint carries the
+ * state, a matching status-coloured dot names the colour, and the label stays
+ * on `ink`.
+ *
+ * Why the label is not status-coloured: at the chip's 12px the status hue does
+ * not clear D1 (4.5:1) on the tints it sits on — `statusWarning` on its own tint
+ * is 4.17:1 on canvas and 3.67:1 on the raised surface, `statusSuccess` 4.51 /
+ * 4.00. DESIGN.md §Colors already rules this out ("这些组合只允许用于图标或形状，
+ * 不允许承载小字"), so the colour moves to the dot and the text rides on ink.
+ */
 export function StatusBadge({ label, variant = "muted", leading, size = "sm" }: StatusBadgeProps) {
   const pillStyle = useMemo(
     () => [
@@ -24,12 +35,12 @@ export function StatusBadge({ label, variant = "muted", leading, size = "sm" }: 
     ],
     [size, variant],
   );
-  const textStyle = useMemo(
+  const dotStyle = useMemo(
     () => [
-      styles.pillText,
-      variant === "success" && styles.pillTextSuccess,
-      variant === "warning" && styles.pillTextWarning,
-      variant === "error" && styles.pillTextError,
+      styles.dot,
+      variant === "success" && styles.dotSuccess,
+      variant === "warning" && styles.dotWarning,
+      variant === "error" && styles.dotError,
     ],
     [variant],
   );
@@ -37,7 +48,8 @@ export function StatusBadge({ label, variant = "muted", leading, size = "sm" }: 
   return (
     <View style={pillStyle}>
       {leading}
-      <Text style={textStyle}>{label}</Text>
+      <View style={dotStyle} />
+      <Text style={styles.pillText}>{label}</Text>
     </View>
   );
 }
@@ -46,9 +58,9 @@ const styles = StyleSheet.create((theme) => ({
   pill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: theme.spacing[1],
     borderRadius: theme.borderRadius.full,
-    borderWidth: 1,
+    borderWidth: theme.borderWidth[1],
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface3,
     paddingHorizontal: theme.spacing[2],
@@ -58,6 +70,8 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.spacing[1.5],
     paddingVertical: 1,
   },
+  // Soft tint background + transparent border = the state reads as a state,
+  // not as a fill competing with the accent.
   pillSuccess: {
     backgroundColor: theme.colors.statusSuccessTint,
     borderColor: "transparent",
@@ -70,18 +84,18 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.statusDangerTint,
     borderColor: "transparent",
   },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.foregroundExtraMuted,
+  },
+  dotSuccess: { backgroundColor: theme.colors.statusSuccess },
+  dotWarning: { backgroundColor: theme.colors.statusWarning },
+  dotError: { backgroundColor: theme.colors.statusDanger },
   pillText: {
     fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.normal,
-    color: theme.colors.foregroundMuted,
-  },
-  pillTextSuccess: {
-    color: theme.colors.statusSuccess,
-  },
-  pillTextWarning: {
-    color: theme.colors.statusWarning,
-  },
-  pillTextError: {
-    color: theme.colors.statusDanger,
+    fontWeight: theme.fontWeight.medium,
+    color: theme.colors.foreground,
   },
 }));

@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { Check, ShieldAlert, ShieldCheck, ShieldX } from "lucide-react-native";
 
+import { StatusBadge } from "@/components/ui/status-badge";
 import type { PermissionCard as PermissionCardData } from "@/stores/connection-store";
 import { useConnectionStore } from "@/stores/connection-store";
 
@@ -32,6 +33,7 @@ export function PermissionCard({ card }: { card: PermissionCardData }) {
 				<Text style={styles.title} numberOfLines={1}>
 					{t("permission.title", { tool: card.toolName })}
 				</Text>
+				<StatusBadge label={t("permission.pending")} variant="warning" size="xs" />
 			</View>
 			{card.reason ? <Text style={styles.reason}>{card.reason}</Text> : null}
 			{argEntries.length > 0 ? (
@@ -56,31 +58,30 @@ export function PermissionCard({ card }: { card: PermissionCardData }) {
 					testID={`permission-select-${card.requestId}`}
 				>
 					<View style={[styles.checkbox, selected && styles.checkboxOn]}>
-						{selected ? <Check size={12} color={theme.colors.accentForeground} strokeWidth={2.5} /> : null}
+						{selected ? <Check size={12} color={theme.colors.onStrong} strokeWidth={2.5} /> : null}
 					</View>
 					<Text style={styles.selectText}>{t("permission.selectForBatch")}</Text>
 				</Pressable>
 			) : null}
 			<View style={styles.actions}>
+				{/* Exactly one accent-filled action (allow once). Deny is the ghost
+				 *  low-priority action; allow-for-session is secondary (canvas + hairline). */}
 				<Pressable
-					style={[styles.btn, styles.deny]}
+					style={styles.ghost}
 					accessibilityLabel={t("permission.deny")}
 					onPress={() => void respondPermission(card.requestId, "deny")}
 				>
-					<ShieldX size={13} color={theme.colors.statusDanger} strokeWidth={1.75} />
-					<Text style={[styles.btnText, { color: theme.colors.statusDanger }]}>
-						{t("permission.deny")}
-					</Text>
+					<ShieldX size={13} color={theme.colors.foregroundMuted} strokeWidth={1.75} />
+					<Text style={styles.ghostText}>{t("permission.deny")}</Text>
 				</Pressable>
+				<View style={styles.actionSpacer} />
 				<Pressable
 					style={styles.btn}
 					accessibilityLabel={t("permission.allowSession")}
 					onPress={() => void respondPermission(card.requestId, "allowSession")}
 				>
-					<ShieldCheck size={13} color={theme.colors.accentBright} strokeWidth={1.75} />
-					<Text style={[styles.btnText, { color: theme.colors.accentBright }]}>
-						{t("permission.allowSession")}
-					</Text>
+					<ShieldCheck size={13} color={theme.colors.foregroundMuted} strokeWidth={1.75} />
+					<Text style={styles.btnText}>{t("permission.allowSession")}</Text>
 				</Pressable>
 				<Pressable
 					style={[styles.btn, styles.allow]}
@@ -88,9 +89,7 @@ export function PermissionCard({ card }: { card: PermissionCardData }) {
 					onPress={() => void respondPermission(card.requestId, "allow")}
 				>
 					<ShieldCheck size={13} color={theme.colors.accentForeground} strokeWidth={1.75} />
-					<Text style={[styles.btnText, { color: theme.colors.accentForeground }]}>
-						{t("permission.allow")}
-					</Text>
+					<Text style={[styles.btnText, styles.allowText]}>{t("permission.allow")}</Text>
 				</Pressable>
 			</View>
 		</Pressable>
@@ -107,17 +106,24 @@ function previewArg(value: unknown): string {
 }
 
 const styles = StyleSheet.create((theme) => ({
+	// Raised layer (DESIGN.md §Elevation: permission cards are one of the few
+	// surfaces allowed a shadow). It has to read as the loudest thing in the
+	// column without introducing a new colour: canvas bg, hairline-strong
+	// border, one shadow, and a warning chip in the header.
 	card: {
 		alignSelf: "stretch",
-		backgroundColor: theme.colors.surface1,
+		backgroundColor: theme.colors.surface0,
 		borderRadius: theme.borderRadius.lg,
 		borderWidth: theme.borderWidth[1],
-		borderColor: theme.colors.statusWarning,
+		borderColor: theme.colors.borderAccent,
 		padding: theme.spacing[3],
 		gap: theme.spacing[2],
+		...theme.shadow.md,
 	},
 	selectedCard: {
-		borderColor: theme.colors.accent,
+		// Selection is the same neutral raise the rest of the product uses, so
+		// the accent budget stays free for the primary action.
+		backgroundColor: theme.colors.surface2,
 	},
 	header: {
 		flexDirection: "row",
@@ -132,11 +138,11 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	reason: {
 		color: theme.colors.foregroundMuted,
-		fontSize: theme.fontSize.sm,
-		lineHeight: 18,
+		fontSize: theme.fontSize.base,
+		lineHeight: Math.round(theme.fontSize.base * 1.5),
 	},
 	args: {
-		backgroundColor: theme.colors.surface0,
+		backgroundColor: theme.colors.surface1,
 		borderRadius: theme.borderRadius.md,
 		padding: theme.spacing[2],
 		gap: theme.spacing[1],
@@ -151,13 +157,13 @@ const styles = StyleSheet.create((theme) => ({
 		flexShrink: 0,
 		color: theme.colors.foregroundExtraMuted,
 		fontFamily: theme.fontFamily.mono,
-		fontSize: theme.fontSize.sm,
+		fontSize: theme.fontSize.code,
 	},
 	argValue: {
 		flex: 1,
 		color: theme.colors.foreground,
 		fontFamily: theme.fontFamily.mono,
-		fontSize: theme.fontSize.sm,
+		fontSize: theme.fontSize.code,
 	},
 	selectRow: {
 		flexDirection: "row",
@@ -169,13 +175,13 @@ const styles = StyleSheet.create((theme) => ({
 		height: 16,
 		borderRadius: theme.borderRadius.sm,
 		borderWidth: theme.borderWidth[1],
-		borderColor: theme.colors.border,
+		borderColor: theme.colors.borderAccent,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	checkboxOn: {
-		backgroundColor: theme.colors.accent,
-		borderColor: theme.colors.accent,
+		backgroundColor: theme.colors.foreground,
+		borderColor: theme.colors.foreground,
 	},
 	selectText: {
 		color: theme.colors.foregroundMuted,
@@ -183,22 +189,42 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	actions: {
 		flexDirection: "row",
+		alignItems: "center",
 		gap: theme.spacing[2],
-		justifyContent: "flex-end",
 		flexWrap: "wrap",
 	},
+	actionSpacer: { flex: 1, minWidth: theme.spacing[2] },
+	// Secondary: canvas + hairline-strong + ink text.
 	btn: {
 		flexDirection: "row",
 		alignItems: "center",
 		gap: theme.spacing[1],
+		height: 28,
 		paddingHorizontal: theme.spacing[3],
-		paddingVertical: theme.spacing[1.5],
 		borderRadius: theme.borderRadius.md,
 		borderWidth: theme.borderWidth[1],
-		borderColor: theme.colors.border,
+		borderColor: theme.colors.borderAccent,
 		backgroundColor: theme.colors.surface0,
 	},
+	// Primary: the card's single accent fill.
 	allow: { backgroundColor: theme.colors.accent, borderColor: theme.colors.accent },
-	deny: { borderColor: theme.colors.border },
-	btnText: { fontSize: theme.fontSize.sm, fontWeight: theme.fontWeight.medium },
+	// Ghost: the low-priority answer (deny).
+	ghost: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: theme.spacing[1],
+		height: 28,
+		paddingHorizontal: theme.spacing[1.5],
+	},
+	btnText: {
+		color: theme.colors.foreground,
+		fontSize: theme.fontSize.sm,
+		fontWeight: theme.fontWeight.medium,
+	},
+	ghostText: {
+		color: theme.colors.foregroundMuted,
+		fontSize: theme.fontSize.sm,
+		fontWeight: theme.fontWeight.medium,
+	},
+	allowText: { color: theme.colors.accentForeground },
 }));

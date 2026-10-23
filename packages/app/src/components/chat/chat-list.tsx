@@ -163,7 +163,10 @@ const styles = StyleSheet.create((theme) => ({
 	root: { flex: 1 },
 	list: { flex: 1 },
 	content: { gap: theme.spacing[2], paddingHorizontal: theme.spacing[3], paddingBottom: theme.spacing[3] },
-	aux: { gap: theme.spacing[2], paddingTop: theme.spacing[2] },
+	// Pending-permission cards are the one floating layer in the transcript
+	// (DESIGN.md §Elevation), so the auxiliary block keeps its own rhythm and a
+	// small breathing gap above the first card.
+	aux: { gap: theme.spacing[2], paddingTop: theme.spacing[3] },
 	queueBadge: {
 		alignSelf: "center",
 		backgroundColor: theme.colors.surface2,

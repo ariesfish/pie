@@ -1,7 +1,7 @@
 // [pie] T-015: batch bar UI semantics — multi-card visibility + selection →
 // respondPermissions wiring. The multi-card visual cannot be driven by a real
 // model today (pi serializes tool-call preparation through the permission
-// gate — see .audit/T-015.tsv T015-7), so the UI path is locked here against
+// gate — see .dev/audit/T-015.tsv T015-7), so the UI path is locked here against
 // a controlled store; the real store's semantics live in permission-store.test.ts.
 /**
  * @vitest-environment jsdom

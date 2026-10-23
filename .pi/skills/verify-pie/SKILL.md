@@ -2,10 +2,10 @@
 name: verify-pie
 description: >-
   Drive pie's real surfaces the way a user does and prove behavior:
-  the daemon's built-in demo page (http://127.0.0.1:<port>, primary surface)
-  and the @pie/app expo web export (served statically). Launch → doctor →
+  the @pie/app expo web export (primary surface) and the daemon's built-in
+  demo page (http://127.0.0.1:<port>, legacy smoke surface). Launch → doctor →
   drive with the frozen control-web CDP harness → evidence lands in
-  .audit/evidence/verify-pie-<runId>/ → cleanup kills only what the run
+  .dev/audit/evidence/verify-pie-<runId>/ → cleanup kills only what the run
   started and never touches the evidence. Use before merges, after
   daemon/protocol/demo-page/app changes, or whenever "does the app actually
   work" needs proof. Chinese triggers: 验证 pie, 驱动演示页, 跑一遍 UI,
@@ -23,8 +23,8 @@ Two surfaces, both web, both driven with the frozen CDP harness:
 
 | Surface | What it is | Launch cost | LLM needed? |
 |---|---|---|---|
-| **Demo page (primary)** | daemon serves `packages/daemon/public/index.html` on its own port; README quickstart | seconds | no (chat/permission journeys: yes) |
-| **App web export (secondary)** | `@pie/app` expo export served statically, connects to the daemon over WS | `app:build:web` ~1 min (reusable) | no (files/diff journeys) |
+| **App web export (primary)** | `@pie/app` expo export served statically, connects to the daemon over WS | `app:build:web` ~1 min (reusable) | no (files/diff journeys) |
+| **Demo page (legacy smoke)** | daemon serves `packages/daemon/public/index.html` on its own port; kept as the P0 smoke panel | seconds | no (chat/permission journeys: yes) |
 
 Isolation rules (hard):
 - The daemon always runs with a **scratch agent dir** (`/tmp/pie-verify-<runId>/agent`),
@@ -166,7 +166,7 @@ app-web files/markdown, app-web diff). Each file lists its steps and gotchas.
 
 ## Evidence
 
-Everything for a proof lands in **`.audit/evidence/verify-pie-<runId>/`**:
+Everything for a proof lands in **`.dev/audit/evidence/verify-pie-<runId>/`**:
 
 - `report.json` + `NN-*.png` — drive report and screenshots (control-web `--out`);
   one subdir per journey (`demo-session/`, `app-web-files/`, …)
@@ -201,7 +201,7 @@ kill -TERM $(jq -r .pid /tmp/pie-verify-<runId>/run.json) && sleep 1
 # 4. scratch: agent dir (contains the credentials copy!), fixture workspace, logs
 rm -rf /tmp/pie-verify-<runId>
 # 5. verify: ports free, and the evidence dir is still fully populated
-ss -ltn | grep -E ":(<daemonPort>|8899)" ; ls .audit/evidence/verify-pie-<runId>/
+ss -ltn | grep -E ":(<daemonPort>|8899)" ; ls .dev/audit/evidence/verify-pie-<runId>/
 ```
 
 Notes: the daemon scratch dir uses the `pie-verify-` prefix (NOT `verify-`)
@@ -232,7 +232,7 @@ interface contract. Do not edit either side without the user's approval.
 (Sub-features / How to get to it (user POV) / Driving it with control-web /
 Gotchas). Proof status: `demo-session-journey` and `app-web-files-markdown`
 were proven end to end at generation time; `app-web-changes-diff` proven
-2026-10-18 (11/11 steps, evidence `.audit/evidence/overnight-20261018/T-008/`);
+2026-10-18 (11/11 steps, evidence `.dev/audit/evidence/overnight-20261018/T-008/`);
 chat/steer and permission cards remain mapped but unproven until a real-target
 run drives them (chat and permission journeys additionally need a real model
 and spend real tokens — see their files). Keep the map honest as the app

@@ -41,7 +41,7 @@ visual (canvas) — the shot is the proof, reviewed by a vision pass,
 not by DOM text.
 
 Proven 2026-10-18 (overnight compression drill): 11/11 steps green,
-evidence `.audit/evidence/overnight-20261018/T-008/app-web-diff/` (drive
+evidence `.dev/audit/evidence/overnight-20261018/T-008/app-web-diff/` (drive
 report + shots), side effects `ws-side-effects.json` (session.list empty —
 files-only journey, no session created).
 

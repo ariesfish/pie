@@ -59,13 +59,20 @@ App 输入 daemon 的 `ws://<host>:8760` + token 即可连接（与演示页相�
 ## 开发
 
 ```bash
-npm run check             # 五个包 typecheck + 101 个 vitest 用例
+npm run check             # 五个包 typecheck + 全部 vitest 用例
 npm run smoke             # 无 LLM 的端到端烟测（临时 agent dir，不写 ~/.pi/agent）
 npm run ui-walkthrough    # UI 交互验收：daemon + fixture 仓库 + web 导出，浏览器驱动
                           # 13 项断言（rail/文件/diff/会话/分栏/拖拽/双抽屉手势），
                           # 截图落 ./ui-walkthrough-shots 供人工/vision 复核
 npm run daemon            # 前台启动 daemon（首次运行会打印浏览器入口 URL）
 ```
+
+仓库约定与质量门槛：
+- [`AGENTS.md`](AGENTS.md) — agent 入口：命令、工作流、`.dev/` 布局、记录在案的偏差
+- [`DESIGN.md`](DESIGN.md) — 视觉契约（token / 层级 / 导航 / 组件状态）
+- [`docs/CONSTRAINTS.md`](docs/CONSTRAINTS.md) — 可判定的质量底线（类型/测试/对比度/token）
+- [`docs/design/`](docs/design/) — 设计契约、参考图与 UI 审计/方案预览
+- [`.dev/README.md`](.dev/README.md) — feature-first 工单与过程记忆布局；当前工作在 `.dev/feature-ui-redesign/`
 
 进度记录（逐轮）：
 - **会话树命令全落地**：`session.tree` / `session.entries` / `session.forkAt`（at/before 两种语义）/ `session.forkPreview` / `session.navigate`（navigate 后广播重同步快照）

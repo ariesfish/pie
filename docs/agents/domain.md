@@ -1,37 +1,53 @@
 # Domain Docs
 
-How the developer workflow skills should consume this repo's domain documentation when exploring the codebase.
+How the developer workflow skills consume this repo's domain documentation before exploring the codebase.
 
 ## Before exploring, read these
 
-- **`GLOSSARY.md`** at the repo root — single-context repo.
-- **`docs/adr/`** — read ADRs that touch the area you're about to work in.
+- **`docs/GLOSSARY.md`** — single-context repo; the only sanctioned vocabulary for domain terms.
+- **`docs/adr/`** — read ADRs that touch the area you are about to change.
+- **`docs/architecture.md`** — package boundaries, wire protocol, daemon/desktop topology.
+- **`DESIGN.md`** (repo root) — read before any UI-bearing change; it is the visual contract.
 
-If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The producer skill (`align`) creates them lazily when terms or decisions actually get resolved.
+`DESIGN.md` v1 (2026-10, quiet-saas) is the visual contract; the audit baseline it replaces lives at `docs/design/audit-2026-10.md`.
 
 ## File structure
 
 ```
 /
-├── GLOSSARY.md
-├── docs/adr/
-│   ├── 0001-wire-protocol.md
-│   └── …
-└── packages/
+├── AGENTS.md
+├── DESIGN.md
+├── docs/
+│   ├── GLOSSARY.md
+│   ├── adr/
+│   ├── architecture.md
+│   ├── agents/            # this directory
+│   └── design/            # references + scheme previews
+└── .dev/                  # process memory
+    ├── feature-<slug>/    #   spec.md + plan.md + todo.md + tickets/ (the tracker)
+    ├── lifecycle/         #   gate ledger (tracked)
+    ├── audit/             #   decision tsv (tracked) + evidence (ignored)
+    └── feature-archive/   #   frozen pre-migration records (ignored)
 ```
 
 ## Use the glossary's vocabulary
 
-When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `GLOSSARY.md`. Don't drift to synonyms the glossary explicitly avoids.
+When your output names a domain concept (issue title, refactor proposal, hypothesis, test name), use the term as defined in `docs/GLOSSARY.md`. Do not drift to the synonyms it explicitly avoids.
 
-If the concept you need isn't in the glossary yet, that's a signal — either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `align`).
+If the concept is not in the glossary yet, that is a signal: either you are inventing language the project does not use (reconsider) or there is a real gap (note it for the glossary-owning skill).
 
 ## Flag ADR conflicts
 
 If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:
 
-> _Contradicts ADR-0007 (event-sourced orders) — but worth reopening because…_
+> _Contradicts ADR-0005 (wholesale UI port) — but worth reopening because…_
 
-## Legacy naming
+ADR conflicts are decisions, not drift. A visual change that contradicts `DESIGN.md` or an ADR is a finding, never a silent restyle.
 
-`CONTEXT.md`/`CONTEXT-MAP.md` are the pre-rename names of `GLOSSARY.md`/`GLOSSARY-MAP.md`. A repo carrying the old names uses the same convention: record its layout as found, and let the owner decide on renaming.
+## Historical names
+
+2026-10 migration: the glossary moved from the repo root to `docs/GLOSSARY.md`,
+and the tracker moved from root `SPEC.md` + `spec/` + `tasks/` to
+`.dev/feature-<slug>/`. Old files live in `.dev/feature-archive/` and are read-only
+history. Mentions of the old paths in archived files are historical records, not
+live instructions.

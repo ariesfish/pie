@@ -248,6 +248,14 @@ async function runAssertions(appUrl, workspacePath) {
 	await page.getByLabel("Toggle explorer rail").click();
 	await sleep(600);
 	check("02 rail open → files tree shows src/", await page.getByText("src", { exact: true }).first().isVisible());
+	// T-019 convergence: one segmented control inside the inspector, no icon
+	// mode strip, and one new-session entry (the strip's "+").
+	const inspectorSegments = await page
+		.getByTestId("inspector-modes")
+		.getByRole("button")
+		.count()
+		.catch(() => 0);
+	check("02b inspector segments = 5 modes", inspectorSegments === 5, `segments=${inspectorSegments}`);
 	await shot(page, "02-rail-files");
 
 	// 03 open app.ts → files tab + CodeMirror
@@ -358,9 +366,15 @@ async function runAssertions(appUrl, workspacePath) {
 	await shot(page, "04c-wrap-toggle");
 
 
-	// 05 sticky creator → start session
+	// 05 sticky creator → start session. T-019: the creator panel is reached
+	// through the strip's single "+", never pinned as a tab.
 	const creator = page.getByLabel("New session", { exact: false }).first();
-	check("05a sticky creator + entry present", (await creator.count()) > 0);
+	const creatorEntries = await page.getByLabel("New session", { exact: false }).count();
+	check(
+		"05a single new-session entry (no pinned creator tab)",
+		creatorEntries === 1 && (await creator.count()) > 0,
+		`entries=${creatorEntries}`,
+	);
 	await creator.click();
 	await sleep(400);
 	const startBtn = page.getByText("Start session", { exact: true }).first();

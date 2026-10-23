@@ -5,6 +5,8 @@ import { Activity, Gauge, GitCompare, Package, FolderOpen } from "lucide-react-n
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 
+import { isCompactBreakpoint } from "@/constants/layout";
+
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import type { ExplorerMode } from "@/stores/tabs-store";
 
@@ -30,7 +32,10 @@ export function InspectorModeControl({
 	onChange: (mode: InspectorMode) => void;
 }) {
 	const { t } = useTranslation();
-	const { theme } = useUnistyles();
+	const { theme, rt } = useUnistyles();
+	// Touch policy: the compact drawer renders these as 44px targets, the
+	// desktop rail keeps the tight 28px control.
+	const compact = isCompactBreakpoint(rt.breakpoint);
 
 	const options = MODES.map((value) => {
 		const Icon = ICONS[value];
@@ -52,7 +57,7 @@ export function InspectorModeControl({
 			options={options}
 			value={mode}
 			onValueChange={onChange}
-			size="xs"
+			size={compact ? "md" : "xs"}
 			hideLabels
 			style={{ margin: theme.spacing[1] }}
 		/>

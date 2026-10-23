@@ -19,10 +19,12 @@ interface StatusBadgeProps {
  * on `ink`.
  *
  * Why the label is not status-coloured: at the chip's 12px the status hue does
- * not clear D1 (4.5:1) on the tints it sits on — `statusWarning` on its own tint
- * is 4.17:1 on canvas and 3.67:1 on the raised surface, `statusSuccess` 4.51 /
- * 4.00. DESIGN.md §Colors already rules this out ("这些组合只允许用于图标或形状，
- * 不允许承载小字"), so the colour moves to the dot and the text rides on ink.
+ * not clear D1 (4.5:1) on the tints it sits on. The fill here is the status hue
+ * at 12% over whatever surface is behind it (roughly #f3ede0 for warning over
+ * canvas, #e4dfd6 over raise), where the hue measures 3.67–4.17:1 and the ink-3
+ * token would drop to 4.16:1. DESIGN.md §Colors rules that out ("这些组合只允许
+ * 用于图标或形状，不允许承载小字"), so the colour moves to the dot and the label
+ * rides on `ink`. Do not put ink-3 text on a status tinted chip.
  */
 export function StatusBadge({ label, variant = "muted", leading, size = "sm" }: StatusBadgeProps) {
   const pillStyle = useMemo(

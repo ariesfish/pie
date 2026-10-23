@@ -2,16 +2,71 @@
   "id": "T-019",
   "title": "Desktop shell + navigation convergence",
   "opened": "2026-10-23T08:17:56Z",
-  "closed": null,
+  "closed": "2026-10-23T09:17:32Z",
   "budget": 3,
   "blocked": null,
-  "gates": {},
+  "gates": {
+    "check": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-23T09:16:39Z"
+    },
+    "verify": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-23T09:17:27Z"
+    }
+  },
   "history": [
     {
       "step": 1,
       "ts": "2026-10-23T08:17:56Z",
       "type": "open",
       "budget": 3
+    },
+    {
+      "step": 2,
+      "ts": "2026-10-23T09:16:39Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "upport act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal presentation > only replaces when the callsite asks for replacement\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n"
+    },
+    {
+      "step": 3,
+      "ts": "2026-10-23T09:17:27Z",
+      "type": "run",
+      "gate": "verify",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "ui-walkthrough"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "pp.ts → files tab + CodeMirror mounted — cm-editors=1\nPASS  03b README.md → md preview (frontmatter + code copy + mermaid) — heading=true copyBtn=1 svg=1 fm=1\nPASS  03c edit → autosave CAS write lands on disk — editor=true disk=true\nPASS  04 changes tab → diff document renders (canvas + sticky headers) — headers=2 canvas=3\nPASS  04b layout toggle → unified/split flips (canvas alive) — before=\"Split view\" after=\"Unified view\" canvas=3\nPASS  04c wrap toggle present\nPASS  05a sticky creator + entry present\nPASS  05b creator panel shows Start session\nPASS  05c session created → session tab + composer — composer=true\nPASS  05d usage rail → token quartet + message stats — tokens=true counts=true\nPASS  06 split pane → two pane headers — split=2 close=2\nPASS  07 drag drop → files tab still present — app.ts nodes=1\nPASS  08 rail resize handle widens rail — x 1174 → 1106\nPASS  09 compact → sessions drawer opens (edge swipe)\nPASS  09b sessions drawer closes (push-away swipe) — backdrop=0\nPASS  10 compact → explorer drawer opens (right edge swipe) — backdrop=1 filesTab=1\nPASS  R1 fork inherits the name at the fork point — fork=分叉源名字\nPASS  R2 renaming the parent does not affect the fork — parent=改父名 fork=分叉源名字\nPASS  R3 rename leaves the branch label entry intact — label={\"type\":\"label\",\"id\":\"l0000001\",\"parentI…\nPASS  R4 labeled session renamed\nPASS  R5 renamed parent row visible in sidebar\nPASS  R6 UI rename: row shows the new name\nPASS  R7 wire state matches UI rename\nPASS  R8 UI clear: row falls back to the first message\nPASS  R9 wire state matches UI clear\nPASS  R10 desktop row updates live after an off-device rename (no reload)\nPASS  R11 phone shows the same session name as the desktop\nscreenshots: /Users/ariesfish/Projects/github/dev-skills/pie/ui-walkthrough-shots\nnpm warn install-scripts .npmrc allow-scripts setting is being ignored because --allow-scripts was passed on the command line\nFavicon source file in Expo config (web.favicon) does not exist: ./assets/favicon.png\n"
+    },
+    {
+      "step": 4,
+      "ts": "2026-10-23T09:17:32Z",
+      "type": "close",
+      "note": "Navigated to two layers: sidebar (workspaces+sessions) -> main tabs (session/files/changes) -> inspector (single header toggle + segmented files/changes/packages/usage/activity). Deleted the pinned New session tab (creator panel is reachable only through the strip's +), deleted the sidebar's duplicate new-session button, deleted the rail icon mode strip and the duplicated RailMode impl (app-container + workspace route). Selected state unified: surface2+ink everywhere, header toggles no longer accent-filled (D5/D4), pane focus uses hairline-strong not accent. Fixed the duplicated <Package> icon and the white-icon-on-grey rail selection (1.2:1). New inspector-modes.tsx is the one control used by desktop rail and compact drawer; icon-only segments carry accessibilityLabel (C6). Tab chips: canvas selection, 12px labels. FONT_SIZE.ui=13 for session rows; session timestamps 12 (was 10). DESIGN v1.2 records the 5 inspector segments and the single new-session entry. Walkthrough selectors now target the inspector control (same assertions). Gates: check PASS, verify PASS all steps."
     }
   ]
 }

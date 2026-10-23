@@ -2,16 +2,89 @@
   "id": "T-023",
   "title": "Verification + close-out",
   "opened": "2026-10-23T08:17:56Z",
-  "closed": null,
+  "closed": "2026-10-23T09:30:08Z",
   "budget": 3,
   "blocked": null,
-  "gates": {},
+  "gates": {
+    "check": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-23T09:29:15Z"
+    },
+    "verify": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-23T09:30:03Z"
+    },
+    "review": {
+      "class": "A",
+      "verdict": "PASS+NOTES",
+      "runs": 1,
+      "ts": "2026-10-23T09:30:08Z",
+      "file": ".dev/audit/evidence/review-ui-redesign/verdict.json",
+      "fails": 0
+    }
+  },
   "history": [
     {
       "step": 1,
       "ts": "2026-10-23T08:17:56Z",
       "type": "open",
       "budget": 3
+    },
+    {
+      "step": 2,
+      "ts": "2026-10-23T09:29:15Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "upport act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal presentation > only replaces when the callsite asks for replacement\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n"
+    },
+    {
+      "step": 3,
+      "ts": "2026-10-23T09:30:03Z",
+      "type": "run",
+      "gate": "verify",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "ui-walkthrough"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": " mounted — cm-editors=1\nPASS  03b README.md → md preview (frontmatter + code copy + mermaid) — heading=true copyBtn=1 svg=1 fm=1\nPASS  03c edit → autosave CAS write lands on disk — editor=true disk=true\nPASS  04 changes tab → diff document renders (canvas + sticky headers) — headers=2 canvas=3\nPASS  04b layout toggle → unified/split flips (canvas alive) — before=\"Split view\" after=\"Unified view\" canvas=3\nPASS  04c wrap toggle present\nPASS  05a single new-session entry (no pinned creator tab) — entries=1\nPASS  05b creator panel shows Start session\nPASS  05c session created → session tab + composer — composer=true\nPASS  05d usage rail → token quartet + message stats — tokens=true counts=true\nPASS  06 split pane → two pane headers — split=2 close=2\nPASS  07 drag drop → files tab still present — app.ts nodes=1\nPASS  08 rail resize handle widens rail — x 1174 → 1106\nPASS  09 compact → sessions drawer opens (edge swipe)\nPASS  09b sessions drawer closes (push-away swipe) — backdrop=0\nPASS  10 compact → explorer drawer opens (right edge swipe) — backdrop=1 filesTab=1\nPASS  R1 fork inherits the name at the fork point — fork=分叉源名字\nPASS  R2 renaming the parent does not affect the fork — parent=改父名 fork=分叉源名字\nPASS  R3 rename leaves the branch label entry intact — label={\"type\":\"label\",\"id\":\"l0000001\",\"parentI…\nPASS  R4 labeled session renamed\nPASS  R5 renamed parent row visible in sidebar\nPASS  R6 UI rename: row shows the new name\nPASS  R7 wire state matches UI rename\nPASS  R8 UI clear: row falls back to the first message\nPASS  R9 wire state matches UI clear\nPASS  R10 desktop row updates live after an off-device rename (no reload)\nPASS  R11 phone shows the same session name as the desktop\nscreenshots: /Users/ariesfish/Projects/github/dev-skills/pie/ui-walkthrough-shots\nnpm warn install-scripts .npmrc allow-scripts setting is being ignored because --allow-scripts was passed on the command line\nFavicon source file in Expo config (web.favicon) does not exist: ./assets/favicon.png\n"
+    },
+    {
+      "step": 4,
+      "ts": "2026-10-23T09:30:08Z",
+      "type": "verdict",
+      "gate": "review",
+      "class": "A",
+      "file": ".dev/audit/evidence/review-ui-redesign/verdict.json",
+      "sha256": "2fba38e240d3f1e3",
+      "verdict": "PASS+NOTES"
+    },
+    {
+      "step": 5,
+      "ts": "2026-10-23T09:30:08Z",
+      "type": "close",
+      "note": "Close-out: walkthrough grown to 30 assertions (added 02b inspector=5 segments, 05a single new-session entry) and all green; 05c regex now matches the i18n fallback (label change from T-022), 04/05d/09 selectors target the inspector control (UI change from T-019) — no assertion loosened, coverage grew. Evidence: .dev/audit/evidence/ui-redesign/ (23 screenshots + walkthrough.md). CONSTRAINTS baseline rewritten: D1/D3/D4/D5/D6/D7 and C7/C8 recorded as paid, with the honest residuals (D2 in chrome screens, C5 code blocks, C8 right-rail clockOf) carried into T-025. Independent review (fresh readonly agent, different model) returned PASS+NOTES, 0 blockers; its D7 note (28px segments in the compact drawer) was fixed before this close, the StatusBadge contrast comment corrected, remaining notes filed as T-025. Gates: check PASS, verify PASS, review verdict recorded."
     }
   ]
 }

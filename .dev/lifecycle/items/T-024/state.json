@@ -2,16 +2,47 @@
   "id": "T-024",
   "title": "i18n completeness for relative time",
   "opened": "2026-10-23T08:27:43Z",
-  "closed": null,
+  "closed": "2026-10-23T09:21:43Z",
   "budget": 3,
   "blocked": null,
-  "gates": {},
+  "gates": {
+    "check": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-23T09:21:39Z"
+    }
+  },
   "history": [
     {
       "step": 1,
       "ts": "2026-10-23T08:27:43Z",
       "type": "open",
       "budget": 3
+    },
+    {
+      "step": 2,
+      "ts": "2026-10-23T09:21:39Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "upport act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal presentation > only replaces when the callsite asks for replacement\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n"
+    },
+    {
+      "step": 3,
+      "ts": "2026-10-23T09:21:43Z",
+      "type": "close",
+      "note": "relativeTime -> relativeTimeValue returning a unit/count descriptor (no strings in the store layer); labels resolve through new agentList.time.* keys in en + zh-CN (now/minutes/hours/days/months, zh uses 刚刚/N 分钟前/... ). Left-sidebar and sessions screen format via lib/relative-time.ts. New test asserts unit mapping + null for bad input, so the data/display split is pinned. Gate: check PASS."
     }
   ]
 }

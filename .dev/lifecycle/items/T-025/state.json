@@ -1,0 +1,17 @@
+{
+  "id": "T-025",
+  "title": "Review follow-ups: token truth and rail width source",
+  "opened": "2026-10-23T09:27:20Z",
+  "closed": null,
+  "budget": 3,
+  "blocked": null,
+  "gates": {},
+  "history": [
+    {
+      "step": 1,
+      "ts": "2026-10-23T09:27:20Z",
+      "type": "open",
+      "budget": 3
+    }
+  ]
+}

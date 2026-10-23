@@ -30,22 +30,33 @@
 | D6 | 导航唯一性 | 每类对象（会话、文件、变更、用量）只有一个主入口；次要入口必须是从主入口进入的上下文视图 | IA 评审 |
 | D7 | 触控 | compact 布局下可点区域 ≥ 44×44 | 组件 + 真机 |
 
-## 当前基线（2026-10-23，T-018/T-022 之后）
+## 当前基线（2026-10-23，UI 波次 T-018…T-024 之后）
 
-仍未达标项，属于 UI 重构波次的还债清单，不是"可以继续这样写"的许可：
+仍未达标项，属于后续波次的还债清单，不是"可以继续这样写"的许可：
 
-- **D2**：组件层仍有 9/10/11px 字号（token 下限已是 12，组件尚未全部换用；T-019/T-020 收口）。
-- **D4**：强调色仍被用于导航选中填充（header 图标、pane 下划线），超出 2 处/视口预算（T-019）。
-- **D5/D6**：四套选中态、三套导航入口仍在（T-019；见 `docs/design/audit-2026-10.md`）。
-- **C7（部分）**：`relativeTime()` 返回硬编码英文（`now` / `3m` / `1mo`），未走 i18n（T-024）。
-- **C8**：`RailMode` 定义两份、usage tab 重复渲染图标（T-019）。
+- **D2（残余）**：组件层仍有 9–11px 字号，集中在 `command-center`、`app/sessions.tsx`、
+  `app/workspaces.tsx`、`layout/explorer-pane.tsx`、`workspace/usage-rail.tsx`、
+  `workspace/right-rail.tsx`；会话面与导航面已收口到 ≥12。
+- **C5（残余）**：`highlighted-code-block.tsx` / `markdown-styles.ts` 的代码块仍用
+  `surface2`，DESIGN 的 `surface-code` 尚未成为 token（视觉差异小，未阻塞本轮）。
+- **C8（残余）**：`workspace/right-rail.tsx` 的 `clockOf()` 自拼时间字符串，未走
+  `lib/relative-time.ts`。
 
 已还清（保留在此以免被重新引入）：
 
-- **D1**：三级文本换成 `#5D6678`，每档表面 ≥ 4.57:1（T-018）。
-- **D3**：表面阶梯改为 canvas/sub/raise/strong + 两级细线，`border` 不再独自承担结构（T-018）。
-- **C7**：daemon 不再发送展示文案，会话占位由 `agentList.untitled` 解析（T-022）。
-- **C8**：`accentBright` 恢复为独立的更深一档；不可达的 dark 主题与强制 `setTheme` 删除；`SIDEBAR_WIDTH` 单一真源（T-018）。
+- **D1**：三级文本 `#5D6678`，四档表面实测 5.77 / 5.39 / 5.06 / 4.57（T-018）；
+  状态色作为小字被限制在 canvas/sub 档，tool chip 改用 tint + 状态点 + ink 文本（T-020）。
+- **D2（主面）**：会话行 13px、正文 15px、时间戳 12px、tab 12px；9/10/11px 已从
+  会话面、导航面移除（T-019/T-020）。
+- **D3**：表面阶梯 canvas/sub/raise/strong + 两级细线，结构不再靠 1.4:1 细线（T-018）。
+- **D4**：导航选中不再用强调色填充；每视口彩色事件 ≤2，主操作 ≤1（T-019/T-020）。
+- **D5**：选中态一套语汇（`surface2` + `ink`），四套旧实现删除（T-019）。
+- **D6**：新会话一个入口（tab 行尾 `+`）、检查器一个开关 + 一条分段控件、
+  无 rail 模式条（T-019）。
+- **D7**：compact 触控目标 44×44（header 控件、发送按钮）（T-021）。
+- **C7**：daemon 不发展示文案；会话占位与相对时间都走 i18n（T-022/T-024）。
+- **C8**：`accentBright` 独立、dark 主题删除、`SIDEBAR_WIDTH` 单一真源、
+  `RailMode` 与重复图标删除（T-018/T-019）。
 
 ## 不可协商项
 

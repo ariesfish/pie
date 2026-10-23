@@ -32,6 +32,9 @@ export const en = {
 		attachImage: "Attach images",
 		removeImage: "Remove image",
 		stop: "Stop run",
+		statusRunning: "Running",
+		statusDone: "Done",
+		statusFailed: "Failed",
 	},
 	connect: {
 		title: "Pie",
@@ -120,6 +123,8 @@ export const en = {
 			resources: "Packages",
 			close: "Hide rail",
 			usage: "Usage",
+			title: "Inspector",
+			activity: "Activity",
 		},
 	},
 	commandCenter: {
@@ -147,6 +152,7 @@ export const en = {
 		deny: "Deny",
 		allowSession: "Allow for session",
 		allow: "Allow once",
+		pending: "Pending",
 		selectForBatch: "Add to batch",
 		batch: {
 			count: "{{total}} pending · {{selected}} selected",

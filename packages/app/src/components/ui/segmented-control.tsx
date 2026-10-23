@@ -15,6 +15,8 @@ type SegmentedControlIconRenderer = (props: { color: string; size: number }) => 
 export interface SegmentedControlOption<T extends string> {
   value: T;
   label: string;
+  /** Accessible name when the visible label is hidden (icon-only segments). */
+  accessibilityLabel?: string;
   icon?: SegmentedControlIconRenderer;
   disabled?: boolean;
   testID?: string;
@@ -138,6 +140,7 @@ function SegmentItem<T extends string>({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={option.accessibilityLabel ?? option.label}
       accessibilityState={accessibilityState}
       aria-selected={isSelected}
       disabled={option.disabled}

@@ -5,16 +5,7 @@
 import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import {
-	Activity,
-	FolderOpen,
-	Gauge,
-	GitCompare,
-	Package,
-	PanelLeft,
-	Search,
-	X,
-} from "lucide-react-native";
+import { Activity, PanelLeft, Search, X } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { ToastProvider } from "@/contexts/toast-context";
 import { DiffDocumentWorkspaceCacheProvider } from "@/git/diff-document/workspace-cache";
@@ -24,6 +15,7 @@ import "@/panels/register-panels";
 import { ExplorerPane } from "@/components/layout/explorer-pane";
 import { MobileSessionsButton } from "@/components/layout/app-container";
 import { RailResizeHandle } from "@/components/layout/rail-resize-handle";
+import { InspectorModeControl } from "@/components/workspace/inspector-modes";
 import { SplitContainer, SingleFocusedPane } from "@/components/layout/split-container";
 import { useConnectionStore } from "@/stores/connection-store";
 import { useSessionListStore } from "@/stores/session-list-store";
@@ -129,62 +121,19 @@ export default function WorkspaceScreen() {
 				<View style={[styles.rail, { width: railWidth }]}>
 					<RailResizeHandle width={railWidth} onResize={setRailWidth} />
 					<View style={styles.railInner}>
-					<View style={styles.railTabs}>
-						<RailMode
-						on={explorerMode === "files"}
-						onPress={() => setExplorerMode("files")}
-						label={t("workspace.rail.files")}
-					>
-							<FolderOpen
-								size={14}
-								color={explorerMode === "files" ? theme.colors.accentForeground : theme.colors.foregroundMuted}
-								strokeWidth={1.5}
-							/>
-						</RailMode>
-						<RailMode
-						on={explorerMode === "changes"}
-						onPress={() => setExplorerMode("changes")}
-						label={t("workspace.rail.changes")}
-					>
-							<GitCompare
-								size={14}
-								color={explorerMode === "changes" ? theme.colors.accentForeground : theme.colors.foregroundMuted}
-								strokeWidth={1.5}
-							/>
-						</RailMode>
-						<RailMode
-							on={explorerMode === "resources"}
-							onPress={() => setExplorerMode("resources")}
-							label={t("workspace.rail.resources")}
-						>
-							<Package
-								size={14}
-								color={explorerMode === "resources" ? theme.colors.accentForeground : theme.colors.foregroundMuted}
-								strokeWidth={1.5}
-							/>
-						</RailMode>
-						<RailMode
-							on={explorerMode === "usage"}
-							onPress={() => setExplorerMode("usage")}
-							label={t("workspace.rail.usage")}
-						>
-							<Gauge
-								size={14}
-								color={explorerMode === "usage" ? theme.colors.accentForeground : theme.colors.foregroundMuted}
-								strokeWidth={1.5}
-							/>
-							<Package
-								size={14}
-								color={explorerMode === "resources" ? theme.colors.accentForeground : theme.colors.foregroundMuted}
-								strokeWidth={1.5}
-							/>
-						</RailMode>
-						<View style={styles.railTabSpacer} />
-						<RailMode onPress={() => setExplorerMode(null)} label={t("workspace.rail.close")}>
-							<X size={14} color={theme.colors.foregroundExtraMuted} strokeWidth={1.5} />
-						</RailMode>
-					</View>
-					<ExplorerPane mode={explorerMode} />
+						<View style={styles.railHeader}>
+							<Text style={styles.railTitle}>{t("workspace.rail.title")}</Text>
+							<Pressable
+								hitSlop={6}
+								accessibilityLabel={t("workspace.rail.close")}
+								onPress={() => setExplorerMode(null)}
+								style={({ pressed }) => [styles.railClose, pressed && { opacity: 0.7 }]}
+							>
+								<X size={14} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
+							</Pressable>
+						</View>
+						<InspectorModeControl mode={explorerMode ?? "files"} onChange={setExplorerMode} />
+						<ExplorerPane mode={explorerMode} />
 					</View>
 				</View>
 			) : null}
@@ -246,9 +195,7 @@ function WorkspaceHeaderRow({
 				>
 					<Activity
 						size={14}
-						color={
-							railVisible ? theme.colors.accentForeground : theme.colors.foregroundMuted
-						}
+						color={railVisible ? theme.colors.foreground : theme.colors.foregroundMuted}
 						strokeWidth={1.5}
 					/>
 				</HeaderIcon>
@@ -276,36 +223,6 @@ function HeaderIcon({
 			style={({ pressed }) => [
 				styles.headerIcon,
 				active && styles.headerIconOn,
-				pressed && { opacity: 0.7 },
-			]}
-		>
-			{children}
-		</Pressable>
-	);
-}
-
-function RailMode({
-	children,
-	onPress,
-	on,
-	label,
-}: {
-	children: React.ReactNode;
-	onPress: () => void;
-	on?: boolean;
-	label: string;
-}) {
-	const { theme } = useUnistyles();
-	return (
-		<Pressable
-			hitSlop={4}
-			onPress={onPress}
-			accessibilityLabel={label}
-			accessibilityRole="tab"
-			style={({ pressed }) => [
-				styles.railTab,
-				on && { backgroundColor: theme.colors.surface2 },
-				on && { borderBottomColor: theme.colors.accent },
 				pressed && { opacity: 0.7 },
 			]}
 		>
@@ -352,7 +269,7 @@ const styles = StyleSheet.create((theme) => ({
 		borderWidth: theme.borderWidth[1],
 		borderColor: theme.colors.border,
 	},
-	headerIconOn: { backgroundColor: theme.colors.accent, borderColor: theme.colors.accent },
+	headerIconOn: { backgroundColor: theme.colors.surface2, borderColor: theme.colors.border },
 	rail: {
 		flexDirection: "row",
 		borderLeftWidth: theme.borderWidth[1],
@@ -360,24 +277,26 @@ const styles = StyleSheet.create((theme) => ({
 		backgroundColor: theme.colors.surfaceSidebar,
 	},
 	railInner: { flex: 1 },
-	railTabs: {
+	railHeader: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 2,
-		paddingHorizontal: theme.spacing[1],
-		paddingLeft: theme.spacing[3],
-		borderBottomWidth: theme.borderWidth[1],
-		borderBottomColor: theme.colors.border,
+		justifyContent: "space-between",
+		paddingHorizontal: theme.spacing[3],
+		paddingTop: theme.spacing[2],
+		paddingBottom: theme.spacing[1],
 	},
-	railTab: {
-		flex: 1,
+	railTitle: {
+		color: theme.colors.foreground,
+		fontSize: theme.fontSize.sm,
+		fontWeight: theme.fontWeight.semibold,
+	},
+	railClose: {
+		width: 22,
+		height: 22,
 		alignItems: "center",
-		paddingVertical: theme.spacing[2],
-		borderBottomWidth: 2,
-		borderBottomColor: "transparent",
-		borderRadius: theme.borderRadius.md,
+		justifyContent: "center",
+		borderRadius: theme.borderRadius.sm,
 	},
-	railTabSpacer: { width: theme.spacing[1] },
 	errorBar: {
 		paddingHorizontal: theme.spacing[3],
 		paddingVertical: theme.spacing[1],

@@ -5,13 +5,16 @@
 import type { ReactNode } from "react";
 import { Pressable, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
-import { FolderOpen, GitCompare, Menu } from "lucide-react-native";
+import { Menu } from "lucide-react-native";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
-import { useTranslation } from "react-i18next";
 
 import { LeftSidebar } from "@/components/layout/left-sidebar";
 import { ExplorerPane } from "@/components/layout/explorer-pane";
-import { useTabsStore, type ExplorerMode } from "@/stores/tabs-store";
+import { useTabsStore } from "@/stores/tabs-store";
+import {
+	InspectorModeControl,
+	type InspectorMode,
+} from "@/components/workspace/inspector-modes";
 import { SIDEBAR_WIDTH } from "@/constants/layout";
 import {
 	MobilePanelOverlay,
@@ -104,61 +107,17 @@ function MobileHomeSurface({ children }: { children: ReactNode }) {
 	);
 }
 
-/** Compact explorer drawer: mode strip + the shared ExplorerPane content. */
+/** Compact explorer drawer: the shared inspector mode control + content. */
 function MobileExplorerRail() {
-	const { t } = useTranslation();
-	const { theme } = useUnistyles();
 	const explorerMode = useTabsStore((s) => s.explorerMode);
 	const setExplorerMode = useTabsStore((s) => s.setExplorerMode);
-	const mode: Exclude<ExplorerMode, null> = explorerMode ?? "files";
+	const mode: InspectorMode = explorerMode ?? "files";
 
 	return (
 		<View style={styles.explorerRail}>
-			<View style={styles.explorerTabs}>
-				<RailMode
-					icon={<FolderOpen size={14} color={mode === "files" ? theme.colors.accentForeground : theme.colors.foregroundMuted} strokeWidth={1.5} />}
-					on={mode === "files"}
-					onPress={() => setExplorerMode("files")}
-					label={t("workspace.rail.files")}
-				/>
-				<RailMode
-					icon={<GitCompare size={14} color={mode === "changes" ? theme.colors.accentForeground : theme.colors.foregroundMuted} strokeWidth={1.5} />}
-					on={mode === "changes"}
-					onPress={() => setExplorerMode("changes")}
-					label={t("workspace.rail.changes")}
-				/>
-			</View>
+			<InspectorModeControl mode={mode} onChange={setExplorerMode} />
 			<ExplorerPane mode={mode} />
 		</View>
-	);
-}
-
-function RailMode({
-	icon,
-	on,
-	onPress,
-	label,
-}: {
-	icon: ReactNode;
-	on: boolean;
-	onPress: () => void;
-	label: string;
-}) {
-	const { theme } = useUnistyles();
-	return (
-		<Pressable
-			hitSlop={4}
-			onPress={onPress}
-			accessibilityLabel={label}
-			accessibilityRole="tab"
-			style={({ pressed }) => [
-				styles.railMode,
-				on && { backgroundColor: theme.colors.surface2, borderBottomColor: theme.colors.accent },
-				pressed && { opacity: 0.7 },
-			]}
-		>
-			{icon}
-		</Pressable>
 	);
 }
 
@@ -195,21 +154,6 @@ const styles = StyleSheet.create((theme) => ({
 	explorerRail: {
 		flex: 1,
 		backgroundColor: theme.colors.surfaceSidebar,
-	},
-	explorerTabs: {
-		flexDirection: "row",
-		gap: 2,
-		paddingHorizontal: theme.spacing[1],
-		borderBottomWidth: theme.borderWidth[1],
-		borderBottomColor: theme.colors.border,
-	},
-	railMode: {
-		flex: 1,
-		alignItems: "center",
-		paddingVertical: theme.spacing[2],
-		borderRadius: theme.borderRadius.md,
-		borderBottomWidth: 2,
-		borderBottomColor: "transparent",
 	},
 	headerIcon: {
 		width: 28,

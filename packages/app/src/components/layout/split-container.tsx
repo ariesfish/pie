@@ -305,6 +305,10 @@ function PaneTabsRow({
 				{pane.tabIds.map((tabId) => {
 					const tab = tabs.find((entry) => entry.tabId === tabId);
 					if (!tab) return null;
+					// The creator panel is reachable through the trailing "+" only;
+					// pinning it as a tab was a third entry point (DESIGN.md
+					// §Components/Navigation).
+					if (tab.target.kind === "new_tab") return null;
 					const on = pane.focusedTabId === tabId;
 					const label = labelFor(tab);
 					const Icon = label.icon;
@@ -401,13 +405,13 @@ const styles = StyleSheet.create((theme) => ({
 		alignItems: "center",
 		paddingRight: theme.spacing[1],
 		backgroundColor: theme.colors.surface1,
-		borderBottomWidth: 2,
+		borderBottomWidth: theme.borderWidth[1],
 		borderBottomColor: theme.colors.border,
 	},
 	paneHeaderRowFocused: {
 		backgroundColor: theme.colors.surface2,
-		borderBottomWidth: 2,
-		borderBottomColor: theme.colors.accentBright,
+		borderBottomWidth: theme.borderWidth[1],
+		borderBottomColor: theme.colors.borderAccent,
 	},
 	paneActions: { flexDirection: "row", alignItems: "center", gap: 2 },
 	paneAction: {
@@ -437,21 +441,26 @@ const styles = StyleSheet.create((theme) => ({
 		opacity: 0.55,
 	},
 	tabsScroll: { flexGrow: 0, flexShrink: 0 },
-	tabsRow: { paddingHorizontal: theme.spacing[2], paddingVertical: theme.spacing[1], gap: theme.spacing[1] },
+	tabsRow: {
+		paddingHorizontal: theme.spacing[2],
+		paddingVertical: theme.spacing[1],
+		gap: theme.spacing[1],
+		backgroundColor: theme.colors.surface1,
+	},
 	tab: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 4,
+		gap: theme.spacing[1],
 		paddingHorizontal: theme.spacing[2],
-		paddingVertical: 5,
+		paddingVertical: theme.spacing[1],
 		borderRadius: theme.borderRadius.md,
 		borderWidth: theme.borderWidth[1],
 		borderColor: "transparent",
 		maxWidth: 200,
 	},
-	tabOn: { backgroundColor: theme.colors.surface2, borderColor: theme.colors.border },
+	tabOn: { backgroundColor: theme.colors.surface0, borderColor: theme.colors.border },
 	tabOnDim: { backgroundColor: theme.colors.surface1 },
-	tabText: { color: theme.colors.foregroundMuted, fontSize: 11, maxWidth: 150 },
+	tabText: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm, maxWidth: 150 },
 	tabTextOn: { color: theme.colors.foreground },
 	tabClose: { padding: 1 },
 	panelHost: { flex: 1, flexDirection: "row" },

@@ -309,8 +309,10 @@ async function runAssertions(appUrl, workspacePath) {
 	await page.getByLabel("Stop editing").click();
 	await sleep(600);
 
-	// 04 rail → changes; click the dirty file → diff view
-	await page.getByRole("tab", { name: "Changes" }).click();
+	// 04 inspector → changes; click the dirty file → diff view. The rail mode
+	// strip became a segmented control inside the inspector (T-019), so the
+	// hook is the control's testID, not a tab role.
+	await inspectorMode(page, "Changes");
 	await sleep(400);
 	await page.getByText("src/app.ts", { exact: false }).first().click();
 	await page
@@ -381,7 +383,7 @@ async function runAssertions(appUrl, workspacePath) {
 
 		// 05d usage rail: the session exists now, so the stats pull renders
 		// the token quartet + message count rows (all zeros, fresh session).
-		await page.getByRole("tab", { name: "Usage" }).click();
+		await inspectorMode(page, "Usage");
 		await page
 			.getByText("Cache read", { exact: true })
 			.first()
@@ -402,7 +404,7 @@ async function runAssertions(appUrl, workspacePath) {
 		await shot(page, "05d-usage-rail");
 		// 07's drag step reaches the app.ts node through the files tree — put
 		// the rail back on files mode before leaving.
-		await page.getByRole("tab", { name: "Files" }).click();
+		await inspectorMode(page, "Files");
 		await sleep(600);
 	}
 
@@ -488,13 +490,23 @@ async function runAssertions(appUrl, workspacePath) {
 	// The drawer shares the rail's mode state; after 04 it shows the changes
 	// list, so assert the drawer's own rail tabs instead of a files-tree row.
 	const drawerFilesTab = await page
-		.getByRole("tab", { name: "Files" })
+		.getByTestId("inspector-modes")
+		.getByRole("button", { name: "Files" })
 		.count()
 		.catch(() => 0);
 	check("10 compact → explorer drawer opens (right edge swipe)", explorerBackdrop === 1 && drawerFilesTab === 1, `backdrop=${explorerBackdrop} filesTab=${drawerFilesTab}`);
 	await shot(page, "13-compact-explorer");
 
 	await browser.close();
+}
+
+/** Press an inspector mode segment (T-019 control) by its visible label. */
+async function inspectorMode(page, label) {
+	await page
+		.getByTestId("inspector-modes")
+		.getByRole("button", { name: label, exact: true })
+		.first()
+		.click();
 }
 
 async function shot(page, name) {

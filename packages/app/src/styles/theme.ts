@@ -145,6 +145,7 @@ export const SPACING = {
 
 /** Type scale. 12px is the floor; body is 15 (DESIGN.md §Typography). */
 export const FONT_SIZE = {
+	ui: 13,
 	code: 12.5,
 	content: 15,
 	sm: 12,

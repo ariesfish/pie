@@ -122,7 +122,7 @@ export function LeftSidebar() {
 				style={({ pressed }) => [styles.newWorkspaceRow, pressed && styles.rowPressed]}
 				onPress={() => router.push("/workspaces")}
 			>
-				<Plus size={14} color={theme.colors.accent} strokeWidth={1.75} />
+				<Plus size={14} color={theme.colors.foregroundMuted} strokeWidth={1.75} />
 				<Text style={styles.newWorkspaceText}>{t("workspaces.new")}</Text>
 			</Pressable>
 
@@ -248,16 +248,10 @@ export function LeftSidebar() {
 				</View>
 			) : null}
 
-			{/* paseo.png footer: new-session on the left, settings on the right. */}
+			{/* Footer: settings. Creating a session has one entry — the tab-strip
+			    "+" (DESIGN.md §Components/Navigation); a second button here was
+			    a duplicate path to the same action. */}
 			<View style={styles.footer}>
-				<Pressable
-					hitSlop={6}
-					onPress={() => useTabsStore.getState().openNew()}
-					accessibilityLabel={t("agentList.newSession")}
-					style={styles.footerButton}
-				>
-					<Plus size={16} color={theme.colors.foregroundMuted} strokeWidth={1.75} />
-				</Pressable>
 				<Pressable
 					hitSlop={6}
 					onPress={() => router.push("/workspaces")}
@@ -484,7 +478,7 @@ const styles = StyleSheet.create((theme) => ({
 	sessionTitle: {
 		flex: 1,
 		color: theme.colors.foregroundMuted,
-		fontSize: theme.fontSize.sm,
+		fontSize: theme.fontSize.ui,
 	},
 	sessionTitleSelected: {
 		color: theme.colors.foreground,
@@ -492,7 +486,7 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	sessionTime: {
 		color: theme.colors.foregroundExtraMuted,
-		fontSize: 10,
+		fontSize: theme.fontSize.sm,
 	},
 	rowPressed: { opacity: 0.7 },
 	renameErrorBanner: {
@@ -516,7 +510,7 @@ const styles = StyleSheet.create((theme) => ({
 	footer: {
 		flexDirection: "row",
 		alignItems: "center",
-		justifyContent: "space-between",
+		justifyContent: "flex-end",
 		paddingHorizontal: theme.spacing[2],
 		paddingVertical: theme.spacing[1],
 		borderTopWidth: theme.borderWidth[1],

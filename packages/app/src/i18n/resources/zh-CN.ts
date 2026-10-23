@@ -32,6 +32,9 @@ export const zhCN = {
 		attachImage: "附加图片",
 		removeImage: "移除图片",
 		stop: "停止运行",
+		statusRunning: "进行中",
+		statusDone: "完成",
+		statusFailed: "失败",
 	},
 	connect: {
 		title: "Pie",
@@ -120,6 +123,8 @@ export const zhCN = {
 			resources: "包",
 			close: "收起侧栏",
 			usage: "用量",
+			title: "检查器",
+			activity: "活动",
 		},
 	},
 	commandCenter: {
@@ -147,6 +152,7 @@ export const zhCN = {
 		deny: "拒绝",
 		allowSession: "本会话允许",
 		allow: "允许一次",
+		pending: "待授权",
 		selectForBatch: "加入批量",
 		batch: {
 			count: "待审 {{total}} 张 · 已选 {{selected}} 张",

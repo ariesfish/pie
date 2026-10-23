@@ -49,7 +49,8 @@ Pie 是给 Pi coding agent 的跨设备客户端：桌面、移动、Web。主�
 没有渐变、没有插画、没有第二种彩色；产品自己的 UI 是唯一的图像。
 
 参考来源：`docs/design/audit-2026-10.md`（现状审计）、`docs/design/variants/index.html`
-（已选方案 A）。Paseo 只提供结构参照（ADR-0005），不复制其皮肤与商标。
+（已选方案 A）。Paseo 只提供结构参照（ADR-0005），不复制其皮肤与商标；本文件取代
+Paseo 皮肤层的唯一依据见 ADR-0007。
 
 ## Colors
 

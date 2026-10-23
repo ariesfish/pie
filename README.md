@@ -4,7 +4,7 @@
 > 以 [Paseo](https://github.com/getpaseo/paseo) 的产品形态为蓝本，以 Pi 官方 SDK（`@earendil-works/pi-coding-agent`）为原生内核，**不走 ACP 等通用 Agent 抽象**。
 
 - 架构设计：[`docs/architecture.md`](docs/architecture.md)
-- 决策记录（ADR）：[0001 wire 协议](docs/adr/0001-wire-protocol.md) · [0002 权限层](docs/adr/0002-permission-layer.md) · [0003 移除 session.switch](docs/adr/0003-remove-session-switch.md) · [0004 不提供终端通道](docs/adr/0004-no-terminal-channel.md) · [0005 分层整目录搬运与栈锁定](docs/adr/0005-wholesale-ui-port-strategy.md)
+- 决策记录（ADR）：[0001 wire 协议](docs/adr/0001-wire-protocol.md) · [0002 权限层](docs/adr/0002-permission-layer.md) · [0003 移除 session.switch](docs/adr/0003-remove-session-switch.md) · [0004 不提供终端通道](docs/adr/0004-no-terminal-channel.md) · [0005 分层整目录搬运与栈锁定](docs/adr/0005-wholesale-ui-port-strategy.md) · [0006 fs.write CAS](docs/adr/0006-fswrite-cas.md) · [0007 视觉语言自立](docs/adr/0007-visual-language-independence.md)
 
 ## Packages
 

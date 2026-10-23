@@ -5,7 +5,7 @@ How the developer workflow skills consume this repo's domain documentation befor
 ## Before exploring, read these
 
 - **`docs/GLOSSARY.md`** — single-context repo; the only sanctioned vocabulary for domain terms.
-- **`docs/adr/`** — read ADRs that touch the area you are about to change.
+- **`docs/adr/`** — read ADRs that touch the area you are about to change (UI: ADR-0005 for structure, ADR-0007 for the skin split).
 - **`docs/architecture.md`** — package boundaries, wire protocol, daemon/desktop topology.
 - **`DESIGN.md`** (repo root) — read before any UI-bearing change; it is the visual contract.
 

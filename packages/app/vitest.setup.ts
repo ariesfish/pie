@@ -25,6 +25,33 @@ if (typeof window !== "undefined" && typeof window.matchMedia !== "function") {
     });
 }
 
+// Node 26 defines a global `localStorage` accessor that is undefined unless
+// the process was started with --localstorage-file. The accessor shadows
+// jsdom's Storage in the jsdom test environment, so persistence tests see
+// `window.localStorage === undefined`. Restore an in-memory Storage only when
+// the environment failed to provide one (Node 22 and older are unaffected).
+if (typeof window !== "undefined" && !window.localStorage) {
+  const store = new Map<string, string>();
+  const storage: Storage = {
+    getItem: (key) => (store.has(key) ? store.get(key)! : null),
+    setItem: (key, value) => {
+      store.set(key, String(value));
+    },
+    removeItem: (key) => {
+      store.delete(key);
+    },
+    clear: () => {
+      store.clear();
+    },
+    key: (index) => [...store.keys()][index] ?? null,
+    get length() {
+      return store.size;
+    },
+  };
+  Object.defineProperty(globalThis, "localStorage", { value: storage, configurable: true });
+  Object.defineProperty(window, "localStorage", { value: storage, configurable: true });
+}
+
 if (typeof globalThis.self === "undefined") {
   globalWithTestShims.self = globalThis;
 }

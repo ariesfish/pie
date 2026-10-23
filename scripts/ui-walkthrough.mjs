@@ -369,8 +369,10 @@ async function runAssertions(appUrl, workspacePath) {
 		await startBtn.click();
 		await sleep(2600);
 		const composer = await page.locator("textarea, [contenteditable='true']").first().isVisible().catch(() => false);
+		// Tab label comes from i18n (agentList.untitled) since T-022 moved the
+		// fallback copy out of the daemon; accept either language.
 		const sessionTab = await page
-			.getByText(/untitled session|新会话，未落盘/)
+			.getByText(/untitled session|未命名会话/i)
 			.first()
 			.isVisible()
 			.catch(() => false);

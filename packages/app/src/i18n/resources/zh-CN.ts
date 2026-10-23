@@ -90,6 +90,13 @@ export const zhCN = {
 		workspaceRoot: "工作区根",
 		newSession: "新会话",
 		untitled: "未命名会话",
+		time: {
+			now: "刚刚",
+			minutes: "{{count}} 分钟前",
+			hours: "{{count}} 小时前",
+			days: "{{count}} 天前",
+			months: "{{count}} 个月前",
+		},
 		start: "开始会话",
 		renameErrorNotConnected: "未连接 daemon",
 		rename: "重命名",

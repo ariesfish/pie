@@ -90,6 +90,13 @@ export const en = {
 		workspaceRoot: "Workspace root",
 		newSession: "New session",
 		untitled: "Untitled session",
+		time: {
+			now: "now",
+			minutes: "{{count}}m",
+			hours: "{{count}}h",
+			days: "{{count}}d",
+			months: "{{count}}mo",
+		},
 		start: "Start session",
 		renameErrorNotConnected: "Not connected to the daemon",
 		rename: "Rename",

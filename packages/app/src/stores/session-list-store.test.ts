@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { SessionListItem } from "@pie/protocol";
 
-import { useSessionListStore, sessionTitle } from "./session-list-store";
+import { useSessionListStore, sessionTitle, relativeTimeValue } from "./session-list-store";
 import { useConnectionStore, applyStoreEvent } from "./connection-store";
 import { en, zhCN } from "@/i18n/resources";
 
@@ -146,5 +146,29 @@ describe("agentList.untitled fallback copy", () => {
 		expect(enUntitled.length).toBeGreaterThan(0);
 		expect(zhUntitled.length).toBeGreaterThan(0);
 		expect(enUntitled).not.toBe(zhUntitled);
+	});
+});
+
+describe("relativeTimeValue returns data, not copy", () => {
+	it("maps ages to unit descriptors and never returns a display string", () => {
+		const now = Date.now();
+		expect(relativeTimeValue(new Date(now - 5_000).toISOString())).toEqual({ unit: "now" });
+		expect(relativeTimeValue(new Date(now - 3 * 60_000).toISOString())).toEqual({
+			unit: "minute",
+			count: 3,
+		});
+		expect(relativeTimeValue(new Date(now - 5 * 3_600_000).toISOString())).toEqual({
+			unit: "hour",
+			count: 5,
+		});
+		expect(relativeTimeValue(new Date(now - 2 * 86_400_000).toISOString())).toEqual({
+			unit: "day",
+			count: 2,
+		});
+		expect(relativeTimeValue(new Date(now - 40 * 86_400_000).toISOString())).toEqual({
+			unit: "month",
+			count: 1,
+		});
+		expect(relativeTimeValue("not-a-date")).toBeNull();
 	});
 });

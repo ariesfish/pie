@@ -22,7 +22,6 @@ import { useTabsStore } from "@/stores/tabs-store";
 
 import { useUnistyles, StyleSheet } from "react-native-unistyles";
 import {
-	relativeTime,
 	sessionTitle,
 	useSessionListStore,
 } from "@/stores/session-list-store";
@@ -37,6 +36,7 @@ import {
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { RenameSessionSheet } from "./rename-session-sheet";
+import { relativeTimeLabel } from "@/lib/relative-time";
 
 /** session rows render under the workspace whose path prefixes their cwd. */
 function sessionUnderWorkspace(sessionCwd: string, workspaceId: string): boolean {
@@ -303,7 +303,7 @@ function SessionRow({
 				>
 					{title}
 				</Text>
-				<Text style={styles.sessionTime}>{relativeTime(session.modified)}</Text>
+				<Text style={styles.sessionTime}>{relativeTimeLabel(t, session.modified)}</Text>
 			</ContextMenuTrigger>
 			<ContextMenuContent>
 				<ContextMenuItem onSelect={onRename} testID="session-row-rename">

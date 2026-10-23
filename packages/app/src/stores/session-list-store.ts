@@ -205,14 +205,22 @@ export function sessionTitle(s: SessionListItem): string {
 	return fm.length > 0 ? (fm.length > 72 ? `${fm.slice(0, 72)}…` : fm) : "";
 }
 
-/** "3m ago" style relative time. */
-export function relativeTime(iso: string): string {
+/**
+ * Relative time as data, not copy: `{ unit, count }` so the caller resolves the
+ * label through i18n (CONSTRAINTS C7). `unit: "now"` carries no count.
+ */
+export type RelativeTime =
+	| { unit: "now" }
+	| { unit: "minute" | "hour" | "day" | "month"; count: number };
+
+export function relativeTimeValue(iso: string): RelativeTime | null {
 	const t = new Date(iso).getTime();
-	if (!Number.isFinite(t)) return "";
+	if (!Number.isFinite(t)) return null;
 	const diff = Date.now() - t;
-	if (diff < 60_000) return "now";
-	if (diff < 3_600_000) return `${Math.max(1, Math.floor(diff / 60_000))}m`;
-	if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h`;
-	const d = Math.floor(diff / 86_400_000);
-	return d < 30 ? `${d}d` : `${Math.floor(d / 30)}mo`;
+	if (diff < 60_000) return { unit: "now" };
+	if (diff < 3_600_000) return { unit: "minute", count: Math.max(1, Math.floor(diff / 60_000)) };
+	if (diff < 86_400_000) return { unit: "hour", count: Math.floor(diff / 3_600_000) };
+	const days = Math.floor(diff / 86_400_000);
+	if (days < 30) return { unit: "day", count: days };
+	return { unit: "month", count: Math.floor(days / 30) };
 }

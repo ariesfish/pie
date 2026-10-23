@@ -6,11 +6,11 @@ import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { ChevronLeft, Search, X } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
+import { relativeTimeLabel } from "@/lib/relative-time";
 import { useUnistyles, StyleSheet } from "react-native-unistyles";
 
 import { Plus } from "lucide-react-native";
 import {
-	relativeTime,
 	sessionTitle,
 	useSessionListStore,
 } from "@/stores/session-list-store";
@@ -107,7 +107,7 @@ export default function SessionsScreen() {
 									{sessionTitle(session) || t("agentList.untitled")}
 								</Text>
 								<View style={styles.rowMeta}>
-									<Text style={styles.rowTime}>{relativeTime(session.modified)}</Text>
+									<Text style={styles.rowTime}>{relativeTimeLabel(t, session.modified)}</Text>
 									{session.messageCount > 0 ? (
 										<Text style={styles.rowCount}>{session.messageCount}</Text>
 									) : null}

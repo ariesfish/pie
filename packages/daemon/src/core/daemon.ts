@@ -223,7 +223,9 @@ export class SessionRegistry {
 				created: new Date().toISOString(),
 				modified: new Date().toISOString(),
 				messageCount: host.session.messages.length,
-				firstMessage: "（新会话，未落盘）",
+				// Wire carries data only: a not-yet-persisted session has no first
+				// message. Display text is the app's job (i18n fallback).
+				firstMessage: "",
 				parentSessionPath: undefined,
 				open: true,
 				pending: host.session.isStreaming,

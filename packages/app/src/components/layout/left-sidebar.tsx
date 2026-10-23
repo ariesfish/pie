@@ -286,6 +286,7 @@ function SessionRow({
 }) {
 	const { theme } = useUnistyles();
 	const { t } = useTranslation();
+	const title = sessionTitle(session) || t("agentList.untitled");
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger
@@ -295,7 +296,7 @@ function SessionRow({
 					pressed && styles.rowPressed,
 				]}
 				onPress={onPress}
-				accessibilityLabel={sessionTitle(session)}
+				accessibilityLabel={title}
 			>
 				<MessageCircle
 					size={13}
@@ -306,7 +307,7 @@ function SessionRow({
 					style={[styles.sessionTitle, selected && styles.sessionTitleSelected]}
 					numberOfLines={1}
 				>
-					{sessionTitle(session)}
+					{title}
 				</Text>
 				<Text style={styles.sessionTime}>{relativeTime(session.modified)}</Text>
 			</ContextMenuTrigger>

@@ -86,6 +86,7 @@ export const en = {
 		projectRoot: "{{workspace}} (workspace root)",
 		workspaceRoot: "Workspace root",
 		newSession: "New session",
+		untitled: "Untitled session",
 		start: "Start session",
 		renameErrorNotConnected: "Not connected to the daemon",
 		rename: "Rename",

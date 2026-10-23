@@ -86,6 +86,7 @@ export const zhCN = {
 		projectRoot: "{{workspace}}(工作区根)",
 		workspaceRoot: "工作区根",
 		newSession: "新会话",
+		untitled: "未命名会话",
 		start: "开始会话",
 		renameErrorNotConnected: "未连接 daemon",
 		rename: "重命名",

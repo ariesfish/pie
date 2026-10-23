@@ -6,6 +6,7 @@ import type { SessionListItem } from "@pie/protocol";
 
 import { useSessionListStore, sessionTitle } from "./session-list-store";
 import { useConnectionStore, applyStoreEvent } from "./connection-store";
+import { en, zhCN } from "@/i18n/resources";
 
 function row(overrides: Partial<SessionListItem> = {}): SessionListItem {
 	return {
@@ -130,10 +131,20 @@ describe("event-driven name sync", () => {
 });
 
 describe("sessionTitle fallback rule", () => {
-	it("prefers name, then first message, then placeholder", () => {
+	it("prefers name, then first message, else empty (caller resolves i18n)", () => {
 		expect(sessionTitle(row())).toBe("旧名字");
 		expect(sessionTitle(row({ name: undefined }))).toBe("首条消息摘要");
-		expect(sessionTitle(row({ name: undefined, firstMessage: "" }))).toBe("(untitled session)");
+		expect(sessionTitle(row({ name: undefined, firstMessage: "" }))).toBe("");
 		expect(sessionTitle(row({ name: "  " }))).toBe("首条消息摘要");
+	});
+});
+
+describe("agentList.untitled fallback copy", () => {
+	it("resolves to a non-empty, distinct label in both languages", () => {
+		const enUntitled = en.agentList.untitled;
+		const zhUntitled = zhCN.agentList.untitled;
+		expect(enUntitled.length).toBeGreaterThan(0);
+		expect(zhUntitled.length).toBeGreaterThan(0);
+		expect(enUntitled).not.toBe(zhUntitled);
 	});
 });

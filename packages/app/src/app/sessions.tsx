@@ -104,7 +104,7 @@ export default function SessionsScreen() {
 							}}
 							>
 								<Text style={styles.rowTitle} numberOfLines={1}>
-									{sessionTitle(session)}
+									{sessionTitle(session) || t("agentList.untitled")}
 								</Text>
 								<View style={styles.rowMeta}>
 									<Text style={styles.rowTime}>{relativeTime(session.modified)}</Text>

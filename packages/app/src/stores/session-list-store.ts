@@ -194,11 +194,15 @@ export function bucketOf(iso: string): DateBucket {
 	return "older";
 }
 
-/** Row title: session name, else first message snippet (paseo fallbackTitle). */
+/**
+ * Row title: session name, else first message snippet (paseo fallbackTitle).
+ * Returns "" when neither exists — the caller resolves display text via i18n
+ * (`agentList.untitled`); this layer must not invent copy.
+ */
 export function sessionTitle(s: SessionListItem): string {
 	if (s.name && s.name.trim().length > 0) return s.name;
 	const fm = s.firstMessage.trim();
-	return fm.length > 0 ? (fm.length > 72 ? `${fm.slice(0, 72)}…` : fm) : "(untitled session)";
+	return fm.length > 0 ? (fm.length > 72 ? `${fm.slice(0, 72)}…` : fm) : "";
 }
 
 /** "3m ago" style relative time. */

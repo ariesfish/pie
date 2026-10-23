@@ -167,6 +167,7 @@ function WorkspaceHeaderRow({
 			{/* Toolbar grammar (paseo desktop): each rail toggle hugs the edge
 			    it controls. Sidebar first, explorer last. */}
 			<View style={styles.headerLeft}>
+				{isCompact ? null : (
 				<HeaderIcon label={t("panels.sidebar")} onPress={toggleSidebar} active={sidebarVisible}>
 					<PanelLeft
 						size={14}
@@ -176,6 +177,7 @@ function WorkspaceHeaderRow({
 						strokeWidth={1.5}
 					/>
 				</HeaderIcon>
+				)}
 				<Text style={styles.workspace} numberOfLines={1}>
 					{workspaceName}
 				</Text>
@@ -260,9 +262,10 @@ const styles = StyleSheet.create((theme) => ({
 		fontWeight: theme.fontWeight.semibold,
 	},
 	headerActions: { flexDirection: "row", alignItems: "center", gap: theme.spacing[1] },
+	// Touch policy: 44 on compact, 28 on desktop (DESIGN.md §Responsive).
 	headerIcon: {
-		width: 28,
-		height: 28,
+		width: { xs: 44, md: 28 },
+		height: { xs: 44, md: 28 },
 		alignItems: "center",
 		justifyContent: "center",
 		borderRadius: theme.borderRadius.md,

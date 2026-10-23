@@ -333,8 +333,9 @@ const styles = StyleSheet.create((theme) => ({
 	// Send: ink circle with a strong-surface icon — it does not spend the
 	// accent budget (DESIGN.md §Components/Buttons).
 	sendRound: {
-		width: 30,
-		height: 30,
+		// 44 on compact, 30 on desktop: a thumb needs the larger target.
+		width: { xs: 44, md: 30 },
+		height: { xs: 44, md: 30 },
 		borderRadius: theme.borderRadius.full,
 		backgroundColor: theme.colors.foreground,
 		alignItems: "center",

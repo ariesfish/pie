@@ -156,8 +156,8 @@ const styles = StyleSheet.create((theme) => ({
 		backgroundColor: theme.colors.surfaceSidebar,
 	},
 	headerIcon: {
-		width: 28,
-		height: 28,
+		width: { xs: 44, md: 28 },
+		height: { xs: 44, md: 28 },
 		alignItems: "center",
 		justifyContent: "center",
 		borderRadius: theme.borderRadius.md,

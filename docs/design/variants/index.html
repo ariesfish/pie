@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="zh-CN" data-scheme="quiet">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pie — 两套视觉方案预览</title>
+<style>
+  :root[data-scheme="quiet"] {
+    --canvas:#FFFFFF; --sub:#F6F7F9; --raise:#EEF0F4; --hover:#F2F4F7;
+    --ink:#14161A; --ink2:#4B5361; --ink3:#667085;
+    --line:#E4E7EC; --line2:#D0D5DD;
+    --accent:#3B5BDB; --on-accent:#FFFFFF; --soft:#EDF1FF;
+    --code:#F8F9FB; --ok:#1F7A4D; --ok-soft:#E7F4EC;
+    --warn:#9A6700; --bad:#B42318; --bad-soft:#FDECEA;
+    --diff-add:#EAF6EE; --diff-del:#FBEAE8;
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", sans-serif;
+    --display: var(--font);
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --r-sm:4px; --r:6px; --r-lg:10px; --r-xl:14px;
+    --shadow: 0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.06);
+  }
+  :root[data-scheme="warm"] {
+    --canvas:#FAF7F0; --sub:#F3EDE1; --raise:#EBE3D4; --hover:#F0E9DB;
+    --ink:#22201B; --ink2:#5E594E; --ink3:#6F6859;
+    --line:#E4DBC9; --line2:#D3C6AE;
+    --accent:#A94E33; --on-accent:#FFF8F0; --soft:#F5E7DE;
+    --code:#F4EEE3; --ok:#3E6B4C; --ok-soft:#E9F0E9;
+    --warn:#8A5A1F; --bad:#A33A32; --bad-soft:#F7E6E2;
+    --diff-add:#EDF3E9; --diff-del:#F8E8E2;
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", sans-serif;
+    --display: Georgia, "Iowan Old Style", "Songti SC", "Times New Roman", serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --r-sm:4px; --r:6px; --r-lg:10px; --r-xl:14px;
+    --shadow: 0 1px 2px rgba(60,40,20,.05), 0 10px 28px rgba(60,40,20,.07);
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:#0E0F12; color:#E7E9EE;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", sans-serif; }
+  body { padding:28px 28px 64px; }
+  .page-head { max-width:1560px; margin:0 auto 22px; display:flex; align-items:flex-end;
+    justify-content:space-between; gap:24px; flex-wrap:wrap; }
+  .page-head h1 { font-size:19px; margin:0 0 6px; letter-spacing:-.01em; }
+  .page-head p { margin:0; color:#9AA1AF; font-size:13px; max-width:720px; line-height:1.6; }
+  .switcher { display:flex; gap:6px; background:#17191E; border:1px solid #262A32;
+    padding:4px; border-radius:10px; }
+  .switcher button { appearance:none; border:0; background:transparent; color:#9AA1AF;
+    font:inherit; font-size:13px; padding:8px 14px; border-radius:7px; cursor:pointer; }
+  .switcher button[aria-pressed="true"] { background:#2A2F39; color:#F2F4F8; }
+  .switcher kbd { font:11px var(--mono); opacity:.6; margin-left:6px; }
+
+  .layout { max-width:1560px; margin:0 auto; display:grid;
+    grid-template-columns: minmax(0,1fr) 340px; gap:24px; align-items:start; }
+  .stage { display:flex; flex-direction:column; gap:24px; min-width:0; }
+
+  /* ---------- app frame ---------- */
+  .frame { background:var(--canvas); color:var(--ink); border-radius:14px; overflow:hidden;
+    border:1px solid var(--line); box-shadow:0 24px 60px rgba(0,0,0,.35);
+    font-family:var(--font); font-size:14px; line-height:1.5; }
+  .desktop { display:grid; grid-template-columns:248px minmax(0,1fr) 300px; height:980px; }
+  .compact-wrap { display:flex; gap:24px; align-items:flex-start; }
+  .phone { width:330px; height:672px; border-radius:24px; overflow:hidden; border:1px solid var(--line);
+    background:var(--canvas); box-shadow:0 24px 60px rgba(0,0,0,.35); display:flex; flex-direction:column;
+    font-family:var(--font); font-size:14px; line-height:1.5; color:var(--ink); }
+
+  svg.i { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.5;
+    stroke-linecap:round; stroke-linejoin:round; flex:none; }
+  svg.i.sm { width:13px; height:13px; }
+
+  /* sidebar */
+  .side { background:var(--sub); border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0; }
+  .brand { display:flex; align-items:center; gap:9px; padding:14px 14px 10px; }
+  .mark { width:26px; height:26px; border-radius:7px; background:var(--ink); color:var(--canvas);
+    display:grid; place-items:center; font:600 15px/1 var(--display); }
+  .brand b { font-size:14px; font-weight:600; letter-spacing:.01em; }
+  .brand .srch { margin-left:auto; color:var(--ink3); }
+  .side-search { margin:0 12px 10px; display:flex; align-items:center; gap:7px;
+    background:var(--canvas); border:1px solid var(--line); border-radius:var(--r); padding:6px 9px; color:var(--ink3); }
+  .side-search span { font-size:12.5px; }
+  .side-label { padding:10px 14px 6px; font-size:11.5px; letter-spacing:.04em;
+    text-transform:uppercase; color:var(--ink3); display:flex; align-items:center; gap:6px; }
+  .ws { display:flex; align-items:center; gap:7px; padding:6px 14px 6px 12px; color:var(--ink); }
+  .ws .chev { color:var(--ink3); }
+  .ws b { font-size:13.5px; font-weight:600; }
+  .ws .count { margin-left:auto; font-size:11.5px; color:var(--ink3); }
+  .sess { list-style:none; margin:2px 8px 0; padding:0; display:flex; flex-direction:column; gap:1px; }
+  .sess li { display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:var(--r);
+    color:var(--ink2); font-size:13px; position:relative; }
+  .sess li.on { background:var(--raise); color:var(--ink); font-weight:500; }
+  .sess li .dot { width:6px; height:6px; border-radius:50%; background:transparent; }
+  .sess li.run .dot { background:var(--accent); }
+  .sess li .t { margin-left:auto; font-size:11.5px; color:var(--ink3); font-variant-numeric:tabular-nums; }
+  .side-foot { margin-top:auto; border-top:1px solid var(--line); padding:8px 10px; display:flex; gap:6px; }
+  .side-foot .btn { display:flex; align-items:center; gap:6px; padding:7px 8px; border-radius:var(--r);
+    color:var(--ink2); font-size:12.5px; }
+  .side-foot .btn:last-child { margin-left:auto; }
+
+  /* center */
+  .center { display:flex; flex-direction:column; min-width:0; background:var(--canvas); }
+  .topbar { height:44px; display:flex; align-items:center; gap:8px; padding:0 10px;
+    border-bottom:1px solid var(--line); }
+  .iconbtn { width:28px; height:28px; display:grid; place-items:center; border-radius:var(--r);
+    color:var(--ink2); border:1px solid transparent; }
+  .iconbtn.on { background:var(--raise); color:var(--ink); border-color:var(--line); }
+  .topbar .title { font-weight:600; font-size:13.5px; margin-left:2px; }
+  .topbar .right { margin-left:auto; display:flex; gap:4px; }
+  .tabs { height:40px; display:flex; align-items:flex-end; gap:2px; padding:0 8px;
+    background:var(--sub); border-bottom:1px solid var(--line); }
+  .tab { display:flex; align-items:center; gap:7px; height:33px; padding:0 10px;
+    border:1px solid transparent; border-bottom:0; border-radius:var(--r) var(--r) 0 0;
+    color:var(--ink2); font-size:12.5px; max-width:220px; }
+  .tab .name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tab.on { background:var(--canvas); color:var(--ink); border-color:var(--line); font-weight:500;
+    position:relative; top:1px; }
+  .tab .x { color:var(--ink3); margin-left:2px; }
+  .tab-new { width:28px; height:33px; display:grid; place-items:center; color:var(--ink3); }
+
+  .scroll { flex:1; min-height:0; overflow:hidden; position:relative; }
+  .thread { max-width:720px; margin:0 auto; padding:26px 24px 8px; display:flex;
+    flex-direction:column; gap:20px; }
+  .msg { display:flex; gap:11px; }
+  .avatar { width:26px; height:26px; border-radius:7px; flex:none; display:grid; place-items:center;
+    font-size:12px; font-weight:600; }
+  .avatar.you { background:var(--ink); color:var(--canvas); }
+  .avatar.pi { background:var(--soft); color:var(--accent); font-family:var(--display); }
+  .msg .body { min-width:0; flex:1; }
+  .msg .who { font-size:12px; color:var(--ink3); margin:1px 0 4px; display:flex; gap:8px; align-items:center; }
+  .msg .who b { color:var(--ink); font-size:12.5px; font-weight:600; }
+  .msg p { margin:0 0 8px; font-size:15px; line-height:1.62; color:var(--ink); }
+  .msg p:last-child { margin-bottom:0; }
+  .msg p code { font:12.5px var(--mono); background:var(--code); border:1px solid var(--line);
+    border-radius:var(--r-sm); padding:1px 4px; }
+  .tool { border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; background:var(--canvas); }
+  .tool-h { display:flex; align-items:center; gap:8px; padding:8px 10px; background:var(--code);
+    border-bottom:1px solid var(--line); font-size:12px; color:var(--ink2); }
+  .tool-h .name { font-weight:600; color:var(--ink); }
+  .tool-h .badge { margin-left:auto; font-size:11px; color:var(--ok); background:var(--ok-soft);
+    padding:2px 6px; border-radius:999px; }
+  .tool pre { margin:0; padding:10px 12px; font:12.5px/1.7 var(--mono); color:var(--ink);
+    overflow:hidden; }
+  .tool pre .dim { color:var(--ink3); }
+  .diffcard { border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; }
+  .diff-h { display:flex; align-items:center; gap:8px; padding:8px 10px; font-size:12px;
+    color:var(--ink2); border-bottom:1px solid var(--line); background:var(--code); }
+  .diff-h .file { font:12.5px var(--mono); color:var(--ink); }
+  .diff-h .stat { margin-left:auto; font:11.5px var(--mono); }
+  .diff-h .add { color:var(--ok); } .diff-h .del { color:var(--bad); }
+  .diff-body { font:12.5px/1.65 var(--mono); padding:6px 0; background:var(--canvas); }
+  .dl { display:flex; padding:1px 10px; white-space:pre; }
+  .dl .ln { width:26px; color:var(--ink3); flex:none; user-select:none; }
+  .dl.add { background:var(--diff-add); } .dl.del { background:var(--diff-del); }
+  .dl .s { color:var(--ink3); }
+
+  .perm { border:1px solid var(--line2); border-radius:var(--r-lg); overflow:hidden; background:var(--canvas);
+    box-shadow:var(--shadow); }
+  .perm-h { padding:11px 12px 9px; display:flex; align-items:center; gap:8px; }
+  .perm-h .k { font-size:11.5px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--warn); background:var(--soft); padding:2px 6px; border-radius:999px; }
+  .perm-h b { font-size:13.5px; }
+  .perm-cmd { margin:0 12px 10px; padding:8px 10px; background:var(--code); border:1px solid var(--line);
+    border-radius:var(--r); font:12.5px var(--mono); color:var(--ink); }
+  .perm-a { display:flex; gap:8px; padding:0 12px 12px; flex-wrap:wrap; }
+  .btn { border:1px solid var(--line2); background:var(--canvas); color:var(--ink);
+    font:500 12.5px var(--font); padding:7px 11px; border-radius:var(--r); }
+  .btn.quiet { border-color:transparent; color:var(--ink2); background:transparent; }
+  .btn.primary { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
+  .btn.danger { color:var(--bad); border-color:var(--line2); background:var(--canvas); }
+
+  .composer-wrap { padding:10px 24px 16px; background:var(--canvas); }
+  .composer { max-width:720px; margin:0 auto; border:1px solid var(--line2); border-radius:var(--r-xl);
+    background:var(--canvas); box-shadow:var(--shadow); padding:10px 11px 8px; }
+  .composer .ph { color:var(--ink3); font-size:14px; padding:2px 2px 14px; }
+  .composer .row { display:flex; align-items:center; gap:6px; }
+  .chip { display:flex; align-items:center; gap:5px; border:1px solid var(--line); border-radius:var(--r);
+    padding:4px 7px; font-size:11.5px; color:var(--ink2); background:var(--sub); }
+  .send { margin-left:auto; width:30px; height:30px; border-radius:50%; background:var(--ink);
+    color:var(--canvas); display:grid; place-items:center; }
+
+  /* inspector */
+  .inspector { border-left:1px solid var(--line); background:var(--sub); display:flex; flex-direction:column; min-height:0; }
+  .insp-h { height:40px; display:flex; align-items:center; gap:8px; padding:0 10px 0 12px;
+    border-bottom:1px solid var(--line); }
+  .insp-h b { font-size:12.5px; font-weight:600; }
+  .insp-h .iconbtn { margin-left:auto; }
+  .seg { display:flex; gap:2px; padding:6px 8px; border-bottom:1px solid var(--line); }
+  .seg span { flex:1; text-align:center; font-size:12px; padding:5px 0; border-radius:var(--r);
+    color:var(--ink2); }
+  .seg .on { background:var(--raise); color:var(--ink); font-weight:600; }
+  .tree { padding:8px 8px; font-size:12.5px; color:var(--ink2); overflow:hidden; }
+  .tr { display:flex; align-items:center; gap:7px; padding:5px 8px; border-radius:var(--r); }
+  .tr.dir { color:var(--ink); font-weight:500; }
+  .tr.on { background:var(--raise); color:var(--ink); }
+  .tr .meta { margin-left:auto; font-size:11px; color:var(--ink3); }
+  .tr .ind { width:12px; }
+  .insp-foot { margin-top:auto; border-top:1px solid var(--line); padding:10px 12px;
+    font-size:11.5px; color:var(--ink3); display:flex; align-items:center; gap:7px; }
+  .pulse { width:7px; height:7px; border-radius:50%; background:var(--ok); }
+
+  /* phone */
+  .phone .status { height:26px; display:flex; align-items:center; justify-content:space-between;
+    padding:0 14px; font-size:11px; color:var(--ink3); }
+  .phone .p-top { height:42px; display:flex; align-items:center; gap:8px; padding:0 10px;
+    border-bottom:1px solid var(--line); }
+  .phone .p-top b { font-size:13px; }
+  .phone .ptabs { display:flex; gap:14px; padding:0 14px; height:36px; align-items:center;
+    border-bottom:1px solid var(--line); background:var(--sub); font-size:12px; color:var(--ink2); }
+  .phone .ptabs .on { color:var(--ink); font-weight:600; position:relative; }
+  .phone .ptabs .on::after { content:""; position:absolute; left:0; right:0; bottom:-11px;
+    height:2px; background:var(--ink); border-radius:2px; }
+  .phone .p-body { flex:1; padding:16px 14px 0; display:flex; flex-direction:column; gap:16px; overflow:hidden; }
+  .phone p { font-size:14px; line-height:1.6; margin:0 0 8px; }
+  .phone .tool pre { font-size:11.5px; }
+  .phone .composer-wrap { padding:10px 10px 14px; }
+  .phone .composer { border-radius:var(--r-xl); }
+  .phone .composer .ph { padding-bottom:10px; }
+
+  /* legend */
+  .legend { position:sticky; top:28px; display:flex; flex-direction:column; gap:16px; }
+  .card { background:#15171C; border:1px solid #252932; border-radius:12px; padding:16px; }
+  .card h2 { margin:0 0 10px; font-size:12px; letter-spacing:.06em; text-transform:uppercase;
+    color:#8E96A6; font-weight:600; }
+  .card p { margin:0; color:#AAB1BF; font-size:12.5px; line-height:1.6; }
+  .swatches { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .sw { border:1px solid #2A2F39; border-radius:8px; overflow:hidden; }
+  .sw .chipc { height:34px; }
+  .sw .m { padding:6px 7px; background:#111318; display:flex; justify-content:space-between; gap:6px;
+    font:11px var(--mono); color:#AAB1BF; }
+  .sw .m b { color:#E7E9EE; font-weight:500; }
+  .sw .h { padding:0 7px 6px; background:#111318; font:10px var(--mono); color:#7C8494; }
+  .type-spec { display:flex; flex-direction:column; gap:9px; }
+  .type-spec .row { display:flex; align-items:baseline; justify-content:space-between; gap:10px; color:#E7E9EE; }
+  .type-spec .row span:last-child { font:11px var(--mono); color:#8E96A6; }
+  .rules { margin:0; padding:0 0 0 16px; color:#AAB1BF; font-size:12.5px; line-height:1.7; }
+  .rules b { color:#E7E9EE; font-weight:600; }
+  .ba { display:grid; grid-template-columns:70px 1fr; gap:6px 10px; font-size:12px; color:#AAB1BF; }
+  .ba b { color:#E7E9EE; font-weight:600; }
+  .ba .old { color:#7C8494; text-decoration:line-through; }
+  .note { color:#7C8494; font-size:11.5px; line-height:1.6; }
+  @media (max-width:1280px){ .layout { grid-template-columns:1fr; } .legend { position:static;
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); } }
+  @media (max-width:980px){ .desktop { grid-template-columns:220px minmax(0,1fr); } .inspector { display:none; } }
+</style>
+</head>
+<body>
+<div class="page-head">
+  <div>
+    <h1>Pie — 两套视觉方案预览</h1>
+    <p>同一套布局与导航收敛，只换视觉语言。方案 A：quiet-saas（近白纸 / 墨字 / 单一强调色）。
+       方案 B：暖纸（claude 系：米白纸 / 衬线标题 / 陶土强调色）。点按钮或按 1 / 2 切换。
+       对照现状：本地 <code style="font:12px ui-monospace,monospace;color:#C7CCD6">ui-walkthrough-shots/06-session.png</code>（<code style="font:12px ui-monospace,monospace;color:#C7CCD6">npm run ui-walkthrough</code> 生成）。</p>
+  </div>
+  <div class="switcher" role="group" aria-label="方案切换">
+    <button type="button" data-set="quiet" aria-pressed="true">A · quiet-saas<kbd>1</kbd></button>
+    <button type="button" data-set="warm" aria-pressed="false">B · 暖纸<kbd>2</kbd></button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="stage">
+    <!-- desktop -->
+    <div class="frame">
+      <div class="desktop">
+        <aside class="side">
+          <div class="brand">
+            <div class="mark">π</div><b>Pie</b>
+            <span class="srch"><svg class="i sm" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.2"/><path d="M10.2 10.2 14 14"/></svg></span>
+          </div>
+          <div class="side-search">
+            <svg class="i sm" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.2"/><path d="M10.2 10.2 14 14"/></svg>
+            <span>搜索会话…</span>
+          </div>
+          <div class="side-label">
+            <svg class="i sm" viewBox="0 0 16 16"><path d="M2.5 5.5h11M2.5 5.5v7h11v-7M2.5 5.5 4 3h4l1.5 2.5"/></svg>
+            工作区
+          </div>
+          <div class="ws">
+            <svg class="i sm chev" viewBox="0 0 16 16"><path d="m5.5 3.5 4.5 4.5-4.5 4.5"/></svg>
+            <b>pie</b><span class="count">6</span>
+          </div>
+          <ul class="sess">
+            <li class="on run"><span class="dot"></span>登录页跳转收口<span class="t">现在</span></li>
+            <li><span class="dot"></span>批量权限批复<span class="t">12 分钟</span></li>
+            <li><span class="dot"></span>diff 渲染器收尾<span class="t">1 小时</span></li>
+            <li><span class="dot"></span>会话树分叉预览<span class="t">昨天</span></li>
+            <li><span class="dot"></span>权限卡多选态<span class="t">昨天</span></li>
+          </ul>
+          <div class="side-foot">
+            <span class="btn"><svg class="i sm" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg>新会话</span>
+            <span class="btn"><svg class="i sm" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.2"/><path d="M8 2.5v1.4M8 12.1v1.4M2.5 8h1.4M12.1 8h1.4M4.1 4.1l1 1M10.9 10.9l1 1M11.9 4.1l-1 1M5.1 10.9l-1 1"/></svg></span>
+          </div>
+        </aside>
+
+        <section class="center">
+          <header class="topbar">
+            <span class="iconbtn"><svg class="i" viewBox="0 0 16 16"><rect x="2.5" y="3" width="11" height="10" rx="1.5"/><path d="M6 3v10"/></svg></span>
+            <span class="title">pie</span>
+            <div class="right">
+              <span class="iconbtn"><svg class="i" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.2"/><path d="M10.2 10.2 14 14"/></svg></span>
+              <span class="iconbtn on"><svg class="i" viewBox="0 0 16 16"><rect x="2.5" y="3" width="11" height="10" rx="1.5"/><path d="M10 3v10"/></svg></span>
+            </div>
+          </header>
+
+          <div class="tabs">
+            <div class="tab on">
+              <svg class="i sm" viewBox="0 0 16 16"><path d="M3 3.5h10v9H3z"/><path d="M5.5 6.5h5M5.5 9.5h3"/></svg>
+              <span class="name">登录页跳转收口</span>
+              <svg class="i sm x" viewBox="0 0 16 16"><path d="m4.5 4.5 7 7M11.5 4.5l-7 7"/></svg>
+            </div>
+            <div class="tab">
+              <svg class="i sm" viewBox="0 0 16 16"><circle cx="4.5" cy="4" r="1.6"/><circle cx="4.5" cy="12" r="1.6"/><circle cx="11.5" cy="8" r="1.6"/><path d="M6.1 4.6 9.9 7.2M6.1 11.4 9.9 8.8"/></svg>
+              <span class="name">变更</span>
+            </div>
+            <span class="tab-new"><svg class="i sm" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg></span>
+          </div>
+
+          <div class="scroll">
+            <div class="thread">
+              <div class="msg">
+                <div class="avatar you">你</div>
+                <div class="body">
+                  <div class="who"><b>你</b><span>10:24</span></div>
+                  <p>登录页的跳转逻辑有点乱。把 <code>router.push</code> 收口到 <code>useAuthRedirect</code>，再补一个登录后回跳的回归测试。</p>
+                </div>
+              </div>
+
+              <div class="msg">
+                <div class="avatar pi">π</div>
+                <div class="body">
+                  <div class="who"><b>Pi</b><span>claude-sonnet-4.5 · 思考 8s</span></div>
+                  <p>先看现有调用点，再决定改动范围。</p>
+                  <div class="tool">
+                    <div class="tool-h">
+                      <svg class="i sm" viewBox="0 0 16 16"><path d="m4 5 3 3-3 3M8.5 11h3.5"/></svg>
+                      <span class="name">bash</span>
+                      <span class="dim">rg "router.push" -n packages/app/src</span>
+                      <span class="badge">完成 · 0.4s</span>
+                    </div>
+<pre><span class="dim">src/auth/login.tsx</span>:41:  <span class="dim">router.push</span>("/");
+<span class="dim">src/auth/login.tsx</span>:58:  <span class="dim">router.push</span>(next);
+<span class="dim">src/auth/session.ts</span>:22: <span class="dim">router.push</span>("/sessions");
+<span class="dim">src/auth/guard.tsx</span>:15:  <span class="dim">router.push</span>("/login");</pre>
+                  </div>
+                  <p style="margin-top:10px">4 处，散在 3 个文件。统一入口并保留 <code>next</code> 回跳，改动如下。</p>
+                  <div class="diffcard">
+                    <div class="diff-h">
+                      <svg class="i sm" viewBox="0 0 16 16"><path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3"/></svg>
+                      <span class="file">src/auth/use-auth-redirect.ts</span>
+                      <span class="stat"><span class="add">+18</span> <span class="del">−1</span></span>
+                    </div>
+                    <div class="diff-body">
+                      <div class="dl add"><span class="ln"></span><span class="s">+</span><span> export function useAuthRedirect() {</span></div>
+                      <div class="dl add"><span class="ln"></span><span class="s">+</span><span>   const next = useNextParam();</span></div>
+                      <div class="dl add"><span class="ln"></span><span class="s">+</span><span>   return useCallback(() =&gt; router.replace(next ?? "/"), [next]);</span></div>
+                      <div class="dl add"><span class="ln"></span><span class="s">+</span><span> }</span></div>
+                      <div class="dl del"><span class="ln"></span><span class="s">−</span><span> // TODO: dedupe redirects</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="msg">
+                <div class="avatar pi">π</div>
+                <div class="body">
+                  <div class="who"><b>Pi</b><span>等待授权</span></div>
+                  <div class="perm">
+                    <div class="perm-h">
+                      <span class="k">需要授权</span><b>运行测试套件</b>
+                    </div>
+                    <div class="perm-cmd">npx vitest run src/auth</div>
+                    <div class="perm-a">
+                      <button class="btn quiet">拒绝</button>
+                      <button class="btn primary">本次允许</button>
+                      <button class="btn">本会话始终允许</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="composer-wrap">
+            <div class="composer">
+              <div class="ph">给 Pi 发消息…</div>
+              <div class="row">
+                <span class="chip"><svg class="i sm" viewBox="0 0 16 16"><path d="M9.5 3.5 5 8a2.1 2.1 0 0 0 3 3l4.5-4.5a3.2 3.2 0 0 0-4.5-4.5L3.5 6.5"/></svg></span>
+                <span class="chip">claude-sonnet-4.5</span>
+                <span class="chip"><svg class="i sm" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.2"/><path d="M8 5.5v3l2 1.2"/></svg>思考</span>
+                <span class="send"><svg class="i sm" viewBox="0 0 16 16"><path d="M8 12V4M4.5 7.5 8 4l3.5 3.5"/></svg></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="inspector">
+          <div class="insp-h">
+            <b>检查器</b>
+            <span class="iconbtn"><svg class="i sm" viewBox="0 0 16 16"><path d="m4.5 4.5 7 7M11.5 4.5l-7 7"/></svg></span>
+          </div>
+          <div class="seg">
+            <span class="on">文件</span><span>变更</span><span>用量</span>
+          </div>
+          <div class="tree">
+            <div class="tr dir"><svg class="i sm" viewBox="0 0 16 16"><path d="m5.5 3.5 4.5 4.5-4.5 4.5"/></svg><svg class="i sm" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v7H2z"/></svg>src<span class="meta">14</span></div>
+            <div class="tr"><span class="ind"></span><svg class="i sm" viewBox="0 0 16 16"><path d="m5.5 3.5 4.5 4.5-4.5 4.5"/></svg><svg class="i sm" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v7H2z"/></svg>auth</div>
+            <div class="tr"><span class="ind"></span><span class="ind"></span><svg class="i sm" viewBox="0 0 16 16"><path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3"/></svg>login.tsx<span class="meta" style="color:var(--bad)">M</span></div>
+            <div class="tr"><span class="ind"></span><span class="ind"></span><svg class="i sm" viewBox="0 0 16 16"><path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3"/></svg>use-auth-redirect.ts<span class="meta" style="color:var(--ok)">A</span></div>
+            <div class="tr"><span class="ind"></span><span class="ind"></span><svg class="i sm" viewBox="0 0 16 16"><path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3"/></svg>guard.tsx</div>
+            <div class="tr on"><span class="ind"></span><svg class="i sm" viewBox="0 0 16 16"><path d="m5.5 3.5 4.5 4.5-4.5 4.5"/></svg><svg class="i sm" viewBox="0 0 16 16"><path d="M2 4.5h4l1.2 1.5H14v7H2z"/></svg>components</div>
+            <div class="tr"><span class="ind"></span><span class="ind"></span><svg class="i sm" viewBox="0 0 16 16"><path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3"/></svg>composer.tsx</div>
+            <div class="tr"><span class="ind"></span><span class="ind"></span><svg class="i sm" viewBox="0 0 16 16"><path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3"/></svg>permission-card.tsx</div>
+          </div>
+          <div class="insp-foot"><span class="pulse"></span>工作区已连接 · 3 个未提交变更</div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- compact -->
+    <div class="compact-wrap">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>Pie</span></div>
+        <div class="p-top">
+          <span class="iconbtn"><svg class="i" viewBox="0 0 16 16"><path d="M3 4.5h10M3 8h10M3 11.5h10"/></svg></span>
+          <b>pie</b>
+          <div class="right" style="margin-left:auto;display:flex;gap:4px">
+            <span class="iconbtn"><svg class="i" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.2"/><path d="M10.2 10.2 14 14"/></svg></span>
+          </div>
+        </div>
+        <div class="ptabs"><span class="on">登录页跳转收口</span><span>变更</span></div>
+        <div class="p-body">
+          <div class="msg">
+            <div class="avatar you">你</div>
+            <div class="body"><p>把 <code style="font:11.5px var(--mono)">router.push</code> 收口到 <code style="font:11.5px var(--mono)">useAuthRedirect</code>，补回归测试。</p></div>
+          </div>
+          <div class="msg">
+            <div class="avatar pi">π</div>
+            <div class="body">
+              <p>4 处调用，已统一入口。</p>
+              <div class="tool">
+                <div class="tool-h"><svg class="i sm" viewBox="0 0 16 16"><path d="m4 5 3 3-3 3M8.5 11h3.5"/></svg><span class="name">bash</span><span class="badge">完成</span></div>
+<pre>npx vitest run src/auth
+<span class="dim">✓ 6 passed</span></pre>
+              </div>
+            </div>
+          </div>
+          <div class="msg">
+            <div class="avatar pi">π</div>
+            <div class="body">
+              <div class="perm">
+                <div class="perm-h"><span class="k">需要授权</span><b>运行测试</b></div>
+                <div class="perm-a" style="padding-top:2px">
+                  <button class="btn quiet">拒绝</button>
+                  <button class="btn primary">允许</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="composer-wrap">
+          <div class="composer">
+            <div class="ph">给 Pi 发消息…</div>
+            <div class="row">
+              <span class="chip">claude-sonnet-4.5</span>
+              <span class="send"><svg class="i sm" viewBox="0 0 16 16"><path d="M8 12V4M4.5 7.5 8 4l3.5 3.5"/></svg></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="legend" style="flex:1;min-width:0">
+        <div class="card">
+          <h2>这一版改了什么</h2>
+          <ul class="rules">
+            <li><b>导航收成两层</b>：侧栏管会话；主区 tab 管内容；检查器是主区的上下文，不再和 tab 平级抢入口。</li>
+            <li><b>去掉常驻「新会话」tab</b>：它和 <code>+</code> 调用同一个动作。只留 <code>+</code>，新会话直接落在空会话面。</li>
+            <li><b>选中态一套语汇</b>：背景抬升 + 字色加深；强调色只给主操作、运行状态和链接。</li>
+            <li><b>字号回到 12 起步</b>：会话行 13、正文 15、标题 20；不再用 10px 小字撑密度。</li>
+            <li><b>表面阶梯可辨</b>：canvas / sub / raise 三档，细线只做收边，不独自承担结构。</li>
+            <li><b>移动端同构</b>：同样的三层信息，抽屉退化为顶部 + 手势，不引入第二套导航语汇。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="legend">
+    <div class="card">
+      <h2>方案差异</h2>
+      <p style="margin-bottom:8px"><b style="color:#E7E9EE">A · quiet-saas（已选）</b>：中性纸面、墨字、蓝紫单强调色。
+        最接近专业工具，跨端最稳；识别度靠克制与精确，不靠装饰。</p>
+      <p><b style="color:#E7E9EE">B · 暖纸（claude 系，未采用）</b>：米白纸、衬线标题、陶土强调色。
+        阅读感和人味更强，和 IDE 类客户端拉开距离；代码/diff 仍走中性纸面。</p>
+    </div>
+
+    <div class="card">
+      <h2>色彩（当前方案）</h2>
+      <div class="swatches" id="swatches"></div>
+      <p class="note" style="margin-top:10px">对比度为实测值（前景 / 实际底色）。正文小字门槛 4.5:1。</p>
+    </div>
+
+    <div class="card">
+      <h2>字号</h2>
+      <div class="type-spec">
+        <div class="row"><span style="font:600 20px var(--display)">检查器</span><span>20 / 600 display</span></div>
+        <div class="row"><span style="font:400 15px var(--font)">会话正文 15px，行高 1.62</span><span>15 / 400 body</span></div>
+        <div class="row"><span style="font:500 13px var(--font)">会话行与控件标签</span><span>13 / 500 ui</span></div>
+        <div class="row"><span style="font:400 12px var(--font)">辅助信息与时间戳</span><span>12 / 400 caption</span></div>
+        <div class="row"><span style="font:400 12.5px var(--mono)">router.push(next)</span><span>12.5 mono</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>导航收敛</h2>
+      <div class="ba">
+        <b>之前</b><span class="old">侧栏 + 三层 tab + 5 模式 rail</span>
+        <b>之后</b><span>侧栏 + 内容 tab + 上下文检查器</span>
+        <b>入口</b><span>会话 / 文件 / 变更 / 用量各一个主入口</span>
+        <b>选中</b><span>抬升 + 字色；强调色只做操作与状态</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>落地前提</h2>
+      <ul class="rules">
+        <li>方案选定后写根 <code>DESIGN.md</code>，token 落 <code>packages/app/src/styles/theme.ts</code>。</li>
+        <li>暖色方案若保留衬线标题，需要随包字体或明确的系统衬线降级清单。</li>
+        <li>两套都遵守 <code>docs/CONSTRAINTS.md</code> 的 D1–D7；对比度按实测，不看截图感觉。</li>
+        <li>改动顺序：先修缺陷 → 再换 token → 最后收导航，每步可单独回滚。</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+  const tokens = {
+    quiet: [
+      ["canvas","#FFFFFF","—"],["sub","#F6F7F9","—"],["raise","#EEF0F4","—"],
+      ["ink","#14161A","18.1:1"],["ink-2","#4B5361","7.75:1"],["ink-3","#667085","4.97:1"],
+      ["accent","#3B5BDB","5.67:1"],["on-accent","#FFFFFF","5.67:1"]
+    ],
+    warm: [
+      ["canvas","#FAF7F0","—"],["sub","#F3EDE1","—"],["raise","#EBE3D4","—"],
+      ["ink","#22201B","15.2:1"],["ink-2","#5E594E","6.51:1"],["ink-3","#6F6859","5.16:1"],
+      ["accent","#A94E33","5.13:1"],["on-accent","#FFF8F0","5.21:1"]
+    ]
+  };
+  function renderSwatches(scheme){
+    const box = document.getElementById("swatches");
+    box.innerHTML = tokens[scheme].map(([name,hex,ratio]) =>
+      `<div class="sw"><div class="chipc" style="background:${hex}"></div>
+       <div class="m"><b>${name}</b><span>${ratio}</span></div>
+       <div class="h">${hex}</div></div>`).join("");
+  }
+  function setScheme(scheme){
+    document.documentElement.dataset.scheme = scheme;
+    document.querySelectorAll(".switcher button").forEach(b =>
+      b.setAttribute("aria-pressed", String(b.dataset.set === scheme)));
+    renderSwatches(scheme);
+  }
+  document.querySelectorAll(".switcher button").forEach(b =>
+    b.addEventListener("click", () => setScheme(b.dataset.set)));
+  addEventListener("keydown", e => {
+    if (e.key === "1") setScheme("quiet");
+    if (e.key === "2") setScheme("warm");
+  });
+  renderSwatches("quiet");
+</script>
+</body>
+</html>

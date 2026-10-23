@@ -13,10 +13,10 @@ export default function Root({ children }: PropsWithChildren) {
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 					<ScrollViewStyleReset />
 				<style
-					// The floor under the whole app: height chain + dark canvas.
-					// Keep in sync with styles/theme.ts darkTheme surface0.
+					// The floor under the whole app: height chain + the light
+					// canvas. Keep in sync with styles/theme.ts surface0.
 					dangerouslySetInnerHTML={{
-						__html: `html, body, #root { height: 100%; margin: 0; background: #101216; }`,
+						__html: `html, body, #root { height: 100%; margin: 0; background: #ffffff; }`,
 					}}
 				/>
 			</head>

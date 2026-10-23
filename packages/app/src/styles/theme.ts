@@ -1,10 +1,19 @@
-// Ported from getpaseo/paseo (Apache-2.0) — packages/app/src/styles/theme.ts
-// Trimmed for P2a: enough structure that A-class ported components compile
-// unchanged (Theme slots, semantic builders, status colors, scales, shadows).
-// Pie tints replace Paseo's teal with the Pie blue-violet family.
+// Pie design tokens — the single source of truth for colour, type, spacing,
+// radius and elevation. Contract: /DESIGN.md (v1, quiet-saas).
+//
+// Rules (docs/CONSTRAINTS.md C5): components read these tokens; they never
+// introduce their own hex/rgba. Adding or changing a value is a DESIGN.md
+// decision first, code second.
+//
+// Structure is inherited from getpaseo/paseo (Apache-2.0); the values are Pie's
+// own (ADR-0007: Paseo supplies structure, Pie owns the skin).
 
-import { darkHighlightColors, lightHighlightColors } from "@getpaseo/highlight";
+import { lightHighlightColors } from "@getpaseo/highlight";
 import { Platform } from "react-native";
+
+// ---------------------------------------------------------------------------
+// Raw palette (scales only — never referenced directly by components)
+// ---------------------------------------------------------------------------
 
 export const baseColors = {
 	// Base colors
@@ -113,38 +122,10 @@ export const baseColors = {
 } as const;
 
 // ---------------------------------------------------------------------------
-// Status colors (upstream verbatim)
+// Scales
 // ---------------------------------------------------------------------------
 
-const lightStatusColors = {
-	statusSuccess: "#3e704a",
-	statusDanger: "#9d433b",
-	statusWarning: "#7b5d39",
-	statusMerged: "#7347af",
-};
-
-const darkStatusColors = {
-	statusSuccess: "#6cb17b",
-	statusDanger: "#d8847b",
-	statusWarning: "#c09664",
-	statusMerged: "#a890d5",
-};
-
-function statusTints(colors: typeof lightStatusColors, alphaHex: string) {
-	return {
-		statusSuccessTint: `${colors.statusSuccess}${alphaHex}`,
-		statusDangerTint: `${colors.statusDanger}${alphaHex}`,
-		statusWarningTint: `${colors.statusWarning}${alphaHex}`,
-	};
-}
-
-const lightStatusTints = statusTints(lightStatusColors, "1f");
-const darkStatusTints = statusTints(darkStatusColors, "29");
-
-// ---------------------------------------------------------------------------
-// Scales (upstream verbatim)
-// ---------------------------------------------------------------------------
-
+/** Spacing scale. Layout rhythm is 4-based (DESIGN.md §Layout). */
 export const SPACING = {
 	0: 0,
 	0.5: 2,
@@ -162,8 +143,9 @@ export const SPACING = {
 	32: 128,
 } as const;
 
+/** Type scale. 12px is the floor; body is 15 (DESIGN.md §Typography). */
 export const FONT_SIZE = {
-	code: 12,
+	code: 12.5,
 	content: 15,
 	sm: 12,
 	base: 14,
@@ -192,13 +174,12 @@ export const FONT_WEIGHT = {
 	bold: "bold" as const,
 } as const;
 
+/** Radius by role: chips 4, controls 6, cards 10, overlays 14, sheets 16. */
 export const BORDER_RADIUS = {
-	none: 0,
-	sm: 2,
-	base: 4,
+	sm: 4,
 	md: 6,
-	lg: 8,
-	xl: 12,
+	lg: 10,
+	xl: 14,
 	"2xl": 16,
 	full: 9999,
 } as const;
@@ -229,18 +210,18 @@ export const DEFAULT_MONO_FONT_STACK: string = Platform.select({
 	web: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
 });
 
-export const DEFAULT_CONTENT_MAX_WIDTH = 820;
+/** Conversation column max width (DESIGN.md §Layout). */
+export const DEFAULT_CONTENT_MAX_WIDTH = 720;
 
 // ---------------------------------------------------------------------------
-// Semantic color builders (upstream structure)
+// Semantic colours
 // ---------------------------------------------------------------------------
 
-export interface DarkThemeConfig {
+export interface ThemeTint {
 	surface0: string;
 	surface1: string;
 	surface2: string;
 	surface3: string;
-	surface4: string;
 	surfaceSidebar: string;
 	foreground?: string;
 	foregroundMuted: string;
@@ -249,24 +230,42 @@ export interface DarkThemeConfig {
 	borderAccent: string;
 	accent: string;
 	accentBright: string;
-	accentForeground?: string;
+	accentForeground: string;
 	destructive: string;
 }
 
-export function buildDarkSemanticColors(tint: DarkThemeConfig) {
-	const foreground = tint.foreground ?? "#fafafa";
+const statusColors = {
+	statusSuccess: "#1f7a4d",
+	statusDanger: "#b42318",
+	statusWarning: "#9a6700",
+	statusMerged: "#6b4ba1",
+};
+
+/** Status tints carry a 12% alpha suffix so chips read as states, not fills. */
+function statusTints(colors: typeof statusColors, alphaHex: string) {
 	return {
+		statusSuccessTint: `${colors.statusSuccess}${alphaHex}`,
+		statusDangerTint: `${colors.statusDanger}${alphaHex}`,
+		statusWarningTint: `${colors.statusWarning}${alphaHex}`,
+	};
+}
+
+export function buildSemanticColors(tint: ThemeTint) {
+	const foreground = tint.foreground ?? "#14161a";
+	return {
+		// Surfaces: canvas → sub → raise → strong step (DESIGN.md §Surface).
 		surface0: tint.surface0,
 		surface1: tint.surface1,
 		surface2: tint.surface2,
 		surface3: tint.surface3,
-		surface4: tint.surface4,
 		surfaceSidebar: tint.surfaceSidebar,
-		surfaceSidebarHover: tint.surface1,
+		surfaceSidebarHover: tint.surface2,
 		surfaceSidebarSelected: tint.surface2,
-		surfaceWorkspace: tint.surface1,
-		interactionHighlight: "rgba(255, 255, 255, 0.08)",
+		interactionHighlight: "rgba(20, 22, 26, 0.05)",
 
+		// Text contrast on the canvas: 18.1:1 / 7.75:1 / 5.77:1. Tertiary still
+		// clears AA on every surface it can land on — sub 5.39:1, raise 5.06:1,
+		// strong step 4.57:1 — so timestamps never fall below the floor.
 		foreground,
 		foregroundMuted: tint.foregroundMuted,
 		foregroundExtraMuted: tint.foregroundExtraMuted,
@@ -274,137 +273,44 @@ export function buildDarkSemanticColors(tint: DarkThemeConfig) {
 		border: tint.border,
 		borderAccent: tint.borderAccent,
 
+		// One accent hue, reserved for primary actions, running state and focus.
 		accent: tint.accent,
 		accentBright: tint.accentBright,
-		accentForeground: tint.accentForeground ?? "#ffffff",
-
-		destructive: tint.destructive,
-		destructiveForeground: "#ffffff",
-		success: tint.accent,
-		successForeground: "#ffffff",
-
-		// Legacy aliases (for gradual migration)
-		background: tint.surface0,
-		popover: tint.surface2,
-		popoverForeground: foreground,
-		primary: foreground,
-		primaryForeground: tint.surface0,
-		secondary: tint.surface2,
-		secondaryForeground: foreground,
-		muted: tint.surface2,
-		mutedForeground: tint.foregroundMuted,
-		accentBorder: tint.borderAccent,
-		input: tint.surface2,
-		ring: "#d4d4d8",
-
-		...darkStatusColors,
-		...darkStatusTints,
-	};
-}
-
-export interface LightThemeConfig {
-	surface0: string;
-	surface1: string;
-	surface2: string;
-	surface3: string;
-	surface4: string;
-	surfaceSidebar: string;
-	foreground?: string;
-	foregroundMuted: string;
-	foregroundExtraMuted: string;
-	border: string;
-	accent: string;
-	accentForeground: string;
-	accentForegroundStrong?: string;
-	destructive: string;
-}
-
-export function buildLightSemanticColors(tint: LightThemeConfig) {
-	const foreground = tint.foreground ?? "#18181b";
-	return {
-		surface0: tint.surface0,
-		surface1: tint.surface1,
-		surface2: tint.surface2,
-		surface3: tint.surface3,
-		surface4: tint.surface4,
-		surfaceSidebar: tint.surfaceSidebar,
-		surfaceSidebarHover: tint.surface1,
-		surfaceSidebarSelected: "#e4e4e7",
-		surfaceWorkspace: "#ffffff",
-		interactionHighlight: "rgba(0, 0, 0, 0.05)",
-
-		foreground,
-		foregroundMuted: tint.foregroundMuted,
-		foregroundExtraMuted: tint.foregroundExtraMuted,
-
-		border: tint.border,
-		borderAccent: tint.border,
-
-		accent: tint.accent,
-		accentBright: tint.accent,
 		accentForeground: tint.accentForeground,
-		accentForegroundStrong: tint.accentForegroundStrong ?? tint.accentForeground,
 
 		destructive: tint.destructive,
 		destructiveForeground: "#ffffff",
-		success: tint.accent,
-		successForeground: tint.accentForeground,
+		/** Text and icons sitting on an ink/accent/destructive fill. */
+		onStrong: "#ffffff",
+		/** Modal and drawer backdrop over the canvas. */
+		scrim: "rgba(20, 22, 26, 0.45)",
 
+		// Legacy alias names kept so older components keep compiling; both
+		// resolve to the canvas and are the same white.
 		background: tint.surface0,
-		popover: "#ffffff",
+		popover: tint.surface0,
 		popoverForeground: foreground,
 		primary: foreground,
-		primaryForeground: "#ffffff",
-		secondary: tint.surface2,
-		secondaryForeground: foreground,
-		muted: tint.surface2,
-		mutedForeground: tint.foregroundMuted,
-		accentBorder: tint.border,
-		input: "#ffffff",
-		ring: "#a1a1aa",
 
-		...lightStatusColors,
-		...lightStatusTints,
+		...statusColors,
+		...statusTints(statusColors, "1f"),
 	};
 }
 
-// ---------------------------------------------------------------------------
-// Pie tints
-// ---------------------------------------------------------------------------
-
-// Pie dark — blue-violet tint matching the daemon demo page palette
-const pieDarkColors = buildDarkSemanticColors({
-	surface0: "#101216",
-	surface1: "#1D212A",
-	surface2: "#242936",
-	surface3: "#2B3240",
-	surface4: "#4B5262",
-	surfaceSidebar: "#0C0E12",
-	foregroundMuted: "#8B93A7",
-	foregroundExtraMuted: "#5B6272",
-	border: "#2B3240",
-	borderAccent: "#3E4A66",
-	accent: "#2B4C7E",
-	accentBright: "#4A7BC8",
-	destructive: "#B33A3A",
-});
-
-// Pie light
-const pieLightColors = buildLightSemanticColors({
-	// paseo.png grammar: the transcript column reads pure white; chrome lives
-	// one step down in surface1/sidebar greys.
-	surface0: "#FFFFFF",
-	surface1: "#EDEFF3",
-	surface2: "#E4E7ED",
-	surface3: "#D5DAE3",
-	surface4: "#B9C0CE",
-	surfaceSidebar: "#F1F3F6",
-	foregroundMuted: "#5B6272",
-	foregroundExtraMuted: "#8B93A7",
-	border: "#D5DAE3",
-	accent: "#2B4C7E",
+const pieLightColors = buildSemanticColors({
+	surface0: "#ffffff",
+	surface1: "#f6f7f9",
+	surface2: "#eef0f4",
+	surface3: "#e1e5eb",
+	surfaceSidebar: "#f6f7f9",
+	foregroundMuted: "#4b5361",
+	foregroundExtraMuted: "#5d6678",
+	border: "#e4e7ec",
+	borderAccent: "#d0d5dd",
+	accent: "#3b5bdb",
+	accentBright: "#2f4bc0",
 	accentForeground: "#ffffff",
-	destructive: "#B33A3A",
+	destructive: "#b42318",
 });
 
 // ---------------------------------------------------------------------------
@@ -424,82 +330,42 @@ const commonTheme = {
 	opacity: OPACITY,
 };
 
-const darkShadow = {
-	sm: {
-		shadowColor: "rgba(0, 0, 0, 0.25)",
-		shadowOffset: { width: 0, height: 2 },
-		shadowRadius: 4,
-		elevation: 2,
-	},
+/**
+ * One elevation tier, for genuinely floating layers only (composer, menus,
+ * permission cards, sheets, toasts). Static cards use a hairline instead.
+ */
+const shadow = {
 	md: {
-		shadowColor: "rgba(0, 0, 0, 0.20)",
-		shadowOffset: { width: 0, height: 4 },
-		shadowRadius: 8,
-		elevation: 8,
-	},
-	lg: {
-		shadowColor: "rgba(0, 0, 0, 0.40)",
-		shadowOffset: { width: 0, height: 12 },
+		shadowColor: "rgba(16, 24, 40, 0.08)",
+		shadowOffset: { width: 0, height: 8 },
 		shadowRadius: 24,
 		elevation: 8,
 	},
 } as const;
 
-const lightShadow = {
-	sm: {
-		shadowColor: "rgba(0, 0, 0, 0.02)",
-		shadowOffset: { width: 0, height: 2 },
-		shadowRadius: 8,
-		elevation: 2,
-	},
-	md: {
-		shadowColor: "rgba(0, 0, 0, 0.04)",
-		shadowOffset: { width: 0, height: 4 },
-		shadowRadius: 8,
-		elevation: 2,
-	},
-	lg: {
-		shadowColor: "rgba(0, 0, 0, 0.08)",
-		shadowOffset: { width: 0, height: 12 },
-		shadowRadius: 24,
-		elevation: 8,
-	},
-} as const;
-
-export function buildDarkTheme(semanticColors: ReturnType<typeof buildDarkSemanticColors>) {
-	return {
-		colorScheme: "dark" as const,
-		colors: {
-			...semanticColors,
-			palette: baseColors,
-			// [port] syntax group from @getpaseo/highlight (paseo styles/theme.ts)
-			syntax: darkHighlightColors,
-		},
-		shadow: darkShadow,
-		...commonTheme,
-	} as const;
-}
-
-export function buildLightTheme(semanticColors: ReturnType<typeof buildLightSemanticColors>) {
+export function buildLightTheme(semanticColors: ReturnType<typeof buildSemanticColors>) {
 	return {
 		colorScheme: "light" as const,
 		colors: {
 			...semanticColors,
 			palette: baseColors,
-			// [port] syntax group from @getpaseo/highlight (paseo styles/theme.ts)
+			// Syntax groups come from @getpaseo/highlight (light set).
 			syntax: lightHighlightColors,
 		},
-		shadow: lightShadow,
+		shadow,
 		...commonTheme,
 	} as const;
 }
 
-export type Theme = ReturnType<typeof buildDarkTheme> | ReturnType<typeof buildLightTheme>;
+export type Theme = ReturnType<typeof buildLightTheme>;
 
-export const darkTheme = buildDarkTheme(pieDarkColors);
 export const lightTheme = buildLightTheme(pieLightColors);
 
+/**
+ * v1 ships one theme (DESIGN.md §Elevation & Depth). A dark theme is a separate
+ * decision: register it only together with a real settings toggle and a
+ * contrast re-check of every token.
+ */
 export const REGISTERED_THEMES = {
-	dark: darkTheme,
 	light: lightTheme,
 } as const;

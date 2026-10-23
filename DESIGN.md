@@ -1,5 +1,5 @@
 ---
-version: 1
+version: 1.1
 name: Pie design system
 description: 近白纸上的工程工具：墨字、单一蓝紫强调色、1px 细线 + 表面阶梯做深度；界面退到会话后面，强调色只给操作与状态。
 resolved-from-defaults:
@@ -15,7 +15,7 @@ colors:
   surface-raised: "#EEF0F4"
   text-primary: "#14161A"
   text-secondary: "#4B5361"
-  text-tertiary: "#667085"
+  text-tertiary: "#5D6678"
   accent: "#3B5BDB"
   accent-hover: "#2F4BC0"
   hairline: "#E4E7EC"
@@ -85,10 +85,11 @@ Paseo 皮肤层的唯一依据见 ADR-0007。
 |---|---|---|---|
 | `ink` | `#14161A` | 18.1:1 | 标题、正文、选中态 |
 | `ink-2` | `#4B5361` | 7.75:1 | 次要正文、控件标签 |
-| `ink-3` | `#667085` | 4.97:1 | 时间戳、占位符、辅助信息（**最低档**） |
+| `ink-3` | `#5D6678` | 5.77:1 | 时间戳、占位符、辅助信息（**最低档**） |
 
-正文小字必须 ≥ 4.5:1；`ink-3` 是下限，不得再引入更浅的文本色。`ink-3` 在 sub 上
-为 4.64:1，仍达标；若换到 raise（`#EEF0F4`）需重新计算，不达标就换 `ink-2`。
+正文小字必须 ≥ 4.5:1；`ink-3` 是下限，不得再引入更浅的文本色。`ink-3` 在每一档
+表面上都达标：sub **5.39:1**、raise **5.06:1**、strong step **4.57:1**。选值依据是
+「三级文本会落在选中行上」，不是只对白底验算。
 
 ### Semantic
 
@@ -103,6 +104,12 @@ Paseo 皮肤层的唯一依据见 ADR-0007。
 | `diff-del` | `#FBEAE8` | diff 删除行底 |
 
 状态色只用于状态，不做装饰；语义色不参与导航选中。
+
+**对比度可达面**（实测，前景 / 实际底色）：`ink` 与 `ink-2` 在四档表面都 ≥ 6.1:1；
+`ink-3` 最低 4.57:1。语义色与 `accent` 作为**文字**只保证到 sub 档：
+`accent` 在 strong step 上 4.48:1、`statusWarning` 在 raise 上 4.27:1，均低于 4.5——
+这些组合只允许用于图标或形状，不允许承载小字。要在 raise 上写状态文字，用
+`ink-2` + soft tint 底，不要让状态色本身当正文色。
 
 ## Typography
 
@@ -173,6 +180,7 @@ Paseo 皮肤层的唯一依据见 ADR-0007。
 - `radius 6`：按钮、输入框、tab、图标按钮。
 - `radius-lg 10`：卡片、diff 容器、权限卡。
 - `radius-xl 14`：composer、sheet。
+- `radius-2xl 16`：sheet 顶角（`BORDER_RADIUS["2xl"]`，控件几何表使用）。
 - `999`：只有状态点与胶囊 chip。
 - 同一元素不得出现两套圆角；不使用 5/8/20 等裸值。
 
@@ -259,6 +267,9 @@ Paseo 皮肤层的唯一依据见 ADR-0007。
 ## Iteration Guide
 
 - 本文件是设计决策记录：每次修改写清「改什么 / 为什么 / 代价」，并 bump `version`。
+- v1.1（2026-10-23，T-018）：`ink-3` 由 `#667085` 改为 `#5D6678` —— 实测该色落在
+  raise 档（选中行）只有 4.36:1，低于正文门槛；新值在每档表面 ≥ 4.57:1。同时补
+  `radius-2xl 16`（sheet 用），因为组件几何表按角色取该档。
 - 改版先审计：对照 `docs/design/audit-2026-10.md` 列出现状差异，再提改动。
 - 已否决方向：暖纸 / 衬线标题（`docs/design/variants/index.html` 方案 B）。
   重新考虑需要新的证据（用户测试或品牌决策），不能凭口味回滚。

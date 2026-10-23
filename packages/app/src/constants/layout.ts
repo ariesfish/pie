@@ -28,5 +28,5 @@ export function useIsCompactFormFactor(): boolean {
 	return width < COMPACT_BREAKPOINT;
 }
 
-export const EXPLORER_WIDTH = 240;
-export const SIDEBAR_WIDTH = 200;
+/** Desktop sidebar width (DESIGN.md §Grid & Container: fixed 232). */
+export const SIDEBAR_WIDTH = 232;

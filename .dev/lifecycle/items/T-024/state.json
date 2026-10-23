@@ -1,0 +1,17 @@
+{
+  "id": "T-024",
+  "title": "i18n completeness for relative time",
+  "opened": "2026-10-23T08:27:43Z",
+  "closed": null,
+  "budget": 3,
+  "blocked": null,
+  "gates": {},
+  "history": [
+    {
+      "step": 1,
+      "ts": "2026-10-23T08:27:43Z",
+      "type": "open",
+      "budget": 3
+    }
+  ]
+}

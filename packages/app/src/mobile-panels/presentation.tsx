@@ -3,6 +3,7 @@
 // agent-list→sessions, file-explorer→explorer. Presentation unchanged.)
 import { useMemo, type ComponentProps, type ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import { lightTheme } from "@/styles/theme";
 import { GestureDetector, type GestureType } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { isWeb } from "@/constants/platform";
@@ -122,7 +123,7 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: lightTheme.colors.scrim,
   },
   panel: {
     position: "absolute",

@@ -12,9 +12,9 @@ StyleSheet.configure({
 		xl: 1200,
 	},
 	settings: {
-		// User feedback first flight: the dark surface read low-contrast to
-		// the primary user, so light ships as the default; dark stays
-		// registered behind a future settings toggle.
+		// v1 ships one theme (DESIGN.md §Elevation & Depth). A dark theme needs
+		// its own tokens, a real toggle and a contrast re-check before it is
+		// registered here.
 		initialTheme: "light",
 	},
 });

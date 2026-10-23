@@ -222,7 +222,7 @@ function renderRow(input: {
 const styles = StyleSheet.create((theme) => ({
 	backdrop: {
 		flex: 1,
-		backgroundColor: "rgba(0,0,0,0.62)",
+		backgroundColor: theme.colors.scrim,
 		justifyContent: "flex-start",
 	},
 	panel: {

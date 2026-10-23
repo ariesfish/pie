@@ -168,14 +168,14 @@ export function Composer() {
 								accessibilityLabel={t("chat.stop")}
 								onPress={() => void abortRun()}
 							>
-								<X size={15} color="#ffffff" strokeWidth={1.75} />
+								<X size={15} color={theme.colors.onStrong} strokeWidth={1.75} />
 							</Pressable>
 							<Pressable
 								style={[styles.choice, styles.steer]}
 								accessibilityLabel={t("chat.steer")}
 								onPress={() => void submit("steer")}
 							>
-								<Zap size={15} color="#ffffff" strokeWidth={1.5} />
+								<Zap size={15} color={theme.colors.onStrong} strokeWidth={1.5} />
 							</Pressable>
 							<Pressable
 								style={styles.choice}
@@ -305,15 +305,11 @@ const styles = StyleSheet.create((theme) => ({
 	// soft shadow; the multiline field sits on it with no inner chrome.
 	card: {
 		backgroundColor: theme.colors.background,
-		borderRadius: 20,
+		borderRadius: theme.borderRadius["2xl"],
 		borderWidth: theme.borderWidth[1],
 		borderColor: theme.colors.border,
 		paddingBottom: theme.spacing[1],
-		shadowColor: "#000000",
-		shadowOpacity: 0.04,
-		shadowRadius: 12,
-		shadowOffset: { width: 0, height: 4 },
-		elevation: 2,
+		...theme.shadow.md,
 	},
 	input: {
 		paddingHorizontal: theme.spacing[3],

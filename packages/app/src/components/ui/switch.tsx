@@ -134,7 +134,7 @@ const styles = StyleSheet.create((theme) => {
       borderRadius: switchGeometry.thumbSize / 2,
     },
     thumb: {
-      shadowColor: "rgba(0, 0, 0, 0.25)",
+      shadowColor: theme.colors.scrim,
       shadowOffset: { width: 0, height: 1 },
       shadowRadius: 2,
       shadowOpacity: 1,

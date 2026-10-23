@@ -13,7 +13,7 @@
 | C2 | 测试 | vitest 0 failure；新增行为有断言覆盖 | `npx vitest run` |
 | C3 | 真实面 | UI 改动：walkthrough 全步绿；daemon/protocol 改动：smoke 全绿 | `npm run ui-walkthrough` / `npm run smoke` |
 | C4 | 断言纪律 | 修 bug 不得放宽断言；确需放宽须在票上写明理由并经人确认 | diff 自查 + review |
-| C5 | token 纪律 | 新增 UI 代码只引用 `theme.ts` 的 token；新增字面量 hex/rgba 仅允许在 `styles/theme.ts`、`components/files/syntax-palette.ts`、`components/material-file-icons.ts`、`*.platform.*` 的平台适配文件 | `git diff` + grep `#[0-9a-fA-F]{3,8}` |
+| C5 | token 纪律 | 新增 UI 代码只引用 `theme.ts` 的 token；字面量 hex/rgba 只允许在 `styles/theme.ts`、`components/files/syntax-palette.ts`、`components/material-file-icons.ts`、`utils/color.ts`、平台文件（`*.platform.*` / `*.web.*` / `*.native.*`）、`components/error-boundary.tsx`（主题注册表本身崩溃时仍须渲染）、`app/+html.tsx`（WS 前的 HTML 底色） | `git diff` + grep `#[0-9a-fA-F]{3,8}` |
 | C6 | 无障碍 | 图标按钮都有 `accessibilityLabel`；键盘焦点可见 | 代码自查 + walkthrough |
 | C7 | 文案边界 | 用户可见字符串只出现在 app 的 i18n 资源里；daemon/protocol 不得硬编码展示文案 | grep + review |
 | C8 | 唯一真源 | 同一语义只有一个实现（无重复组件、无死主题、无未使用常量） | review |
@@ -30,16 +30,22 @@
 | D6 | 导航唯一性 | 每类对象（会话、文件、变更、用量）只有一个主入口；次要入口必须是从主入口进入的上下文视图 | IA 评审 |
 | D7 | 触控 | compact 布局下可点区域 ≥ 44×44 | 组件 + 真机 |
 
-## 当前基线（2026-10-23 实测）
+## 当前基线（2026-10-23，T-018/T-022 之后）
 
-已知未达标项，属于 UI 重构波次的还债清单，不是"可以继续这样写"的许可：
+仍未达标项，属于 UI 重构波次的还债清单，不是"可以继续这样写"的许可：
 
-- **D1**：`foregroundExtraMuted #8B93A7` 在白底 **3.07:1**，用于 10px 时间戳与占位符（`theme.ts:403`、`left-sidebar.tsx:493`）。
-- **D2**：全仓 26 处 9/10/11px 字号，声明体系最小档是 12（`FONT_SIZE`）。
-- **D3**：`border #D5DAE3` 在白底 **1.40:1**，5 级灰阶挤在一起，结构不可见。
-- **D5/D6**：四套选中态、三套导航入口（见 `docs/design/audit-2026-10.md`）。
-- **C7**：daemon 硬编码中文会话占位文案 `"（新会话，未落盘）"`（`packages/daemon/src/core/daemon.ts:226`）。
-- **C8**：`accentBright` 在浅色主题退化为 `accent`（`theme.ts:344`）；dark 主题不可达但仍在维护（`_layout.tsx:105`）。
+- **D2**：组件层仍有 9/10/11px 字号（token 下限已是 12，组件尚未全部换用；T-019/T-020 收口）。
+- **D4**：强调色仍被用于导航选中填充（header 图标、pane 下划线），超出 2 处/视口预算（T-019）。
+- **D5/D6**：四套选中态、三套导航入口仍在（T-019；见 `docs/design/audit-2026-10.md`）。
+- **C7（部分）**：`relativeTime()` 返回硬编码英文（`now` / `3m` / `1mo`），未走 i18n（T-024）。
+- **C8**：`RailMode` 定义两份、usage tab 重复渲染图标（T-019）。
+
+已还清（保留在此以免被重新引入）：
+
+- **D1**：三级文本换成 `#5D6678`，每档表面 ≥ 4.57:1（T-018）。
+- **D3**：表面阶梯改为 canvas/sub/raise/strong + 两级细线，`border` 不再独自承担结构（T-018）。
+- **C7**：daemon 不再发送展示文案，会话占位由 `agentList.untitled` 解析（T-022）。
+- **C8**：`accentBright` 恢复为独立的更深一档；不可达的 dark 主题与强制 `setTheme` 删除；`SIDEBAR_WIDTH` 单一真源（T-018）。
 
 ## 不可协商项
 

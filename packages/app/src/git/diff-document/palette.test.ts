@@ -1,6 +1,6 @@
 // Ported from getpaseo/paseo (Apache-2.0)
 import { describe, expect, it } from "vitest";
-import { darkTheme, lightTheme } from "@/styles/theme";
+import { lightTheme } from "@/styles/theme";
 import { hexColorWithAlpha } from "@/utils/color";
 import { codeLineNumberTone, codeTextColor, createDiffPalette, retainDiffPalette } from "./palette";
 import type { DiffCell, DiffPalette } from "./types";
@@ -37,7 +37,8 @@ describe("diff palette retention", () => {
   });
 });
 
-describe.each([lightTheme, darkTheme])("semantic diff colors", (theme) => {
+describe("semantic diff colors", () => {
+  const theme = lightTheme;
   it("uses the app status palette for gutter text and derived row tints", () => {
     const created = createDiffPalette(theme);
 

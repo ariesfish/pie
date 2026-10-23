@@ -71,7 +71,7 @@ function PackagesSection() {
 				<TextInput
 					style={styles.installInput}
 					placeholder={`npm:<pkg>@x | git://… | /local/path`}
-					placeholderTextColor="#4b5262"
+					placeholderTextColor={theme.colors.foregroundMuted}
 					value={installSource}
 					onChangeText={setInstallSource}
 					autoCapitalize="none"
@@ -143,7 +143,7 @@ function SkillsSection() {
 			<TextInput
 				style={styles.installInput}
 				placeholder={t("resources.search")}
-				placeholderTextColor="#4b5262"
+				placeholderTextColor={theme.colors.foregroundMuted}
 				value={q}
 				onChangeText={setQ}
 				autoCapitalize="none"

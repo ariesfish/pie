@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { LeftSidebar } from "@/components/layout/left-sidebar";
 import { ExplorerPane } from "@/components/layout/explorer-pane";
 import { useTabsStore, type ExplorerMode } from "@/stores/tabs-store";
+import { SIDEBAR_WIDTH } from "@/constants/layout";
 import {
 	MobilePanelOverlay,
 } from "@/mobile-panels/presentation";
@@ -21,9 +22,6 @@ import { useCloseExplorerGesture, useCloseSessionsGesture, useOpenExplorerGestur
 const rowStyle = { flex: 1, flexDirection: "row" } as const;
 const flexStyle = { flex: 1 } as const;
 const fillStyle = { flex: 1 } as const;
-
-// paseo.png measured: left sidebar occupies x0–231 (≈232px device px).
-const SIDEBAR_DESKTOP_WIDTH = 232;
 
 export function AppContainer({
 	children,
@@ -186,7 +184,7 @@ const styles = StyleSheet.create((theme) => ({
 		backgroundColor: theme.colors.surface0,
 	},
 	sidebarColumn: {
-		width: SIDEBAR_DESKTOP_WIDTH,
+		width: SIDEBAR_WIDTH,
 		borderRightWidth: theme.borderWidth[1],
 		borderRightColor: theme.colors.border,
 		backgroundColor: theme.colors.surfaceSidebar,

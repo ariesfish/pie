@@ -31,14 +31,18 @@ export class AppErrorBoundary extends Component<Props, State> {
 	}
 }
 
+// Literal values on purpose: this fallback must render when the theme registry
+// itself is what failed (see docs/CONSTRAINTS.md C5 allowlist). Values mirror
+// DESIGN.md v1 so a crash still looks like Pie.
 const COLORS = {
-	bg: "#0a0a0c",
-	fg: "#e6e9ef",
-	danger: "#e5534b",
-	muted: "#8b93a7",
-	surface: "#15161a",
-	border: "#26272d",
-	accent: "#2b6cb0",
+	bg: "#ffffff",
+	fg: "#14161a",
+	danger: "#b42318",
+	muted: "#5d6678",
+	surface: "#f6f7f9",
+	border: "#e4e7ec",
+	accent: "#3b5bdb",
+	onAccent: "#ffffff",
 };
 
 function CrashScreen({ error, onRetry }: { error: Error; onRetry(): void }) {
@@ -50,16 +54,16 @@ function CrashScreen({ error, onRetry }: { error: Error; onRetry(): void }) {
 			<Text style={{ color: COLORS.fg, fontSize: 15, textAlign: "center" }} selectable>
 				{error.message || String(error)}
 			</Text>
-			<ScrollView style={{ maxHeight: 260, width: "100%", backgroundColor: COLORS.surface, borderRadius: 8, borderWidth: 1, borderColor: COLORS.border }} contentContainerStyle={{ padding: 12 }}>
+			<ScrollView style={{ maxHeight: 260, width: "100%", backgroundColor: COLORS.surface, borderRadius: 10, borderWidth: 1, borderColor: COLORS.border }} contentContainerStyle={{ padding: 12 }}>
 				<Text style={{ color: COLORS.muted, fontSize: 12, fontFamily: "monospace" }} selectable>
 					{String(error.stack ?? "").slice(0, 800)}
 				</Text>
 			</ScrollView>
 			<Pressable
-				style={{ marginTop: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, backgroundColor: COLORS.accent }}
+				style={{ marginTop: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 10, backgroundColor: COLORS.accent }}
 				onPress={onRetry}
 			>
-				<Text style={{ color: "#ffffff", fontSize: 15, fontWeight: "500" }}>Try again</Text>
+				<Text style={{ color: COLORS.onAccent, fontSize: 15, fontWeight: "500" }}>Try again</Text>
 			</Pressable>
 		</View>
 	);

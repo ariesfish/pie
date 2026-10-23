@@ -79,7 +79,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   desktopOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.55)",
+    backgroundColor: theme.colors.scrim,
     justifyContent: "center",
     alignItems: "center",
     padding: theme.spacing[6],

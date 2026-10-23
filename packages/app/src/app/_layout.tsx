@@ -3,7 +3,6 @@
 // Host runtime bootstrap, keyboard, portals and command center are not ported.)
 import { Text, TextInput, View } from "react-native";
 import { Stack } from "expo-router";
-import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -13,7 +12,7 @@ import "@/styles/unistyles";
 import { CommandCenterProvider } from "@/command-center/provider";
 import { AppErrorBoundary } from "@/components/error-boundary";
 import { DEFAULT_UI_FONT_STACK } from "@/styles/theme";
-import { UnistylesRuntime, StyleSheet } from "react-native-unistyles";
+import { StyleSheet } from "react-native-unistyles";
 
 // Order matters: unistyles must configure before any StyleSheet.create call.
 import "@/i18n/i18next";
@@ -99,11 +98,6 @@ export default function RootLayout() {
 	textType.defaultProps = { ...textType.defaultProps, fontFamily: DEFAULT_UI_FONT_STACK };
 	inputType.defaultProps = { ...inputType.defaultProps, fontFamily: DEFAULT_UI_FONT_STACK };
 
-	// Belt-and-suspenders against a raced-away init; unconditionally re-assert
-	// the light identity once the tree is up (user feedback first flight).
-	useEffect(() => {
-		UnistylesRuntime.setTheme("light");
-	}, []);
 	return <RootAppTree />;
 }
 

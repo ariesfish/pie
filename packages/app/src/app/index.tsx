@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { Redirect } from "expo-router";
 import { Text, TextInput, View } from "react-native";
-import { StyleSheet } from "react-native-unistyles";
+import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { useWorkspaceStore } from "@/stores/workspace-store";
 
 export default function Index() {
 	const { t } = useTranslation();
+	const { theme } = useUnistyles();
 	const status = useConnectionStore((s) => s.status);
 	const error = useConnectionStore((s) => s.error);
 	const connect = useConnectionStore((s) => s.connect);
@@ -59,7 +60,7 @@ export default function Index() {
 			<TextInput
 				style={styles.input}
 				placeholder={t("connect.addressPlaceholder")}
-				placeholderTextColor="#4b5262"
+				placeholderTextColor={theme.colors.foregroundMuted}
 				value={wsUrl}
 				onChangeText={setWsUrl}
 				autoCapitalize="none"
@@ -69,7 +70,7 @@ export default function Index() {
 			<TextInput
 				style={styles.input}
 				placeholder="…"
-				placeholderTextColor="#4b5262"
+				placeholderTextColor={theme.colors.foregroundMuted}
 				value={token}
 				onChangeText={setToken}
 				autoCapitalize="none"

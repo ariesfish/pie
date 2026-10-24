@@ -77,6 +77,7 @@ export default function SettingsScreen() {
 	const [catalog, setCatalog] = useState<ModelCatalogItem[]>([]);
 	const [catalogLoaded, setCatalogLoaded] = useState(false);
 	const [showAdvanced, setShowAdvanced] = useState(false);
+	const [modelsComments, setModelsComments] = useState(false);
 	const dirtyRef = useRef(dirty);
 	const draftRef = useRef(draft);
 	dirtyRef.current = dirty;
@@ -103,6 +104,11 @@ export default function SettingsScreen() {
 				const read = await conn.request("config.read", { file: target });
 				setContent(read.exists ? read.content : "{\n}\n");
 				setRevision(read.revision);
+				setModelsComments(
+					target === "models" &&
+						read.exists &&
+						stripJsonComments(read.content) !== read.content,
+				);
 				setDirty(false);
 				setSaved(false);
 			} catch {
@@ -434,6 +440,7 @@ export default function SettingsScreen() {
 									<Text style={styles.sectionTitle}>{t("settings.customProviders")}</Text>
 									<Pressable
 										accessibilityLabel={t("settings.addProvider")}
+										disabled={modelsComments}
 										onPress={() => {
 											setDraft(emptyDraft());
 											setDraftIsNew(true);
@@ -447,6 +454,9 @@ export default function SettingsScreen() {
 									</Pressable>
 								</View>
 
+								{modelsComments ? (
+									<Text style={styles.warning}>{t("settings.commentsWarning")}</Text>
+								) : null}
 								{draft ? (
 									<ProviderForm
 										t={t}
@@ -486,6 +496,7 @@ export default function SettingsScreen() {
 												<Pressable
 													accessibilityLabel={t("settings.editProvider")}
 													hitSlop={8}
+													disabled={modelsComments}
 													onPress={() => {
 														setDraft({
 															id: provider.id,
@@ -504,6 +515,7 @@ export default function SettingsScreen() {
 												<Pressable
 													accessibilityLabel={t("settings.removeProvider")}
 													hitSlop={8}
+													disabled={modelsComments}
 													onPress={() => setConfirmDelete(provider.id)}
 													style={[styles.iconButton, density]}
 												>
@@ -558,7 +570,7 @@ export default function SettingsScreen() {
 														variant="ghost"
 														hitSlop={10}
 														style={styles.buttonShape}
-														size="sm"
+														size={buttonSize}
 														onPress={() => setConfirmDelete(null)}
 													>
 														{t("common.cancel")}
@@ -995,6 +1007,7 @@ function configError(t: (key: string) => string, err: unknown): string {
 	if (code === ErrorCodes.configConflict) return t("settings.conflict");
 	if (code === ErrorCodes.configInvalid) return t("settings.invalidConfig");
 	if (code === ErrorCodes.configTooLarge) return t("settings.tooLarge");
+	if (code === ErrorCodes.configComments) return t("settings.commentsBlockForm");
 	return t("settings.saveFailed");
 }
 

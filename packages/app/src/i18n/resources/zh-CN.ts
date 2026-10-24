@@ -121,6 +121,8 @@ export const zhCN = {
 		loadFailed: "配置加载失败。",
 		packageFailed: "扩展包操作失败。",
 		invalidConfig: "daemon 拒绝了这份配置，请检查字段后重试。",
+		commentsWarning: "models.json 含注释；请用高级 JSON 编辑，避免丢失注释。",
+		commentsBlockForm: "表单无法保留 models.json 的注释/尾逗号，请用高级 JSON 编辑。",
 		tooLarge: "文件超过 1 MiB 上限。",
 		saveFailed: "保存失败。",
 		fileInvalid: "{{file}} 不是有效的 JSON，请在编辑器里修正。",

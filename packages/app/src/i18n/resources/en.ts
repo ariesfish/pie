@@ -121,6 +121,8 @@ export const en = {
 		loadFailed: "Could not load the configuration.",
 		packageFailed: "The package operation failed.",
 		invalidConfig: "The daemon rejected this configuration. Check the fields and try again.",
+		commentsWarning: "models.json contains comments; use Advanced JSON to edit it without losing them.",
+		commentsBlockForm: "models.json comments/trailing commas cannot be preserved by the form. Use Advanced JSON.",
 		tooLarge: "The file exceeds the 1 MiB limit.",
 		saveFailed: "Could not save the file.",
 		fileInvalid: "{{file}} is not valid JSON; use the editor to fix it.",

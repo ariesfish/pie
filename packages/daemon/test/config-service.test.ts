@@ -61,6 +61,9 @@ describe("ConfigService", () => {
 		});
 		await expect(service.write("models", commented)).resolves.toMatchObject({ file: "models" });
 		expect((await service.overview()).models.providers).toEqual(["acme"]);
+		await expect(
+			service.upsertProvider({ id: "acme", models: [{ id: "m1" }] }),
+		).rejects.toMatchObject({ code: "config_comments" });
 	});
 
 	it("does not clear the default when a delete loses the revision race", async () => {

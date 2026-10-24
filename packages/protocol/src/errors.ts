@@ -30,6 +30,8 @@ export const ErrorCodes = {
 	configInvalid: "config_invalid",
 	/** Config payload exceeds the daemon cap. */
 	configTooLarge: "config_too_large",
+	/** Structured edit would discard comments/trailing commas. */
+	configComments: "config_comments",
 	/** Unexpected internal error. */
 	internal: "internal",
 } as const;

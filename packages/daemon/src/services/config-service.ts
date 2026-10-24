@@ -24,7 +24,8 @@ type ConfigErrorCode =
 	| "invalid_args"
 	| typeof ErrorCodes.configInvalid
 	| typeof ErrorCodes.configConflict
-	| typeof ErrorCodes.configTooLarge;
+	| typeof ErrorCodes.configTooLarge
+	| typeof ErrorCodes.configComments;
 
 export class ConfigError extends Error {
 	constructor(message: string, readonly code: ConfigErrorCode) {
@@ -242,6 +243,14 @@ export class ConfigService {
 		return this.withLock(file, () => this.writeUnlocked(file, content, expectedRevision));
 	}
 
+	private assertStructuredEditAllowed(read: { exists: boolean; content: string }): void {
+		if (!read.exists) return;
+		const text = stripBom(read.content);
+		if (stripJsonComments(text) !== text) {
+			throw new ConfigError("config_comments", ErrorCodes.configComments);
+		}
+	}
+
 	async upsertProvider(
 		draft: ModelProviderDraft,
 		expectedRevision?: string,
@@ -249,6 +258,7 @@ export class ConfigService {
 		validateProviderDraft(draft);
 		return this.withLock("models", async () => {
 			const read = await this.readUnlocked("models");
+			this.assertStructuredEditAllowed(read);
 			const data = read.exists ? parseObject(read.content, "models") : {};
 			const providers = isRecord(data.providers) ? { ...data.providers } : {};
 			const candidate = providers[draft.id];
@@ -287,6 +297,7 @@ export class ConfigService {
 	async removeProvider(providerId: string, expectedRevision?: string): Promise<{ revision: string }> {
 		return this.withLock("models", async () => {
 			const read = await this.readUnlocked("models");
+			this.assertStructuredEditAllowed(read);
 			const data = read.exists ? parseObject(read.content, "models") : {};
 			const providers = isRecord(data.providers) ? { ...data.providers } : {};
 			if (!Object.hasOwn(providers, providerId)) {

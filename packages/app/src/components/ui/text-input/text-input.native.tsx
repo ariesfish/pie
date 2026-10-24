@@ -15,6 +15,7 @@ import PasteInput, {
 } from "@mattermost/react-native-paste-input";
 import { useIsInsideBottomSheet } from "@/components/ui/bottom-sheet-scope";
 import type { EditingTextInputHandle, EditingTextInputProps } from "./types";
+import type { TextInputInstance } from "react-native";
 
 type NativeInput = (TextInput | PasteTextInputInstance) & {
   blur(): void;
@@ -168,7 +169,7 @@ export const EditingTextInput = forwardRef<EditingTextInputHandle, EditingTextIn
         {...props}
         autoFocus={autoFocus}
         key={replacement.revision}
-        ref={assignInputRef as React.Ref<TextInput>}
+        ref={assignInputRef as React.Ref<TextInputInstance>}
         defaultValue={textRef.current}
         onChangeText={handleChangeText}
       />

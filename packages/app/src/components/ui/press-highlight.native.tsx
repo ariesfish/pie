@@ -6,8 +6,9 @@ import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanima
 import { resolveHighlightCorners } from "./press-highlight.shape";
 import type { PressHighlightProps } from "./press-highlight.types";
 import { ABSOLUTE_FILL } from "@/styles/absolute-fill";
+import type { ViewInstance } from "react-native";
 
-export const PressHighlight = forwardRef<View, PressHighlightProps>(function PressHighlight(
+export const PressHighlight = forwardRef<ViewInstance, PressHighlightProps>(function PressHighlight(
   { children, disabled, highlightStyle, ...props },
   ref,
 ) {

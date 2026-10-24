@@ -2,6 +2,7 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from "react";
 import { TextInput } from "react-native";
 import type { EditingTextInputHandle, EditingTextInputProps } from "./types";
+import type { TextInputInstance } from "react-native";
 
 interface WebTextInputElement extends TextInput {
   value?: string;
@@ -22,7 +23,7 @@ export const EditingTextInput = forwardRef<EditingTextInputHandle, EditingTextIn
       defaultValue: _____,
       ...props
     } = allProps as EditingTextInputProps & { value?: unknown; defaultValue?: unknown };
-    const inputRef = useRef<TextInput | null>(null);
+    const inputRef = useRef<TextInputInstance | null>(null);
     const initialTextRef = useRef(initialValue);
     const textRef = useRef(initialTextRef.current);
     const isComposingRef = useRef(false);

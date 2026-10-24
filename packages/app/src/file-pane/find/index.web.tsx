@@ -8,7 +8,7 @@ import {
   type RefObject,
 } from "react";
 import { EditorView } from "@codemirror/view";
-import { View, type View as ViewInstance } from "react-native";
+import { View, type ViewInstance } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 import { PaneFind, findShortcutPlatform, isFindShortcut, type PaneFindHandle } from "@/pane-find";

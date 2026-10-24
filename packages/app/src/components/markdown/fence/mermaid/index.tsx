@@ -17,6 +17,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
 import { isWeb } from "@/constants/platform";
 import type { MarkdownFenceRendererProps } from "../types";
+import type { ViewInstance } from "react-native";
 
 export function MermaidFence({ code, phase }: MarkdownFenceRendererProps) {
 	const { theme } = useUnistyles();
@@ -77,7 +78,7 @@ export function MermaidFence({ code, phase }: MarkdownFenceRendererProps) {
 }
 
 function MermaidSvg({ svg }: { svg: string }) {
-	const ref = useRef<View>(null);
+	const ref = useRef<ViewInstance>(null);
 	useLayoutEffect(() => {
 		const node = ref.current as unknown as HTMLDivElement | null;
 		if (!node) return;

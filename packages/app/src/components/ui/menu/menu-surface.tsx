@@ -29,6 +29,7 @@ import { AnchoredSurface, MenuOverlay } from "./menu-overlay";
 import { getMenuSheetBottomPadding } from "./menu-sheet-layout";
 import type { Alignment, Placement } from "../anchor";
 import type { KeyboardFocusScope } from "@/keyboard/actions";
+import type { ViewInstance } from "react-native";
 
 const ThemedChevronLeft = withUnistyles(ChevronLeft);
 const mutedIconMapping = (theme: Theme) => ({ color: theme.colors.foregroundMuted });
@@ -82,7 +83,7 @@ export interface MenuPageDefinition {
 }
 
 interface MenuSurfaceContextValue {
-  registerSubAnchor: (id: string, ref: React.RefObject<View | null>) => void;
+  registerSubAnchor: (id: string, ref: React.RefObject<ViewInstance | null>) => void;
   hoverOpen: (sub: { id: string; depth: number }) => void;
   hoverClose: (depth: number) => void;
   cancelHoverClose: () => void;
@@ -140,9 +141,9 @@ export function MenuSurface(props: MenuSurfaceProps): ReactElement | null {
 
 function useSubAnchors(): {
   value: MenuSurfaceContextValue;
-  getAnchor: (id: string) => React.RefObject<View | null> | null;
+  getAnchor: (id: string) => React.RefObject<ViewInstance | null> | null;
 } {
-  const anchors = useRef(new Map<string, React.RefObject<View | null>>());
+  const anchors = useRef(new Map<string, React.RefObject<ViewInstance | null>>());
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { openSub, closeSub } = useMenuContext("MenuSurface");
@@ -156,7 +157,7 @@ function useSubAnchors(): {
 
   useEffect(() => clearTimers, [clearTimers]);
 
-  const registerSubAnchor = useCallback((id: string, ref: React.RefObject<View | null>) => {
+  const registerSubAnchor = useCallback((id: string, ref: React.RefObject<ViewInstance | null>) => {
     anchors.current.set(id, ref);
   }, []);
 
@@ -301,7 +302,7 @@ function MenuFlyout({
 }: {
   page: MenuPageDefinition;
   depth: number;
-  anchorRef: React.RefObject<View | null> | null;
+  anchorRef: React.RefObject<ViewInstance | null> | null;
   minWidth?: number;
   maxHeight?: number;
   scrollable?: boolean;

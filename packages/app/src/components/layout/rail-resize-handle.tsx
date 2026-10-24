@@ -8,6 +8,7 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { isWeb } from "@/constants/platform";
 import { clampRailWidth } from "@/constants/layout";
+import type { ViewInstance } from "react-native";
 
 export function RailResizeHandle({
 	width,
@@ -20,7 +21,7 @@ export function RailResizeHandle({
 	const { theme } = useUnistyles();
 	const [dragging, setDragging] = useState(false);
 	const startWidthRef = useRef(width);
-	const viewRef = useRef<View>(null);
+	const viewRef = useRef<ViewInstance>(null);
 
 	// Web-only: a live DOM text selection that covers the handle makes Chromium
 	// start a native text drag on press-drag (trusted dragstart + pointercancel),

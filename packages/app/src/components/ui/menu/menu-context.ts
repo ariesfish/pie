@@ -11,6 +11,7 @@ import {
   type MenuPath,
 } from "./menu-navigation";
 import type { Rect } from "../anchor";
+import type { ViewInstance } from "react-native";
 
 /**
  * How a menu draws itself once it is open.
@@ -33,7 +34,7 @@ export interface MenuContextValue {
   setOpen: (open: boolean) => void;
   /** Runs an item's action, closing the menu first when the item asks for it. */
   selectItem: (onSelect: (() => void) | undefined, closeOnSelect: boolean) => void;
-  triggerRef: React.RefObject<View | null>;
+  triggerRef: React.RefObject<ViewInstance | null>;
   /** Point anchor for menus opened from a gesture rather than a trigger box. */
   anchorRect: Rect | null;
   setAnchorRect: (rect: Rect | null) => void;
@@ -106,7 +107,7 @@ export function useMenuState({
   onOpenChange?: (open: boolean) => void;
   compactMode?: MenuCompactMode;
 }): MenuContextValue {
-  const triggerRef = useRef<View>(null);
+  const triggerRef = useRef<ViewInstance>(null);
   const [anchorRect, setAnchorRect] = useState<Rect | null>(null);
   const [path, setPath] = useState<MenuPath>(MENU_ROOT_PATH);
   const isCompact = useIsCompactFormFactor();

@@ -10,13 +10,14 @@ import {
 } from "react-native";
 import Animated from "react-native-reanimated";
 import { inlineUnistylesStyle } from "@/styles/unistyles-inline-style";
+import type { ViewInstance } from "react-native";
 
 export interface FloatingSurfaceProps extends Omit<ComponentProps<typeof Animated.View>, "style"> {
   frameStyle?: StyleProp<ViewStyle>;
   style?: StyleProp<ViewStyle>;
 }
 
-export const FloatingSurface = forwardRef<View, FloatingSurfaceProps>(function FloatingSurface(
+export const FloatingSurface = forwardRef<ViewInstance, FloatingSurfaceProps>(function FloatingSurface(
   { frameStyle, style, ...props },
   ref,
 ): ReactElement {

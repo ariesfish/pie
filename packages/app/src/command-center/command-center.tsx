@@ -23,6 +23,7 @@ import { ChevronRight } from "lucide-react-native";
 
 import { useCommandCenterContributions } from "./provider";
 import { useCommandCenterStore } from "./command-center-store";
+import type { TextInputInstance } from "react-native";
 import {
 	buildContributionSections,
 	preserveActiveResultId,
@@ -49,7 +50,7 @@ export function CommandCenter() {
 	const [query, setQuery] = useState("");
 	const [activeResultId, setActiveResultId] = useState<string | null>(null);
 	const listRef = useRef<FlatList<CommandCenterListRow> | null>(null);
-	const inputRef = useRef<TextInput | null>(null);
+	const inputRef = useRef<TextInputInstance | null>(null);
 
 	// Reset transient state whenever the palette opens.
 	useEffect(() => {
@@ -163,7 +164,7 @@ export function CommandCenter() {
 						renderItem={(info: ListRenderItemInfo<CommandCenterListRow>) =>
 							renderRow({ info, activeResultId, onSelect: runResult, emptyLabel: t("commandCenter.empty") })
 						}
-						ItemSeparatorComponent={null}
+						ItemSeparatorComponent={undefined}
 						onScrollToIndexFailed={(event: {
 							index: number;
 						}) => {

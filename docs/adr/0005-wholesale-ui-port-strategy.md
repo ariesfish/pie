@@ -42,3 +42,11 @@
 - 新增依赖（W1）：`@tanstack/react-query`（daemon 场景关闭 online/network 监听）、`react-native-keyboard-controller`、`@floating-ui/react-native`。
 - roadmap「P2 收尾：diff Skia 渲染器」按 ADR-0004 同款 .native 分叉模式执行（web 端不引入 CanvasKit，实测 7MB）。
 - 搬运完成后（W4 之后、P3 之前）立项：SDK 54→57 升级 + RNGH 2→3 + vitest→5 的组合升级 PR。
+
+
+## Amendment (2026-10-24)
+
+The stack upgrade lands on **Expo SDK 58**, not 57. Expo 57 bundled RNGH 2.32;
+Expo 58 bundles RNGH 3.3, which is the compatible combination the original
+"SDK 57 / RNGH 3" line was reaching for. React Native 0.88 and React 19.3 ride
+with SDK 58. The rest of this ADR is unchanged.

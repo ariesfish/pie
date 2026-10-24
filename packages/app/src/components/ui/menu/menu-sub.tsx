@@ -15,6 +15,7 @@ import { useMenuContext, useMenuDepth } from "./menu-context";
 import { isSubPageOpen } from "./menu-navigation";
 import { useMenuSurface } from "./menu-surface";
 import { MenuItem } from "./menu-item";
+import type { ViewInstance } from "react-native";
 
 const ThemedChevronRight = withUnistyles(ChevronRight);
 const mutedIconMapping = (theme: Theme) => ({ color: theme.colors.foregroundMuted });
@@ -56,7 +57,7 @@ export function MenuSubTrigger({
   const depth = useMenuDepth();
   const { registerSubAnchor, hoverOpen, hoverClose, cancelHoverClose } =
     useMenuSurface("MenuSubTrigger");
-  const anchorRef = useRef<View>(null);
+  const anchorRef = useRef<ViewInstance>(null);
 
   useEffect(() => {
     registerSubAnchor(id, anchorRef);

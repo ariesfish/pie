@@ -4,6 +4,7 @@ import {
   ScrollView as NativeScrollView,
   FlatList as NativeFlatList,
   type ScrollViewProps,
+  type ScrollViewInstance,
   type FlatListProps,
 } from "react-native";
 import { BottomSheetScrollView, BottomSheetFlatList } from "@gorhom/bottom-sheet";
@@ -24,19 +25,19 @@ const HorizontalFlatList = GestureFlatList as unknown as <Item>(
 ) => React.ReactElement;
 
 /** The presentation owns gesture integration; callers keep the React Native API. */
-export const ScrollView = forwardRef<NativeScrollView, ScrollViewProps>(
+export const ScrollView = forwardRef<ScrollViewInstance, ScrollViewProps>(
   function ScrollView(props, ref) {
     const inSheet = useIsInsideBottomSheet();
     if (!inSheet) return <NativeScrollView {...props} ref={ref} />;
     if (props.horizontal) {
       return isNative ? (
-        <GestureScrollView {...props} ref={ref} disallowInterruption />
+        <GestureScrollView {...props} ref={ref as never} disallowInterruption />
       ) : (
         <NativeScrollView {...props} ref={ref} />
       );
     }
     return (
-      <BottomSheetScrollView {...props} ref={ref}>
+      <BottomSheetScrollView {...props} ref={ref as never}>
         {props.children}
       </BottomSheetScrollView>
     );
@@ -48,7 +49,7 @@ function SheetAwareFlatList<Item>(props: FlatListProps<Item>, ref: Ref<NativeFla
   if (!inSheet) return <NativeFlatList {...props} ref={ref} />;
   if (props.horizontal) {
     return isNative ? (
-      <HorizontalFlatList {...props} ref={ref} disallowInterruption />
+      <HorizontalFlatList {...props} ref={ref as never} disallowInterruption />
     ) : (
       <NativeFlatList {...props} ref={ref} />
     );

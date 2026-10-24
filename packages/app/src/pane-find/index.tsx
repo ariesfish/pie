@@ -14,7 +14,7 @@ import {
   Text,
   View,
   type NativeSyntheticEvent,
-  type TextInputKeyPressEventData,
+  type TextInputKeyPressEvent,
   type TextInputProps,
 } from "react-native";
 import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, X } from "lucide-react-native";
@@ -86,7 +86,7 @@ const FindField = forwardRef<
     height: number;
     trailing?: ReactNode;
     onChangeText(value: string): void;
-    onKeyPress(event: NativeSyntheticEvent<TextInputKeyPressEventData>): void;
+    onKeyPress(event: TextInputKeyPressEvent): void;
     autoFocus?: boolean;
     returnKeyType?: TextInputProps["returnKeyType"];
   }
@@ -166,8 +166,8 @@ export const PaneFind = forwardRef<PaneFindHandle, PaneFindProps>(function PaneF
   useImperativeHandle(ref, () => ({ focus }), [focus]);
 
   const onKeyPress = useCallback(
-    (event: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
-      const key = event.nativeEvent as TextInputKeyPressEventData & {
+    (event: TextInputKeyPressEvent) => {
+      const key = event.nativeEvent as TextInputKeyPressEvent["nativeEvent"] & {
         shiftKey?: boolean;
         ctrlKey?: boolean;
         metaKey?: boolean;
@@ -222,7 +222,7 @@ export const PaneFind = forwardRef<PaneFindHandle, PaneFindProps>(function PaneF
       style={styles.widget}
       accessibilityLabel={t("paneFind.title")}
       {...(isWeb
-        ? {
+        ? ({
             onKeyDown: (event: KeyboardEvent) => {
               if (event.key === "Escape" && !isImeComposingKeyboardEvent(event.nativeEvent)) {
                 event.preventDefault();
@@ -230,7 +230,7 @@ export const PaneFind = forwardRef<PaneFindHandle, PaneFindProps>(function PaneF
                 onClose();
               }
             },
-          }
+          } as unknown as {})
         : {})}
     >
       {replace ? (

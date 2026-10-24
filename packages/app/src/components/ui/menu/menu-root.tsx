@@ -23,6 +23,7 @@ import {
   type MenuCompactMode,
 } from "./menu-context";
 import { isWeb } from "@/constants/platform";
+import type { ViewInstance } from "react-native";
 
 /**
  * Owns one menu's state. Wrap a trigger and a `MenuSurface` in it.
@@ -69,14 +70,14 @@ function assignRef<T>(ref: Ref<T> | undefined, value: T | null): void {
   Object.assign(ref, { current: value });
 }
 
-export const MenuTrigger = forwardRef<View, MenuTriggerProps>(function MenuTrigger(
+export const MenuTrigger = forwardRef<ViewInstance, MenuTriggerProps>(function MenuTrigger(
   { children, disabled, style, accessibilityState, ...props },
   forwardedRef,
 ): ReactElement {
   const ctx = useMenuContext("MenuTrigger");
 
   const handleTriggerRef = useCallback(
-    (node: View | null) => {
+    (node: ViewInstance | null) => {
       assignRef(ctx.triggerRef, node);
       assignRef(forwardedRef, node);
     },

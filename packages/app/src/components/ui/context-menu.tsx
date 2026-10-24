@@ -30,6 +30,7 @@ import {
   type MenuTriggerState,
 } from "@/components/ui/menu";
 import { PressHighlight } from "@/components/ui/press-highlight";
+import type { ViewInstance } from "react-native";
 
 /**
  * A menu opened by a long press or a right click, anchored to the point of the gesture rather
@@ -120,7 +121,7 @@ export function ContextMenuTrigger({
     enabledOnWeb?: boolean;
     longPressDelayMs?: number;
     onContextMenu?: (event: unknown) => void;
-    triggerRef?: Ref<View | null>;
+    triggerRef?: Ref<ViewInstance | null>;
     contextOnly?: boolean;
   }
 >): ReactElement {
@@ -147,7 +148,7 @@ export function ContextMenuTrigger({
   );
 
   const handleRef = useCallback(
-    (node: View | null) => {
+    (node: ViewInstance | null) => {
       assignRef(ctx.triggerRef, node);
       assignRef(triggerRef, node);
     },

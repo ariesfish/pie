@@ -7,12 +7,13 @@ import { render } from "@testing-library/react";
 import { Text, type View } from "react-native";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MenuRoot, MenuTrigger } from "./menu-root";
+import type { ViewInstance } from "react-native";
 
 beforeEach(() => vi.stubGlobal("React", React));
 
 describe("MenuTrigger", () => {
   it("forwards its rendered trigger to callers", () => {
-    const triggerRef = createRef<View>();
+    const triggerRef = createRef<ViewInstance>();
 
     render(
       <MenuRoot>

@@ -25,6 +25,7 @@ import {
   type ButtonControlSize,
 } from "@/components/ui/control-geometry";
 import type { Theme } from "@/styles/theme";
+import type { ViewInstance } from "react-native";
 
 type ButtonVariant = "default" | "secondary" | "outline" | "ghost" | "destructive";
 type ButtonSize = ButtonControlSize;
@@ -179,7 +180,7 @@ export function Button({
   ...props
 }: PropsWithChildren<
   Omit<PressableProps, "style"> & {
-    ref?: React.Ref<View>;
+    ref?: React.Ref<ViewInstance>;
     variant?: ButtonVariant;
     size?: ButtonSize;
     leftIcon?: LeftIcon;

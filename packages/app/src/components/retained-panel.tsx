@@ -50,10 +50,8 @@ export const RetainedPanel = memo(function RetainedPanel({
 	style,
 	testID,
 }: RetainedPanelProps) {
-	const visibleStyle = StyleSheet.compose<ViewStyle, ViewStyle, ViewStyle>(styles.root, style);
-	const panelStyle = active
-		? visibleStyle
-		: StyleSheet.compose<ViewStyle, ViewStyle, ViewStyle>(visibleStyle, styles.hidden);
+	const visibleStyle = StyleSheet.flatten([styles.root, style]);
+	const panelStyle = active ? visibleStyle : StyleSheet.flatten([visibleStyle, styles.hidden]);
 
 	return (
 		<RetainedPanelActivity active={active}>

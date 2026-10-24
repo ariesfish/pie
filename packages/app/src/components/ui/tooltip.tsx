@@ -31,6 +31,7 @@ import { useIsCompactFormFactor } from "@/constants/layout";
 import { FloatingSurface } from "@/components/ui/floating";
 import { isNative, isWeb } from "@/constants/platform";
 import { getOverlayRoot, OVERLAY_Z } from "@/lib/overlay-root";
+import type { ViewInstance } from "react-native";
 
 type Side = "top" | "bottom" | "left" | "right";
 type Align = "start" | "center" | "end";
@@ -45,7 +46,7 @@ interface Rect {
 interface TooltipContextValue {
   open: boolean;
   setOpen: (open: boolean) => void;
-  triggerRef: React.RefObject<View | null>;
+  triggerRef: React.RefObject<ViewInstance | null>;
   enabled: boolean;
   openOnPress: boolean;
   delayDuration: number;
@@ -121,7 +122,7 @@ function useControllableOpenState({
   return [value, setValue];
 }
 
-function measureElement(element: View): Promise<Rect> {
+function measureElement(element: ViewInstance): Promise<Rect> {
   return new Promise((resolve) => {
     element.measureInWindow((x, y, width, height) => {
       resolve({ x, y, width, height });
@@ -241,7 +242,7 @@ export function Tooltip({
   enabledOnDesktop?: boolean;
   enabledOnMobile?: boolean;
 }>): ReactElement {
-  const triggerRef = useRef<View>(null);
+  const triggerRef = useRef<ViewInstance>(null);
   const [isOpen, setIsOpen] = useControllableOpenState({
     open,
     defaultOpen,

@@ -32,6 +32,7 @@ import {
   useWebOverlayRegistration,
 } from "@/lib/overlay-root";
 import { ABSOLUTE_FILL } from "@/styles/absolute-fill";
+import type { ViewInstance } from "react-native";
 import {
   computePosition,
   getTransformOrigin,
@@ -119,7 +120,7 @@ export function useAnchoredPosition({
 }: {
   open: boolean;
   anchorRect: Rect | null;
-  anchorRef: React.RefObject<View | null>;
+  anchorRef: React.RefObject<ViewInstance | null>;
   side: Placement;
   align: Alignment;
   offset: number;
@@ -219,7 +220,7 @@ export interface AnchoredSurfaceProps {
   onClose: () => void;
   onExited?: () => void;
   anchorRect: Rect | null;
-  anchorRef: React.RefObject<View | null>;
+  anchorRef: React.RefObject<ViewInstance | null>;
   side?: Placement;
   align?: Alignment;
   offset?: number;
@@ -431,7 +432,7 @@ export function MenuOverlay({
 }: {
   visible: boolean;
   onClose: () => void;
-  restoreFocusRef?: RefObject<View | null>;
+  restoreFocusRef?: RefObject<ViewInstance | null>;
   children: ReactElement | null;
 }): ReactElement | null {
   const floatingLayer = useOverlayLayer("floating");

@@ -21,6 +21,7 @@ import {
 	type SendDisposition,
 } from "@/stores/connection-store";
 import { Button } from "@/components/ui/button";
+import type { TextInputInstance } from "react-native";
 
 type Delivery = "auto" | "steer" | "followUp";
 
@@ -33,7 +34,7 @@ export function Composer() {
 	const abortRun = useConnectionStore((s) => s.abortRun);
 	const clearError = useConnectionStore((s) => s.clearError);
 
-	const inputRef = useRef<TextInput | null>(null);
+	const inputRef = useRef<TextInputInstance | null>(null);
 	const submitRef = useRef<((delivery: Delivery) => void) | null>(null);
 	const [draft, setDraft] = useState("");
 	const [images, setImages] = useState<

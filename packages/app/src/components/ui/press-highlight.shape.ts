@@ -38,12 +38,12 @@ export function resolveHighlightCorners(
   if (!flattened) {
     return {};
   }
-  const corners: ViewStyle = {};
+  const corners: Record<string, unknown> = {};
   for (const property of CORNER_PROPERTIES) {
     const value = flattened[property];
     if (value !== undefined) {
       corners[property] = value;
     }
   }
-  return corners;
+  return corners as ViewStyle;
 }

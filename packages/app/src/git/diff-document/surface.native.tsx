@@ -65,6 +65,7 @@ import {
   type NativeTextLayout,
   type NativeHeaderTextLayout,
 } from "./text.native";
+import type { ScrollViewInstance } from "react-native";
 import type {
   DiffDocumentModel,
   DiffFileSection,
@@ -81,7 +82,7 @@ export function DiffSurface(props: DiffSurfaceProps) {
   const { t } = useTranslation();
   const [viewport, setViewport] = useState({ width: 0, height: 0 });
   const [fileWindowTop, setFileWindowTop] = useState(0);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const previousModelRef = useRef<ReturnType<typeof buildDiffDocumentModel> | null>(null);
   const reusableModelRef = useRef<{
     dependencies: readonly unknown[];

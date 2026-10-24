@@ -69,6 +69,11 @@ export const zhCN = {
 	timeline: {
 		title: "时间线",
 		empty: "暂无事件",
+		runStarted: "开始运行",
+		queue: "队列：{{count}}",
+		permission: "权限：{{name}}",
+		tool: "工具：{{name}}",
+		toolDone: "工具完成：{{name}}",
 	},
 	controls: {
 		modelDefault: "模型",

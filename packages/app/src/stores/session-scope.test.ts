@@ -65,6 +65,23 @@ describe("session-scoped event routing", () => {
 		expect(useConnectionStore.getState().deltaText).toBe("new");
 	});
 
+	it("records activity as typed events, not display strings", () => {
+		applyStoreEvent(event("session.run.started", { sessionId: "s1" }));
+		applyStoreEvent(
+			event("session.queue.changed", { sessionId: "s1", steering: ["a"], followUp: ["b"] }),
+		);
+		applyStoreEvent(
+			event("session.tool.started", { sessionId: "s1", toolCallId: "t1", toolName: "bash" }),
+		);
+
+		expect(useConnectionStore.getState().timeline).toMatchObject([
+			{ kind: "run" },
+			{ kind: "queue", count: 2 },
+			{ kind: "tool", name: "bash" },
+		]);
+		expect(useConnectionStore.getState().timeline[0]).not.toHaveProperty("text");
+	});
+
 	it("detaches the previous session before attaching the next one", async () => {
 		const request = vi.fn().mockResolvedValue({});
 		resetStore({ request });

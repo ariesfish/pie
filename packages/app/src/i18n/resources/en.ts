@@ -69,6 +69,11 @@ export const en = {
 	timeline: {
 		title: "Timeline",
 		empty: "No events yet",
+		runStarted: "Run started",
+		queue: "Queue: {{count}}",
+		permission: "Permission: {{name}}",
+		tool: "Tool: {{name}}",
+		toolDone: "Tool done: {{name}}",
 	},
 	controls: {
 		modelDefault: "Model",

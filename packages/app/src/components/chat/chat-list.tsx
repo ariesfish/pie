@@ -5,12 +5,12 @@
 // the bottom-anchor transport (maintainVisibleContentPosition).
 // Paseo's view.tsx (fork/outline/tool-details) is a later W4 batch; the
 // weave here is the same skeleton at pie's vocabulary.
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import { Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
-import { deriveTimeline, useConnectionStore } from "@/stores/connection-store";
+import { useConnectionStore, useSessionTimeline } from "@/stores/connection-store";
 import { StreamItemRow } from "@/components/chat/stream-row";
 import { PermissionCard } from "@/components/chat/permission-card";
 import { PermissionBatchBar } from "@/components/chat/permission-batch-bar";
@@ -22,9 +22,21 @@ import { resolveStreamRenderStrategy } from "@/agent-stream/strategy-resolver";
 import type { StreamViewportHandle } from "@/agent-stream/strategy";
 import { DEFAULT_CONTENT_MAX_WIDTH } from "@/styles/theme";
 
+/**
+ * History pagination is parked: `session.entries` returns the whole snapshot
+ * and the daemon has no cursor yet. The viewport keeps its state machine, but
+ * these inputs keep it dormant. See `agent-stream/README.md`.
+ */
+const PARKED_HISTORY = {
+	onNearHistoryStart: () => false,
+	isLoadingOlderHistory: false,
+	hasOlderHistory: false,
+	olderHistoryProgressKey: null,
+} as const;
+
 export function ChatList() {
 	const { t } = useTranslation();
-	const revision = useConnectionStore((s) => s.revision);
+	const timeline = useSessionTimeline();
 	const streaming = useConnectionStore((s) => s.streaming);
 	const deltaText = useConnectionStore((s) => s.deltaText);
 	const deltaKind = useConnectionStore((s) => s.deltaKind);
@@ -33,7 +45,6 @@ export function ChatList() {
 	const toolCalls = useConnectionStore((s) => s.toolCalls);
 	const hasPermission = useConnectionStore((s) => s.permissions.length > 0);
 	const permissions = useConnectionStore((s) => s.permissions);
-	const [nearBottom, setNearBottom] = useState(true);
 	const viewportRef = useRef<StreamViewportHandle | null>(null);
 
 	const sessionIdNow = useConnectionStore.getState().sessionId;
@@ -44,12 +55,12 @@ export function ChatList() {
 	const stream = useMemo(
 		() =>
 			buildStreamItems({
-				entries: deriveTimeline(revision),
+				entries: timeline,
 				deltaText,
 				deltaKind,
 				toolCalls,
 			}),
-		[revision, deltaText, deltaKind, toolCalls],
+		[timeline, deltaText, deltaKind, toolCalls],
 	);
 
 	const model = useMemo(
@@ -65,10 +76,8 @@ export function ChatList() {
 		[stream, streaming],
 	);
 
-	// [pie] W4b: both platforms run the inverted FlatList strategy — the
-	// dedicated forward web viewport (paseo strategy-web.tsx) is a later
-	// batch; RN-web honors `inverted` and degrades
-	// maintainVisibleContentPosition to a no-op.
+	// Both platforms use their real viewport strategy: web renders the
+	// forward DOM viewport, native the inverted FlatList.
 	const strategy = useMemo(
 		() =>
 			resolveStreamRenderStrategy({
@@ -143,18 +152,14 @@ export function ChatList() {
 				viewportRef,
 				routeBottomAnchorRequest: null,
 				isAuthoritativeHistoryReady: true,
-				onNearBottomChange: (value) => setNearBottom(value),
-				onNearHistoryStart: () => false,
-				isLoadingOlderHistory: false,
-				hasOlderHistory: false,
-				olderHistoryProgressKey: null,
+				onNearBottomChange: () => {},
+				...PARKED_HISTORY,
 				scrollEnabled: true,
 				listStyle: styles.list,
 				baseListContentContainerStyle: styles.content,
 				forwardListContentContainerStyle: styles.content,
 				contentMaxWidth: DEFAULT_CONTENT_MAX_WIDTH,
 			})}
-			{!nearBottom ? null : null}
 		</View>
 	);
 }

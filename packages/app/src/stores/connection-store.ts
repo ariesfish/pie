@@ -2,6 +2,7 @@
 // Data sources are Pie-specific: PieConnection + SessionTreeStore + the pie
 // protocol event stream. The tree instance mutates in place, so consumers
 // read `revision` to re-derive the timeline.
+import { useMemo } from "react";
 import { create } from "zustand";
 import { Platform } from "react-native";
 
@@ -26,6 +27,18 @@ const LIST_LEVEL_EVENTS = new Set<string>(["session.summary.updated", "session.r
 
 const tree = new SessionTreeStore();
 
+/** One right-rail activity record; labels live in the UI, not the store. */
+export type ActivityKind = "run" | "tool" | "toolDone" | "queue" | "permission";
+
+export interface ActivityItem {
+	ts: number;
+	kind: ActivityKind;
+	/** Tool or permission name, when the event carries one. */
+	name?: string;
+	/** Queue depth (steering + follow-up). */
+	count?: number;
+}
+
 /** Live tool-call record (event-sourced from session.tool.*). */
 export interface ToolCallRecord {
 	toolCallId: string;
@@ -35,10 +48,6 @@ export interface ToolCallRecord {
 	args?: Record<string, unknown>;
 	result?: unknown;
 	durationMs?: number;
-}
-
-export function getSharedTree(): SessionTreeStore {
-	return tree;
 }
 
 interface ConnectionState {
@@ -61,7 +70,7 @@ interface ConnectionState {
 	pendingModel: ModelRef | null;
 	pendingThinking: ThinkingLevel | null;
 	/** Right-rail event timeline (ring buffer). */
-	timeline: Array<{ ts: number; kind: string; text: string }>;
+	timeline: ActivityItem[];
 	/** Tool calls keyed by toolCallId; nested calls link via parentToolCallId. */
 	toolCalls: Record<string, ToolCallRecord>;
 	/** Pending permission requests for the active session (T-014, batchable);
@@ -381,9 +390,9 @@ export function applyStoreEvent(
 		return;
 	}
 
-	const timelineEvent = (kind: string, text: string) => {
+	const pushActivity = (item: Omit<ActivityItem, "ts">) => {
 		useConnectionStore.setState((st) => ({
-			timeline: [...st.timeline, { ts: Date.now(), kind, text }].slice(-250),
+			timeline: [...st.timeline, { ts: Date.now(), ...item }].slice(-250),
 		}));
 	};
 	switch (event.ev) {
@@ -410,7 +419,7 @@ export function applyStoreEvent(
 			useConnectionStore.setState((s) => ({ revision: s.revision + 1 }));
 			break;
 		case "session.run.started":
-			timelineEvent("run", "run started");
+			pushActivity({ kind: "run" });
 			useConnectionStore.setState({ streaming: true, deltaText: "", deltaKind: null });
 			break;
 		case "session.partial.delta":
@@ -423,7 +432,7 @@ export function applyStoreEvent(
 			useConnectionStore.setState({ streaming: false, deltaText: "", deltaKind: null });
 			break;
 		case "session.queue.changed":
-			timelineEvent("queue", `queue: ${event.data.steering.length + event.data.followUp.length}`);
+			pushActivity({ kind: "queue", count: event.data.steering.length + event.data.followUp.length });
 			useConnectionStore.setState({
 				queue: { steering: event.data.steering, followUp: event.data.followUp },
 			});
@@ -438,7 +447,7 @@ export function applyStoreEvent(
 			const { sessionId, requestId, toolName, argsPreview, annotations, reason, timeoutMs } = event.data;
 			// Only the active session's requests surface (pie renders one chat at a time).
 			if (sessionId !== useConnectionStore.getState().sessionId) break;
-			timelineEvent("permission", `permission: ${toolName}`);
+			pushActivity({ kind: "permission", name: toolName });
 			useConnectionStore.setState((st) => ({
 				permissions: [...st.permissions, { sessionId, requestId, toolName, argsPreview, annotations, reason, timeoutMs }],
 			}));
@@ -454,7 +463,7 @@ export function applyStoreEvent(
 			break;
 		}
 		case "session.tool.started": { // timeline
-			timelineEvent("tool", `tool: ${event.data.toolName ?? "…"}`);
+			pushActivity({ kind: "tool", name: event.data.toolName ?? "…" });
 			const { toolCallId, toolName, parentToolCallId, args } = event.data;
 			if (typeof toolCallId !== "string") break;
 			useConnectionStore.setState((st) => ({
@@ -474,7 +483,7 @@ export function applyStoreEvent(
 		case "session.tool.updated":
 			break;
 		case "session.tool.ended": { // timeline
-			timelineEvent("tool", `tool done: ${event.data.toolName ?? "…"}`);
+			pushActivity({ kind: "toolDone", name: event.data.toolName ?? "…" });
 			const { toolCallId, result, isError, durationMs } = event.data;
 			if (typeof toolCallId !== "string") break;
 			useConnectionStore.setState((st) => {
@@ -512,13 +521,12 @@ export function applyStoreEvent(
 }
 
 /**
- * Timeline derived from the shared tree; keyed to `revision` by callers.
- * Renders user/assistant messages only; other entry kinds join in P2b
- * (tool cards, extended dialogs and the typed-widget renderer).
+ * The session timeline derived from the shared tree. The tree mutates in
+ * place, so `revision` is the cache key: it changes on every snapshot/append.
  */
-export function deriveTimeline(revision: number): SessionEntry[] {
-	void revision; // identity param: callers pass the store's revision to memoize
-	return tree.timeline();
+export function useSessionTimeline(): SessionEntry[] {
+	const revision = useConnectionStore((s) => s.revision);
+	return useMemo(() => tree.timeline(), [revision]);
 }
 
 export const workspaceApplyFsChanged = useWorkspaceStore.getState().applyFsChanged;

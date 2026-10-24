@@ -3,14 +3,41 @@
 // Paseo's right rail hosts timeline/tool-call transcripts; Pie logs the event
 // stream recorded by connection-store (applyStoreEvent taps).
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { Activity, Hammer, MessageSquare, Trash2 } from "lucide-react-native";
+import { Activity, Hammer, MessageSquare, ShieldCheck, Trash2 } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
 import { relativeTimeLabel } from "@/lib/relative-time";
-import { useConnectionStore } from "@/stores/connection-store";
+import {
+	type ActivityItem,
+	useConnectionStore,
+} from "@/stores/connection-store";
 
-const KIND_ICON = { run: MessageSquare, tool: Hammer, queue: Activity } as const;
+const KIND_ICON = {
+	run: MessageSquare,
+	tool: Hammer,
+	toolDone: Hammer,
+	queue: Activity,
+	permission: ShieldCheck,
+} as const;
+
+function activityLabel(
+	t: (key: string, options?: Record<string, unknown>) => string,
+	item: ActivityItem,
+): string {
+	switch (item.kind) {
+		case "run":
+			return t("timeline.runStarted");
+		case "queue":
+			return t("timeline.queue", { count: item.count ?? 0 });
+		case "permission":
+			return t("timeline.permission", { name: item.name ?? "…" });
+		case "tool":
+			return t("timeline.tool", { name: item.name ?? "…" });
+		case "toolDone":
+			return t("timeline.toolDone", { name: item.name ?? "…" });
+	}
+}
 
 export function RightRail() {
 	const { t } = useTranslation();
@@ -35,12 +62,12 @@ export function RightRail() {
 						.slice()
 						.reverse()
 						.map((item, i) => {
-							const Icon = KIND_ICON[item.kind as keyof typeof KIND_ICON] ?? Activity;
+							const Icon = KIND_ICON[item.kind];
 							return (
 								<View key={`${item.ts}-${i}`} style={styles.row}>
 									<Icon size={12} color={theme.colors.foregroundExtraMuted} strokeWidth={1.5} />
 									<Text style={styles.text} numberOfLines={1}>
-										{item.text}
+										{activityLabel(t, item)}
 									</Text>
 									<Text style={styles.time}>
 										{relativeTimeLabel(t, new Date(item.ts).toISOString())}

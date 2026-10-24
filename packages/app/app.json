@@ -7,7 +7,11 @@
 		"orientation": "portrait",
 		"userInterfaceStyle": "automatic",
 		"backgroundColor": "#101216",
-		"platforms": ["ios", "android", "web"],
+		"platforms": [
+			"ios",
+			"android",
+			"web"
+		],
 		"ios": {
 			"supportsTablet": true,
 			"bundleIdentifier": "dev.pie.app"
@@ -23,6 +27,10 @@
 		"experiments": {
 			"typedRoutes": true,
 			"reactCompiler": true
-		}
+		},
+		"plugins": [
+			"expo-router",
+			"expo-status-bar"
+		]
 	}
 }

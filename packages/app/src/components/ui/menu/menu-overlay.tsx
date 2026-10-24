@@ -31,6 +31,7 @@ import {
   useOverlayLayer,
   useWebOverlayRegistration,
 } from "@/lib/overlay-root";
+import { ABSOLUTE_FILL } from "@/styles/absolute-fill";
 import {
   computePosition,
   getTransformOrigin,
@@ -528,7 +529,7 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   overlayWeb: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     pointerEvents: "auto" as const,
   },
   backdrop: {

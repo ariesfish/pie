@@ -1,6 +1,6 @@
 // Ported from getpaseo/paseo (Apache-2.0) — packages/app/src/navigation/themed-stack.tsx
 // (Pie subset: unistyles-driven background color, no appearance-boundary remount.)
-import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
+import type { NativeStackNavigationOptions } from "expo-router";
 import { Stack } from "expo-router";
 import { useMemo, type ReactElement, type ReactNode } from "react";
 import { withUnistyles } from "react-native-unistyles";

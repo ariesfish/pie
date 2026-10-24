@@ -11,6 +11,7 @@ import { WindowChromeRootRegion } from "@/utils/desktop-window";
 import { useTabsStore, type MobilePanelView } from "@/stores/tabs-store";
 import { getMobilePanelFrame } from "./model";
 import { useIsMobilePanelActive, useMobilePanelsRuntime } from "./provider";
+import { ABSOLUTE_FILL } from "@/styles/absolute-fill";
 
 type OverlayPanel = Exclude<MobilePanelView, "home">;
 
@@ -98,7 +99,7 @@ export function MobilePanelOverlay({
             importantForAccessibility="no-hide-descendants"
             onPress={showMobileHome}
             pointerEvents={isOpen ? "auto" : "none"}
-            style={StyleSheet.absoluteFillObject}
+            style={ABSOLUTE_FILL}
             testID={isOpen ? `${panel}-backdrop` : undefined}
           >
             <Animated.View pointerEvents="none" style={backdropStyle} />
@@ -118,11 +119,11 @@ export function MobilePanelOverlay({
 // native node after Fabric commits.
 const styles = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     zIndex: 1,
   },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: lightTheme.colors.scrim,
   },
   panel: {

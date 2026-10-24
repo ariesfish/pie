@@ -28,6 +28,7 @@ import { isWeb } from "@/constants/platform";
 import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AdaptiveTextInput } from "@/components/adaptive-text-input";
+import { ABSOLUTE_FILL } from "@/styles/absolute-fill";
 export { AdaptiveTextInput, type AdaptiveTextInputProps } from "@/components/adaptive-text-input";
 
 // Horizontal indent token shared by the sheet header (title, back arrow,
@@ -67,7 +68,7 @@ export interface SheetHeader {
 }
 
 const SCROLL_CONTENT_GROW = { flexGrow: 1 };
-const ABSOLUTE_FILL_STYLE = { ...StyleSheet.absoluteFillObject };
+const ABSOLUTE_FILL_STYLE = { ...ABSOLUTE_FILL };
 const NATIVE_DIALOG_SNAP_POINTS = ["100%"];
 
 const styles = StyleSheet.create((theme) => ({
@@ -78,7 +79,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: "transparent",
   },
   desktopOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     backgroundColor: theme.colors.scrim,
     justifyContent: "center",
     alignItems: "center",

@@ -5,6 +5,7 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { resolveHighlightCorners } from "./press-highlight.shape";
 import type { PressHighlightProps } from "./press-highlight.types";
+import { ABSOLUTE_FILL } from "@/styles/absolute-fill";
 
 export const PressHighlight = forwardRef<View, PressHighlightProps>(function PressHighlight(
   { children, disabled, highlightStyle, ...props },
@@ -67,9 +68,9 @@ export const PressHighlight = forwardRef<View, PressHighlightProps>(function Pre
 
 const styles = StyleSheet.create({
   highlight: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
   },
   highlightFill: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
   },
 });

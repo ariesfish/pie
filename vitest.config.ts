@@ -53,6 +53,13 @@ export default defineConfig({
 	},
 	test: {
 		exclude: [...configDefaults.exclude, "**/dist/**"],
+		server: {
+			deps: {
+				// Worklets 0.10 ships extensionless ESM imports; inline them so
+				// Vite's resolver handles the package instead of native Node.
+				inline: ["react-native-worklets", "react-native-reanimated"],
+			},
+		},
 		// React Native bundler globals (paseo vitest.config.ts define block).
 		define: {
 			__DEV__: "false",

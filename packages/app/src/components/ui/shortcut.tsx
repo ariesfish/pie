@@ -6,6 +6,7 @@ import { useKeyboardShortcutsAvailable } from "@/keyboard/availability";
 import { normalizeDisplayChord } from "@/components/ui/normalize-display-chord";
 import { formatShortcut, type ShortcutKey } from "@/utils/format-shortcut";
 import { getShortcutOs } from "@/utils/shortcut-platform";
+import { ABSOLUTE_FILL } from "@/styles/absolute-fill";
 
 export function Shortcut({
   keys,
@@ -69,7 +70,7 @@ const styles = StyleSheet.create((theme) => ({
     borderWidth: 0,
   },
   badgeBackground: {
-    ...StyleSheet.absoluteFillObject,
+    ...ABSOLUTE_FILL,
     borderRadius: theme.borderRadius.md,
     backgroundColor: theme.colors.surface3,
     opacity: theme.opacity[50],

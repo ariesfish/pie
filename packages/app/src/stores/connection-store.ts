@@ -17,6 +17,13 @@ import { useWorkspaceStore } from "./workspace-store";
 export type ConnectionStatus = "idle" | "connecting" | "connected" | "failed" | "disconnected";
 export type SendDisposition = "queued" | "busy-confirmed" | "rejected";
 
+/**
+ * Events that describe the sidebar/list rather than the open transcript. They
+ * arrive for sessions this client is not attached to and must not be filtered
+ * by the active session id.
+ */
+const LIST_LEVEL_EVENTS = new Set<string>(["session.summary.updated", "session.renamed"]);
+
 const tree = new SessionTreeStore();
 
 /** Live tool-call record (event-sourced from session.tool.*). */
@@ -163,6 +170,10 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 			const thinkingLevel = preset.thinkingLevel ?? get().pendingThinking ?? undefined;
 			const sessionCwd = preset.projectPath ?? workspace;
 			const created = await conn.request("session.create", { workspaceId: sessionCwd, ...(model ? { model } : {}), ...(thinkingLevel ? { thinkingLevel } : {}) });
+			const previousSessionId = get().sessionId;
+			if (previousSessionId && previousSessionId !== created.sessionId) {
+				await conn.request("session.detach", { sessionId: previousSessionId }).catch(() => {});
+			}
 			set({ sessionId: created.sessionId });
 			void get().applySessionPreset(created.sessionId);
 			await conn.request("session.attach", { sessionId: created.sessionId });
@@ -318,6 +329,13 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 	switchSession: async (sessionId, sessionPath) => {
 		const conn = get().conn;
 		if (!conn) return;
+		// Detach the previous session before attaching the next one. Without
+		// this, the daemon keeps the old subscription and its events keep
+		// flowing into the shared tree after the switch.
+		const previousSessionId = get().sessionId;
+		if (previousSessionId && previousSessionId !== sessionId) {
+			await conn.request("session.detach", { sessionId: previousSessionId }).catch(() => {});
+		}
 		// Reset single-session surfaces; the attach snapshot rebuilds the tree.
 		// The model catalog & pending picks are workspace-level and survive the
 		// switch (they are re-applied on session.create via applySessionPreset).
@@ -347,6 +365,22 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 export function applyStoreEvent(
 	event: Parameters<NonNullable<Parameters<PieConnection["onEvent"]>[0]>>[0],
 ): void {
+	// Session-scoped events carry their sessionId (protocol/events.ts). Drop
+	// events from a session this client is no longer showing; list-level
+	// updates still apply so the sidebar stays live.
+	const eventSessionId =
+		event.ev === "session.snapshot"
+			? event.data.snapshot.sessionId
+			: (event.data as { sessionId?: string }).sessionId;
+	const activeSessionId = useConnectionStore.getState().sessionId;
+	if (
+		eventSessionId &&
+		eventSessionId !== activeSessionId &&
+		!LIST_LEVEL_EVENTS.has(event.ev)
+	) {
+		return;
+	}
+
 	const timelineEvent = (kind: string, text: string) => {
 		useConnectionStore.setState((st) => ({
 			timeline: [...st.timeline, { ts: Date.now(), kind, text }].slice(-250),

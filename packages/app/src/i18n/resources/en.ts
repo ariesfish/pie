@@ -207,6 +207,8 @@ export const en = {
 		binary: "binary",
 		truncated: "truncated",
 		editFile: "Edit file",
+		unsaved: "unsaved",
+		saving: "saving",
 		saveFile: "Save file",
 		stopEditing: "Stop editing",
 	},

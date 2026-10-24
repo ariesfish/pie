@@ -17,7 +17,6 @@ import { ArrowLeft, Check, FileText, Folder, Pencil } from "lucide-react-native"
 import { useSyncExternalStore } from "react";
 import { useConnectionStore } from "@/stores/connection-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
-import { CodeViewer } from "@/components/files/code-viewer";
 import { FileSourceView } from "@/file-pane/source/view";
 import { editorVisualTheme } from "@/file-pane/visual-theme";
 import { FileMarkdownPreview } from "@/file-pane/markdown-preview";
@@ -40,12 +39,6 @@ export function FilesPanel() {
 	const openFilePath = useWorkspaceStore((s) => s.openFilePath);
 	const fileLoading = useWorkspaceStore((s) => s.fileLoading);
 	const closeFile = useWorkspaceStore((s) => s.closeFile);
-	const dirty = useWorkspaceStore((s) => s.dirty);
-	const saving = useWorkspaceStore((s) => s.saving);
-	const editedContent = useWorkspaceStore((s) => s.editedContent);
-	const setEdited = useWorkspaceStore((s) => s.setEdited);
-	const clearEdits = useWorkspaceStore((s) => s.clearEdits);
-	const saveFile = useWorkspaceStore((s) => s.saveFile);
 	const [editing, setEditing] = useState(false);
 	const conn = useConnectionStore((s) => s.conn);
 	// W3b-4: while editing, the ported FileEditorModel owns the buffer —
@@ -67,12 +60,18 @@ export function FilesPanel() {
 		if (!node || (node.fetchedAt === 0 && !node.loading)) void listDir(dir);
 	}, [node, dir, listDir]);
 
+	// A file switch leaves edit mode; the editor model is per-path.
+	useEffect(() => {
+		setEditing(false);
+	}, [openFilePath]);
+
 	const isMarkdown = /\.(md|markdown|mdx)$/i.test(openFilePath ?? "");
-	const viewerText = editedContent ?? openFile?.text ?? "";
-	// [W3b-4] while the ported editor owns the buffer, its snapshot drives
-	// the header chrome (dirty flag / save affordances).
+	const viewerText = openFile?.text ?? "";
+	// [W3b-4] the ported FileEditorModel is the only editor buffer; its
+	// snapshot drives the header chrome and the CAS save path.
 	const editorActive = editing && editor.model != null;
-	const headerDirty = editorActive ? editorSnapshot.modified : dirty;
+	const headerDirty = editorActive && editorSnapshot.modified;
+	const saving = editorActive && editorSnapshot.status === "saving";
 
 	if (openFile && openFilePath) {
 		return (
@@ -84,18 +83,15 @@ export function FilesPanel() {
 					<Text style={styles.pathText} numberOfLines={1}>
 						{openFilePath}
 						{openFile.truncated ? ` · ${t("files.truncated")}` : ""}
-						{headerDirty ? " · unsaved" : ""}
-						{editorActive && editorSnapshot.status === "saving" ? " · saving" : ""}
+						{headerDirty ? ` · ${t("files.unsaved")}` : ""}
+						{saving ? ` · ${t("files.saving")}` : ""}
 					</Text>
 					{textBadge(openFile.binary, t)}
 					{openFile.text != null && !editing && (
 						<Pressable
 							style={styles.backBtn}
 							accessibilityLabel={t("files.editFile")}
-							onPress={() => {
-								setEditing(true);
-								setEdited(openFile.text ?? "");
-							}}
+							onPress={() => setEditing(true)}
 							hitSlop={8}
 						>
 							<Pencil size={15} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
@@ -107,10 +103,7 @@ export function FilesPanel() {
 								style={[styles.backBtn, headerDirty && styles.saveBtn]}
 								disabled={!headerDirty || saving}
 								accessibilityLabel={t("files.saveFile")}
-								onPress={() => {
-									if (editorActive) void editor.model?.save();
-									else if (editedContent != null) void saveFile(editedContent);
-								}}
+								onPress={() => void editor.model?.save()}
 								hitSlop={8}
 							>
 								<Check
@@ -122,10 +115,7 @@ export function FilesPanel() {
 							<Pressable
 								style={styles.backBtn}
 								accessibilityLabel={t("files.stopEditing")}
-								onPress={() => {
-									setEditing(false);
-									clearEdits();
-								}}
+								onPress={() => setEditing(false)}
 								hitSlop={8}
 							>
 								<FileText size={15} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
@@ -167,12 +157,9 @@ export function FilesPanel() {
 						/>
 					</>
 				) : editing ? (
-					<CodeViewer
-						content={viewerText}
-						filename={openFilePath}
-						editable
-						onChangeText={(text) => setEdited(text)}
-					/>
+					<View style={styles.center}>
+						<ActivityIndicator color={theme.colors.foregroundMuted} />
+					</View>
 				) : (
 					<FileSourceView
 						content={viewerText}

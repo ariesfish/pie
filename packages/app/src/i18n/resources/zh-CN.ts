@@ -207,6 +207,8 @@ export const zhCN = {
 		binary: "二进制",
 		truncated: "已截断",
 		editFile: "编辑文件",
+		unsaved: "未保存",
+		saving: "保存中",
 		saveFile: "保存文件",
 		stopEditing: "停止编辑",
 	},

@@ -30,11 +30,6 @@ interface WorkspaceState {
 	openFilePath: string | null;
 	fileLoading: boolean;
 
-	/** Editor buffer when editing (null = viewing). */
-	editedContent: string | null;
-	dirty: boolean;
-	saving: boolean;
-
 	gitStatus: GitStatusResult | null;
 	gitLoading: boolean;
 	gitError: string | null;
@@ -47,10 +42,6 @@ interface WorkspaceState {
 	listDir: (path: string) => Promise<void>;
 	openPath: (path: string) => Promise<void>;
 	closeFile: () => void;
-	/** Save the edited buffer via fs.write (atomic on the daemon side). */
-	saveFile: (content: string) => Promise<void>;
-	setEdited: (content: string) => void;
-	clearEdits: () => void;
 	refreshStatus: () => Promise<void>;
 	loadDiff: (path?: string) => Promise<void>;
 	/** Handle one fs watcher event batch. */
@@ -65,9 +56,6 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 	openFile: null,
 	openFilePath: null,
 	fileLoading: false,
-	editedContent: null,
-	dirty: false,
-	saving: false,
 
 	gitStatus: null,
 	gitLoading: false,
@@ -140,7 +128,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 	},
 
 	closeFile: () =>
-		set({ openFile: null, openFilePath: null, fileLoading: false, editedContent: null, dirty: false }),
+		set({ openFile: null, openFilePath: null, fileLoading: false }),
 
 	refreshStatus: async () => {
 		const { workspaceId, conn } = asConn(get);
@@ -187,7 +175,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 				Object.entries(s.dirs).map(([k, v]) => [k, { ...v, fetchedAt: 0 }]),
 			),
 		});
-		if (touchesOpenFile && !s.dirty) {
+		if (touchesOpenFile) {
 			void get().openPath(s.openFilePath!);
 		}
 		if (s.gitStatus) {
@@ -198,22 +186,6 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 		}
 	},
 
-	saveFile: async (content) => {
-		const { workspaceId, openFilePath, conn } = asConn(get as never as () => WorkspaceState);
-		if (!workspaceId || !openFilePath) return;
-		set({ saving: true });
-		try {
-			await conn.request("fs.write", { workspaceId, path: openFilePath, content });
-			set({ saving: false, dirty: false, editedContent: null });
-			void get().refreshStatus();
-		} catch (err) {
-			set({ saving: false });
-			useConnectionStore.setState({ error: errText(err) });
-		}
-	},
-
-	setEdited: (content) => set({ editedContent: content, dirty: true }),
-	clearEdits: () => set({ editedContent: null, dirty: false }),
 }));
 
 function asConn(get: () => WorkspaceState): WorkspaceState & {

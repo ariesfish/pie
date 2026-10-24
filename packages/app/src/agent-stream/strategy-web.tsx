@@ -46,7 +46,6 @@ import {
 } from "./history-start-settle-scheduler";
 import { useChatFindSelectedMessageId } from "./chat-find-bridge.web";
 import { getStreamItemMessageId } from "./presentation-lite";
-import { useScrollToMessage } from "./use-scroll-to-message.web";
 
 interface CreateWebStreamStrategyInput {
   isMobileBreakpoint: boolean;
@@ -301,7 +300,6 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
     routeBottomAnchorRequest,
     isAuthoritativeHistoryReady,
     onNearBottomChange,
-    onReadingPositionChange,
     onNearHistoryStart,
     isLoadingOlderHistory,
     hasOlderHistory,
@@ -480,9 +478,7 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
       distanceFromHistoryStart: scrollContainer.scrollTop,
       hasOlderHistory,
       isLoadingOlderHistory,
-      // An explicit jump owns the landing position. Revealing another local
-      // page here changes the virtual index before the target has mounted.
-      isReady: historyStartReadyRef.current && bottomAnchorSettled && !isJumpSettling(),
+      isReady: historyStartReadyRef.current && bottomAnchorSettled,
       progressKey: olderHistoryProgressKey,
     };
   });
@@ -686,24 +682,6 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
     scheduleStickToBottom();
   }, [cancelPendingStickToBottom, scheduleStickToBottom, scrollMessagesToBottom]);
 
-  // Rows are laid out in DOM order, virtualized block first, so the first row whose bottom
-  // clears the reading line is the one the reader is looking at.
-  const reportReadingPosition = useStableEvent(() => {
-    if (!isActiveRef.current) {
-      return;
-    }
-    if (!onReadingPositionChange) {
-      return;
-    }
-    const scrollContainer = scrollContainerRef.current;
-    const contentNode = contentRef.current;
-    if (!scrollContainer || !contentNode) {
-      onReadingPositionChange(null);
-      return;
-    }
-    onReadingPositionChange(readingAnchor.getReadingRowId(scrollContainer.scrollTop));
-  });
-
   const updateScrollMetrics = useCallback(() => {
     if (!isActiveRef.current) {
       return;
@@ -714,18 +692,7 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
       return;
     }
     syncNearBottom(scrollContainer, onNearBottomChange);
-    reportReadingPosition();
-  }, [onNearBottomChange, reportReadingPosition]);
-
-  const { isJumpSettling, scrollToMessage } = useScrollToMessage({
-    active: isActive,
-    scrollContainerRef,
-    rowVirtualizer,
-    historyVirtualized: segments.historyVirtualized,
-    cancelPendingStickToBottom,
-    setFollowOutput,
-    onNearBottomChange,
-  });
+  }, [onNearBottomChange]);
 
   const reconcileReadingPosition = useStableEvent(() => {
     const container = scrollContainerRef.current;
@@ -743,7 +710,7 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
         return { id, top: bounds.top - viewportTop + scrollTop, height: bounds.height };
       },
     );
-    const shouldAnchor = !followOutputRef.current && !isJumpSettling();
+    const shouldAnchor = !followOutputRef.current;
     if (!shouldAnchor) readingAnchor.reset();
     const correctedTop = readingAnchor.reconcile(container.scrollTop, rows);
     if (!shouldAnchor) {
@@ -800,21 +767,20 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
       (mouseGesture?.kind === "autoscroll" && mouseGesture.hasUpwardEvidence) ||
       window.performance.now() < upwardInputEvidenceUntilRef.current;
 
-    if (!followOutputRef.current && isAtBottom && scrolledDown && !isJumpSettling()) {
+    if (!followOutputRef.current && isAtBottom && scrolledDown) {
       setFollowOutput(true);
     } else if (followOutputRef.current && scrolledUp && hasUpwardInputEvidence) {
       stopFollowingOutputFromUserIntent();
     }
 
     lastKnownScrollTopRef.current = currentScrollTop;
-    if (!followOutputRef.current && !isJumpSettling() && (scrolledUp || scrolledDown)) {
+    if (!followOutputRef.current && (scrolledUp || scrolledDown)) {
       readingAnchor.scroll(currentScrollTop);
     }
     updateScrollMetrics();
     evaluateHistoryStart();
   }, [
     evaluateHistoryStart,
-    isJumpSettling,
     readingAnchor,
     stopFollowingOutputFromUserIntent,
     updateScrollMetrics,
@@ -962,7 +928,6 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
       const nextGeometry = getObservedViewportGeometry(scrollContainer);
       if (pendingResumeGeometryCheckRef.current) {
         pendingResumeGeometryCheckRef.current = false;
-        reportReadingPosition();
         const previousGeometry = lastObservedViewportGeometryRef.current;
         lastObservedViewportGeometryRef.current = nextGeometry;
         if (previousGeometry && observedViewportGeometriesEqual(previousGeometry, nextGeometry)) {
@@ -993,7 +958,6 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
     reconcileReadingPosition,
     evaluateHistoryStart,
     isActive,
-    reportReadingPosition,
     scheduleHistoryStartPrependSettle,
     scheduleStickToBottom,
     updateScrollMetrics,
@@ -1164,7 +1128,6 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
         }
         scheduleStickToBottom();
       },
-      scrollToMessage,
     };
     viewportRef.current = handle;
     return () => {
@@ -1177,7 +1140,6 @@ function WebStreamViewport(props: StreamRenderInput & { isMobileBreakpoint: bool
     cancelPendingStickToBottom,
     forceStickToBottom,
     scheduleStickToBottom,
-    scrollToMessage,
     viewportRef,
   ]);
 

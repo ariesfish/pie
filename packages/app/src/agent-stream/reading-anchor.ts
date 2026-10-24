@@ -19,8 +19,6 @@ export function createReadingAnchor() {
     scrollTop + (anchor && row?.id === anchor.id ? row.top - anchor.top : 0);
   return {
     getRowId: () => anchor?.id ?? null,
-    getReadingRowId: (scrollTop: number) =>
-      readingRow(scrollTop)?.id ?? geometry.at(-1)?.id ?? null,
     project,
     reset() {
       anchor = null;

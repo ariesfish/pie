@@ -42,20 +42,9 @@ export interface StreamEdgeSlotProps {
   ListFooterComponentStyle?: StyleProp<ViewStyle>;
 }
 
-/**
- * A caller that landed on one occurrence inside the message owns where the viewport
- * settles. It resolved the occurrence against a specific row already, so it takes no
- * row here and returns null once that row is gone.
- */
-export interface ScrollToMessageOccurrence {
-  signal: AbortSignal;
-  targetTop(): number | null;
-}
-
 export interface StreamViewportHandle {
   scrollToBottom: (reason?: BottomAnchorLocalRequest["reason"]) => void;
   prepareForViewportChange: () => void;
-  scrollToMessage?: (messageId: string, occurrence?: ScrollToMessageOccurrence) => void;
 }
 
 export interface StreamSegmentRenderers {
@@ -83,9 +72,6 @@ export interface StreamRenderInput {
   routeBottomAnchorRequest: BottomAnchorRouteRequest | null;
   isAuthoritativeHistoryReady: boolean;
   onNearBottomChange: (value: boolean) => void;
-  // The history row under the top of the viewport, for surfaces that mark where the reader
-  // is in the transcript. Only the web viewport measures it today.
-  onReadingPositionChange?: (rowId: string | null) => void;
   onNearHistoryStart: () => boolean | Promise<boolean>;
   isLoadingOlderHistory: boolean;
   hasOlderHistory: boolean;

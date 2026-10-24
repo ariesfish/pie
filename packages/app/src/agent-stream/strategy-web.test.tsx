@@ -491,51 +491,6 @@ describe("createWebStreamStrategy", () => {
     expect(unmounted).not.toHaveBeenCalled();
   });
 
-  it("reports the live-head row as the reading position", () => {
-    const strategy = createWebStreamStrategy({ isMobileBreakpoint: false });
-    const viewportRef = React.createRef<StreamViewportHandle>();
-    const onReadingPositionChange = vi.fn();
-    container = document.createElement("div");
-    document.body.appendChild(container);
-    root = createRoot(container);
-
-    act(() => {
-      root?.render(
-        strategy.render({
-          agentId: "agent",
-          segments: {
-            historyVirtualized: [],
-            historyMounted: [userMessage(1)],
-            liveHead: [userMessage(2)],
-          },
-          boundary: {
-            hasVirtualizedHistory: false,
-            hasMountedHistory: true,
-            hasLiveHead: true,
-          },
-          renderers: createRenderers(vi.fn()),
-          listEmptyComponent: null,
-          viewportRef,
-          routeBottomAnchorRequest: null,
-          isAuthoritativeHistoryReady: true,
-          onNearBottomChange: vi.fn(),
-          onReadingPositionChange,
-          onNearHistoryStart: vi.fn().mockReturnValue(true),
-          isLoadingOlderHistory: false,
-          hasOlderHistory: false,
-          olderHistoryProgressKey: null,
-          scrollEnabled: true,
-          listStyle: null,
-          baseListContentContainerStyle: null,
-          forwardListContentContainerStyle: null,
-          contentMaxWidth: DEFAULT_CONTENT_MAX_WIDTH,
-        }),
-      );
-    });
-
-    expect(onReadingPositionChange).toHaveBeenLastCalledWith("message-2");
-  });
-
   it("keeps bottom anchoring through subpixel browser rounding", () => {
     const scrollTo = vi.fn();
     HTMLElement.prototype.scrollTo = scrollTo;
@@ -1467,7 +1422,6 @@ describe("createWebStreamStrategy", () => {
     HTMLElement.prototype.scrollTo = scrollTo;
     const strategy = createWebStreamStrategy({ isMobileBreakpoint: true });
     const viewportRef = React.createRef<StreamViewportHandle>();
-    const onReadingPositionChange = vi.fn();
     const renderInput: StreamRenderInput = {
       agentId: "agent",
       segments: {
@@ -1486,7 +1440,6 @@ describe("createWebStreamStrategy", () => {
       routeBottomAnchorRequest: null,
       isAuthoritativeHistoryReady: true,
       onNearBottomChange: vi.fn(),
-      onReadingPositionChange,
       onNearHistoryStart: vi.fn().mockReturnValue(true),
       isLoadingOlderHistory: false,
       hasOlderHistory: false,
@@ -1535,7 +1488,6 @@ describe("createWebStreamStrategy", () => {
     const viewportObservation = observed.get(scrollContainer);
     expect(viewportObservation).toBeDefined();
     act(() => notifyResize(scrollContainer, contentNode));
-    expect(onReadingPositionChange).toHaveBeenLastCalledWith("message-1");
 
     act(() => root?.render(renderWithActivity(false)));
     expect(container.querySelector('[data-testid="agent-chat-scroll"]')).toBe(scrollContainer);
@@ -1544,7 +1496,6 @@ describe("createWebStreamStrategy", () => {
     rowsShifted = true;
     act(() => root?.render(renderWithActivity(true)));
     act(() => notifyResize(scrollContainer, contentNode));
-    expect(onReadingPositionChange).toHaveBeenLastCalledWith("message-2");
     expect(scrollTo).not.toHaveBeenCalled();
 
     act(() => root?.render(renderWithActivity(false)));

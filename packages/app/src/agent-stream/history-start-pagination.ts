@@ -1,4 +1,6 @@
 // Ported from getpaseo/paseo (Apache-2.0) — agent-stream/history-start-pagination.ts.
+// PARKED: ChatList passes PARKED_HISTORY until the daemon exposes cursor
+// pagination (see agent-stream/README.md). The state machine is inert.
 export const HISTORY_START_THRESHOLD_PX = 96;
 
 export type HistoryStartPaginationState =

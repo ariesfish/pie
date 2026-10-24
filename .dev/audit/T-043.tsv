@@ -1,0 +1,3 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T043-1	vitest 3.2 -> 5.0.5	app/daemon/client/protocol/desktop share one runner	root+workspace package.json; check 97/773	PASS	N/A	
+T043-2	no config rewrite needed	v5 accepts the existing alias/setup config	vitest.config.ts unchanged; full check	PASS	N/A	

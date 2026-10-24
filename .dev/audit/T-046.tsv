@@ -1,0 +1,3 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T046-1	final verification on Expo 58	intermediate 57 tree must not ship	check/smoke/walkthrough/web/doctor/packaged	PASS	N/A	
+T046-2	native compile out of scope	no Java/Android SDK/Xcode; prebuild only	spec Out of scope; residual in verdict	PASS	N/A	

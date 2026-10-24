@@ -1,0 +1,4 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T044-1	Expo 54 -> 57 intermediate	ADR-0005 line; RNGH 3 not bundled yet	npm expo 57; check/walkthrough	PASS	N/A	
+T044-2	RN 0.86 absoluteFillObject removal	local ABSOLUTE_FILL constant	packages/app/src/styles/absolute-fill.ts	PASS	N/A	
+T044-3	unistyles 3.6 for RN 0.86 types	3.5 failed style registration types	npm ls unistyles 3.6	PASS	N/A	

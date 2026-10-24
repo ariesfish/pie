@@ -560,7 +560,9 @@ export default function SettingsScreen() {
 													<Text style={styles.error}>{t("settings.confirmRemoveProvider")}</Text>
 													<Button
 														variant="destructive"
-														size="sm"
+														hitSlop={10}
+														style={styles.buttonShape}
+														size={buttonSize}
 														loading={providerBusy === provider.id}
 														onPress={() => void removeProvider(provider.id)}
 													>

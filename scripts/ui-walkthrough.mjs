@@ -244,6 +244,17 @@ async function runAssertions(appUrl, workspacePath) {
 	check("01 connect → workspace header", header);
 	await shot(page, "01-connect");
 
+	// 01b settings route (config read surface)
+	await page.getByLabel("Settings").click();
+	await sleep(1200);
+	check(
+		"01b settings route opens",
+		await page.getByText("General").first().isVisible().catch(() => false),
+	);
+	await shot(page, "00-settings");
+	await page.getByLabel("Back").click();
+	await sleep(800);
+
 	// 02 explorer rail → files tree
 	await page.getByLabel("Toggle explorer rail").click();
 	await sleep(600);

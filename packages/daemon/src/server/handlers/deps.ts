@@ -4,6 +4,7 @@ import type { HostSession } from "../../core/host-session.js";
 import type { FsService } from "../../services/fs-service.js";
 import type { GitService } from "../../services/git-service.js";
 import type { PackageService } from "../../services/package-service.js";
+import type { ConfigService } from "../../services/config-service.js";
 import type { PermissionMode } from "../../pi/permissions.js";
 
 /** One session-scoped wire event (the server adds no envelope here). */
@@ -21,6 +22,7 @@ export interface HandlerDeps {
 	fsService: FsService;
 	gitService: GitService;
 	packageService: PackageService;
+	configService: ConfigService;
 	piVersion: string;
 	piAgentDir: string;
 	permissionMode?: PermissionMode;

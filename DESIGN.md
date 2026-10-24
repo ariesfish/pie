@@ -1,5 +1,5 @@
 ---
-version: 1.5
+version: 1.6
 name: Pie design system
 description: 近白纸上的工程工具：墨字、墨色强调、1px 细线 + 表面阶梯做深度；界面退到会话后面，强调只给操作与焦点，彩色只留给语义状态。
 resolved-from-defaults:
@@ -280,6 +280,11 @@ chip 内衬这类控件内部微调，不做分栏与页面级留白。禁止 3 
 ## Iteration Guide
 
 - 本文件是设计决策记录：每次修改写清「改什么 / 为什么 / 代价」，并 bump `version`。
+- v1.6（2026-10-23，T-036）：新增设置页（`/settings`）。顶部是 Pi agent 目录与
+  默认模型 / auth provider / 模型 provider / MCP 计数摘要；下面用分段控件切换
+  `settings.json` / `models.json` / `mcp.json`，正文是 mono JSON 编辑器。只开放
+  这三个文件，`auth.json` 只显示 provider 名、不返回密钥；保存带 revision CAS，
+  冲突时要求先重载。页面沿用 canvas + hairline + 墨色主按钮，不新增 token。
 - v1.5（2026-10-23，T-035）：检查器新增「历史」段，展示 Pi 会话树：缩进表示
   分支、当前根到叶路径抬升、分叉点显示分支图标；选中节点可 Navigate（同一文件
   内 rewind）或 Fork（新会话）。会话树来自快照的扁平原数据，不在客户端重算 Pi

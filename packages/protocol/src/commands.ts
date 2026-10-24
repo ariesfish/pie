@@ -11,6 +11,16 @@ import type { EntryId, RequestId, SessionId, WorkspaceId } from "./ids.js";
 import type { SessionSnapshot } from "./tree.js";
 import type { ContextUsage, FileVersionInfo, FsEntryInfo, FsReadResult, FsWriteResult, GitDiffFile, GitStatusResult, ModelCatalogItem, ModelRef, PackageInfo, ScopedModel, SessionEntry, SkillInfo, ThinkingLevel } from "./values.js";
 
+/** User-editable Pi config files; auth.json is intentionally excluded. */
+export type ConfigFile = "settings" | "models" | "mcp";
+
+export interface ConfigFileInfo {
+	file: ConfigFile;
+	path: string;
+	exists: boolean;
+	revision: string;
+}
+
 export interface CommandMap {
 	// --- daemon -------------------------------------------------------------------
 	/** Daemon health + versions. */
@@ -37,6 +47,34 @@ export interface CommandMap {
 		args: Record<string, never>;
 		result: { workspaces: WorkspaceInfo[] };
 	};
+	/** Pi config files readable/writable through the daemon (no auth secrets). */
+	"config.overview": {
+		args: Record<string, never>;
+		result: {
+			agentDir: string;
+			files: Record<ConfigFile, ConfigFileInfo>;
+			authProviders: string[];
+			settings: {
+				defaultProvider?: string;
+				defaultModel?: string;
+				defaultThinkingLevel?: string;
+				theme?: string;
+				defaultProjectTrust?: string;
+			};
+			models: { providers: string[] };
+			mcp: { servers: string[] };
+			errors?: Partial<Record<ConfigFile, string>>;
+		};
+	};
+	"config.read": {
+		args: { file: ConfigFile };
+		result: ConfigFileInfo & { content: string };
+	};
+	"config.write": {
+		args: { file: ConfigFile; content: string; expectedRevision?: string };
+		result: { file: ConfigFile; revision: string };
+	};
+
 	/** Track a workspace and (re)check project trust. */
 	"workspace.open": {
 		args: { path: string };

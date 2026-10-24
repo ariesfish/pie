@@ -23,6 +23,7 @@ import { SessionRegistry } from "../core/daemon.js";
 import { FsService } from "../services/fs-service.js";
 import { GitService } from "../services/git-service.js";
 import { PackageService } from "../services/package-service.js";
+import { ConfigService } from "../services/config-service.js";
 import { HostSession, HostSessionError } from "../core/host-session.js";
 import { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import { mapModelCatalog } from "../pi/adapter.js";
@@ -33,6 +34,7 @@ import { registerResourceCommands } from "./handlers/resources.js";
 import { registerSessionCommands } from "./handlers/session.js";
 import { registerSystemCommands } from "./handlers/system.js";
 import { registerWorkspaceCommands } from "./handlers/workspace.js";
+import { registerConfigCommands } from "./handlers/config.js";
 import type { HandlerDeps, SessionEvent } from "./handlers/deps.js";
 
 export interface DaemonServerOptions {
@@ -289,6 +291,7 @@ export class DaemonServer {
 			fsService: this.fsService,
 			gitService: this.gitService,
 			packageService: this.packageService,
+			configService: new ConfigService(this.opts.agentDir),
 			piVersion: this.opts.piVersion,
 			piAgentDir: this.opts.piAgentDir,
 			permissionMode: this.opts.permissionMode,
@@ -300,6 +303,7 @@ export class DaemonServer {
 		};
 		registerSystemCommands(this.router, deps);
 		registerWorkspaceCommands(this.router, deps);
+		registerConfigCommands(this.router, deps);
 		registerSessionCommands(this.router, deps);
 		registerResourceCommands(this.router, deps);
 		registerPermissionCommands(this.router, deps);

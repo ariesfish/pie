@@ -254,7 +254,7 @@ export function LeftSidebar() {
 			<View style={styles.footer}>
 				<Pressable
 					hitSlop={6}
-					onPress={() => router.push("/workspaces")}
+					onPress={() => router.push("/settings")}
 					accessibilityLabel={t("common.settings")}
 					style={styles.footerButton}
 				>

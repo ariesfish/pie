@@ -3,3 +3,4 @@ T038-1	provider/model form writes through structured daemon commands	表单不�
 T038-2	unknown provider/model fields preserved by id merge	手写 models.json 的 cost/headers/compat 不能被表单吞掉	config-service.test upsert preserve unknown	check PASS	N/A	
 T038-3	provider delete clears default; model removal clears dangling default	默认模型不能指向已删对象	config-service.test defaults; removeProvider	check PASS	N/A	
 T038-4	commented models.json refuses structured edits	表单会丢掉注释/尾逗号；改用 Advanced JSON	config_comments + tests	check PASS	N/A	
+T038-5	owner accepted the model form visual and interaction order	T-038 judgment criterion	user: “没什么问题” after reviewing 00d/00e	PASS	N/A	ui-walkthrough-shots/00d-model-form.png

@@ -1,4 +1,5 @@
 export * from "./version.js";
+export * from "./json.js";
 export * from "./ids.js";
 export * from "./errors.js";
 export * from "./capabilities.js";

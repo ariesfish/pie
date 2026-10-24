@@ -22,6 +22,8 @@ export interface ModelProviderModelDraft {
 	maxTokens?: number;
 }
 
+export const MODEL_PROVIDER_ID_PATTERN = /^[A-Za-z0-9._-]+$/;
+
 export interface ModelProviderDraft {
 	id: string;
 	name?: string;

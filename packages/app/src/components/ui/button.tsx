@@ -136,7 +136,7 @@ const styles = StyleSheet.create((theme) => {
     },
     disabled: {
       backgroundColor: theme.colors.surface1,
-      borderColor: theme.colors.surface1,
+      borderColor: theme.colors.border,
     },
     disabledText: {
       color: theme.colors.foregroundExtraMuted,

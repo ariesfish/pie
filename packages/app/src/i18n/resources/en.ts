@@ -80,7 +80,6 @@ export const en = {
 		saved: "Saved.",
 		dirtyHint: "Unsaved changes. Save or discard before switching tabs.",
 		invalidJson: "Invalid JSON: {{message}}",
-		parseError: "Could not parse {{file}}: {{message}}",
 		conflict: "The file changed on disk. Reload before saving so you do not overwrite another writer.",
 		noConnection: "Connect to a daemon to edit config.",
 		revision: "Revision {{revision}}",

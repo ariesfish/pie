@@ -10,8 +10,10 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
 import {
 	type CommandResult,
+	MODEL_PROVIDER_ID_PATTERN,
 	type ConfigFile,
 	ErrorCodes,
+	stripJsonComments,
 	type ModelCatalogItem,
 	type ModelProviderDraft,
 	type PackageInfo,
@@ -167,7 +169,7 @@ export default function SettingsScreen() {
 	const saveProvider = async () => {
 		if (!conn || !draft) return;
 		const models = draft.models.filter((model) => model.id.trim().length > 0);
-		if (!/^[A-Za-z0-9._-]+$/.test(draft.id)) {
+		if (!MODEL_PROVIDER_ID_PATTERN.test(draft.id)) {
 			setError(t("settings.invalidProviderId"));
 			return;
 		}
@@ -235,7 +237,7 @@ export default function SettingsScreen() {
 	const save = async () => {
 		if (!conn || !file || !dirty) return;
 		try {
-			JSON.parse(content);
+			JSON.parse(stripJsonComments(content));
 		} catch {
 			setError(t("settings.invalidJson"));
 			return;
@@ -341,6 +343,7 @@ export default function SettingsScreen() {
 					<Button
 						variant="outline"
 						hitSlop={10}
+						style={styles.buttonShape}
 						disabled={!workspaceId || packageBusy !== null}
 						onPress={() => void updatePackages()}
 					>
@@ -537,7 +540,13 @@ export default function SettingsScreen() {
 													>
 														{t("settings.removeProvider")}
 													</Button>
-													<Button variant="ghost" hitSlop={10} size="sm" onPress={() => setConfirmDelete(null)}>
+													<Button
+														variant="ghost"
+														hitSlop={10}
+														style={styles.buttonShape}
+														size="sm"
+														onPress={() => setConfirmDelete(null)}
+													>
 														{t("common.cancel")}
 													</Button>
 												</View>
@@ -669,54 +678,67 @@ function ProviderForm({
 	return (
 		<View style={styles.form}>
 			<View style={styles.formGrid}>
-				<TextInput
-					value={draft.id}
-					editable={isNew}
-					onChangeText={(id) => onChange({ ...draft, id })}
-					placeholder={t("settings.providerId")}
-					accessibilityLabel={t("settings.providerId")}
-					autoCapitalize="none"
-					autoCorrect={false}
-					style={[styles.input, !isNew && styles.inputReadonly]}
-				/>
-				<TextInput
-					value={draft.name ?? ""}
-					onChangeText={(name) => onChange({ ...draft, name })}
-					placeholder={t("settings.providerName")}
-					accessibilityLabel={t("settings.providerName")}
-					style={styles.input}
-				/>
-				<TextInput
-					value={draft.baseUrl ?? ""}
-					onChangeText={(baseUrl) => onChange({ ...draft, baseUrl })}
-					placeholder={t("settings.providerBaseUrl")}
-					accessibilityLabel={t("settings.providerBaseUrl")}
-					autoCapitalize="none"
-					autoCorrect={false}
-					style={styles.input}
-				/>
-				<TextInput
-					value={draft.api ?? ""}
-					onChangeText={(api) => onChange({ ...draft, api })}
-					placeholder={t("settings.providerApi")}
-					accessibilityLabel={t("settings.providerApi")}
-					autoCapitalize="none"
-					autoCorrect={false}
-					style={styles.input}
-				/>
-				<TextInput
-					value={draft.apiKey ?? ""}
-					onChangeText={(apiKey) => {
-						onKeyTouched();
-						onChange({ ...draft, apiKey });
-					}}
-					placeholder={hasKey && !keyTouched ? t("settings.keyKeep") : t("settings.providerKey")}
-					accessibilityLabel={t("settings.providerKey")}
-					autoCapitalize="none"
-					autoCorrect={false}
-					secureTextEntry
-					style={styles.input}
-				/>
+				<View style={styles.field}>
+					<Text style={styles.fieldLabel}>{t("settings.providerId")}</Text>
+					<TextInput
+						value={draft.id}
+						editable={isNew}
+						onChangeText={(id) => onChange({ ...draft, id })}
+						accessibilityLabel={t("settings.providerId")}
+						autoCapitalize="none"
+						autoCorrect={false}
+						style={[styles.input, !isNew && styles.inputReadonly]}
+					/>
+				</View>
+				<View style={styles.field}>
+					<Text style={styles.fieldLabel}>{t("settings.providerName")}</Text>
+					<TextInput
+						value={draft.name ?? ""}
+						onChangeText={(name) => onChange({ ...draft, name })}
+						accessibilityLabel={t("settings.providerName")}
+						style={styles.input}
+					/>
+				</View>
+				<View style={styles.field}>
+					<Text style={styles.fieldLabel}>{t("settings.providerBaseUrl")}</Text>
+					<TextInput
+						value={draft.baseUrl ?? ""}
+						onChangeText={(baseUrl) => onChange({ ...draft, baseUrl })}
+						placeholder="https://…"
+						accessibilityLabel={t("settings.providerBaseUrl")}
+						autoCapitalize="none"
+						autoCorrect={false}
+						style={styles.input}
+					/>
+				</View>
+				<View style={styles.field}>
+					<Text style={styles.fieldLabel}>{t("settings.providerApi")}</Text>
+					<TextInput
+						value={draft.api ?? ""}
+						onChangeText={(api) => onChange({ ...draft, api })}
+						placeholder="openai-completions"
+						accessibilityLabel={t("settings.providerApi")}
+						autoCapitalize="none"
+						autoCorrect={false}
+						style={styles.input}
+					/>
+				</View>
+				<View style={styles.field}>
+					<Text style={styles.fieldLabel}>{t("settings.providerKey")}</Text>
+					<TextInput
+						value={draft.apiKey ?? ""}
+						onChangeText={(apiKey) => {
+							onKeyTouched();
+							onChange({ ...draft, apiKey });
+						}}
+						placeholder={hasKey && !keyTouched ? t("settings.keyKeep") : t("settings.providerKey")}
+						accessibilityLabel={t("settings.providerKey")}
+						autoCapitalize="none"
+						autoCorrect={false}
+						secureTextEntry
+						style={styles.input}
+					/>
+				</View>
 			</View>
 			{hasKey && !keyTouched ? (
 				<Pressable
@@ -789,10 +811,17 @@ function ProviderForm({
 			</Pressable>
 
 			<View style={styles.formActions}>
-				<Button variant="default" hitSlop={10} disabled={busy} loading={busy} onPress={onSave}>
+				<Button
+					variant="default"
+					hitSlop={10}
+					style={styles.buttonShape}
+					disabled={busy}
+					loading={busy}
+					onPress={onSave}
+				>
 					{t("settings.saveProvider")}
 				</Button>
-				<Button variant="ghost" hitSlop={10} disabled={busy} onPress={onCancel}>
+				<Button variant="ghost" hitSlop={10} style={styles.buttonShape} disabled={busy} onPress={onCancel}>
 					{t("common.cancel")}
 				</Button>
 			</View>
@@ -890,6 +919,7 @@ function ExtensionsPanel({
 				<Button
 					variant="default"
 					hitSlop={10}
+					style={styles.buttonShape}
 					disabled={!workspaceId || !source.trim() || busy !== null}
 					loading={busy === "install"}
 					onPress={onInstall}
@@ -977,7 +1007,7 @@ const styles = StyleSheet.create((theme) => ({
 		borderWidth: theme.borderWidth[1],
 		borderColor: theme.colors.border,
 		borderRadius: theme.borderRadius.lg,
-		backgroundColor: theme.colors.surface1,
+		backgroundColor: theme.colors.surface0,
 	},
 	summaryTitle: {
 		color: theme.colors.foregroundExtraMuted,
@@ -997,14 +1027,18 @@ const styles = StyleSheet.create((theme) => ({
 		borderWidth: theme.borderWidth[1],
 		borderColor: theme.colors.border,
 		borderRadius: theme.borderRadius.lg,
-		backgroundColor: theme.colors.surface1,
+		backgroundColor: theme.colors.surface0,
 	},
 	sectionHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: theme.spacing[2] },
 	sectionTitle: {
 		color: theme.colors.foreground,
 		fontSize: theme.fontSize["2xl"],
 		fontWeight: theme.fontWeight.semibold,
+		marginTop: theme.spacing[2],
 	},
+	buttonShape: { borderRadius: theme.borderRadius.md },
+	field: { flexGrow: 1, minWidth: 160, gap: 2 },
+	fieldLabel: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
 	link: {
 		color: theme.colors.accent,
 		fontSize: theme.fontSize.sm,
@@ -1079,8 +1113,8 @@ const styles = StyleSheet.create((theme) => ({
 	modelIdInput: { minWidth: 120 },
 	modelNameInput: { minWidth: 120 },
 	numberInput: { minWidth: 92, flexGrow: 0 },
-	clearKey: { alignSelf: "flex-start", minHeight: 32, justifyContent: "center" },
-	addModel: { flexDirection: "row", alignItems: "center", gap: theme.spacing[1], minHeight: 40 },
+	clearKey: { alignSelf: "flex-start", minHeight: 44, justifyContent: "center" },
+	addModel: { flexDirection: "row", alignItems: "center", gap: theme.spacing[1], minHeight: 44 },
 	editorHeader: { flexDirection: "row", alignItems: "center", gap: theme.spacing[2] },
 	path: { flex: 1, color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm, fontFamily: theme.fontFamily.mono },
 	reload: { minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" },

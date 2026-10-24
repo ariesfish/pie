@@ -200,7 +200,7 @@ const styles = StyleSheet.create((theme) => {
       ...geometry.segmentedSegmentMd,
     },
     segmentSelected: {
-      backgroundColor: theme.colors.surface3,
+      backgroundColor: theme.colors.surface2,
     },
     segmentHover: {
       backgroundColor: theme.colors.surface2,

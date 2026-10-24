@@ -7,8 +7,8 @@ import { chmod, mkdir, readFile, realpath, rename, rm, stat, writeFile } from "n
 import { dirname, join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
-import { ErrorCodes } from "@pie/protocol";
-import type { ConfigFile, ConfigFileInfo, ModelProviderDraft } from "@pie/protocol";
+import { ErrorCodes, stripJsonComments } from "@pie/protocol";
+import { MODEL_PROVIDER_ID_PATTERN, type CommandResult, type ConfigFile, type ConfigFileInfo, type ModelProviderDraft } from "@pie/protocol";
 
 const FILE_NAMES: Record<ConfigFile, string> = {
 	settings: "settings.json",
@@ -55,33 +55,61 @@ function setOptional(
 }
 
 function validateProviderDraft(draft: ModelProviderDraft): void {
-	if (!draft || typeof draft.id !== "string" || !/^[A-Za-z0-9._-]+$/.test(draft.id)) {
-		throw new ConfigError("Provider id must match [A-Za-z0-9._-]+", ErrorCodes.configInvalid);
+	if (
+		!draft ||
+		typeof draft.id !== "string" ||
+		!MODEL_PROVIDER_ID_PATTERN.test(draft.id) ||
+		["__proto__", "prototype", "constructor"].includes(draft.id)
+	) {
+		throw new ConfigError("config_invalid", ErrorCodes.configInvalid);
+	}
+	if (draft.name !== undefined && typeof draft.name !== "string") {
+		throw new ConfigError("config_invalid", ErrorCodes.configInvalid);
+	}
+	if (draft.baseUrl !== undefined && typeof draft.baseUrl !== "string") {
+		throw new ConfigError("config_invalid", ErrorCodes.configInvalid);
+	}
+	if (draft.api !== undefined && typeof draft.api !== "string") {
+		throw new ConfigError("config_invalid", ErrorCodes.configInvalid);
+	}
+	if (draft.apiKey !== undefined && typeof draft.apiKey !== "string") {
+		throw new ConfigError("config_invalid", ErrorCodes.configInvalid);
 	}
 	if (!Array.isArray(draft.models)) {
-		throw new ConfigError("Provider models must be an array", ErrorCodes.configInvalid);
+		throw new ConfigError("config_invalid", ErrorCodes.configInvalid);
 	}
 	const ids = new Set<string>();
 	for (const model of draft.models) {
 		if (!model || typeof model.id !== "string" || model.id.trim().length === 0) {
-			throw new ConfigError("Every model needs a non-empty id", ErrorCodes.configInvalid);
+			throw new ConfigError("config_invalid", ErrorCodes.configInvalid);
 		}
 		if (ids.has(model.id)) {
-			throw new ConfigError(`Duplicate model id: ${model.id}`, ErrorCodes.configInvalid);
+			throw new ConfigError("config_invalid", ErrorCodes.configInvalid);
 		}
 		ids.add(model.id);
+		for (const key of ["name"] as const) {
+			if (model[key] !== undefined && typeof model[key] !== "string") {
+				throw new ConfigError("config_invalid", ErrorCodes.configInvalid);
+			}
+		}
+		for (const key of ["contextWindow", "maxTokens"] as const) {
+			const value = model[key];
+			if (value !== undefined && (typeof value !== "number" || !Number.isFinite(value) || value < 0)) {
+				throw new ConfigError("config_invalid", ErrorCodes.configInvalid);
+			}
+		}
 	}
 }
 
 function parseObject(content: string, file: ConfigFile): Record<string, unknown> {
 	let value: unknown;
 	try {
-		value = JSON.parse(content);
+		value = JSON.parse(stripJsonComments(content));
 	} catch {
-		throw new ConfigError(`${FILE_NAMES[file]} is not a JSON object`, ErrorCodes.configInvalid);
+		throw new ConfigError("config_invalid", ErrorCodes.configInvalid);
 	}
 	if (!isRecord(value)) {
-		throw new ConfigError(`${FILE_NAMES[file]} must contain a JSON object`, ErrorCodes.configInvalid);
+		throw new ConfigError("config_invalid", ErrorCodes.configInvalid);
 	}
 	return value;
 }
@@ -115,24 +143,33 @@ export class ConfigService {
 
 		const lockDir = `${path}.lock`;
 		const deadline = Date.now() + LOCK_TIMEOUT_MS;
-		await mkdir(dirname(path), { recursive: true });
-		for (;;) {
-			try {
-				await mkdir(lockDir);
-				break;
-			} catch (err) {
-				if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
-				if (Date.now() > deadline) {
-					release();
-					throw new ConfigError(`${FILE_NAMES[file]} is locked by another writer`, ErrorCodes.configConflict);
-				}
-				await sleep(LOCK_RETRY_MS);
-			}
-		}
+		let acquired = false;
 		try {
+			await mkdir(dirname(path), { recursive: true });
+			for (;;) {
+				try {
+					await mkdir(lockDir);
+					acquired = true;
+					break;
+				} catch (err) {
+					if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
+					const info = await stat(lockDir).catch(() => null);
+					if (info && Date.now() - info.mtimeMs > 10_000) {
+						await rm(lockDir, { recursive: true, force: true }).catch(() => {});
+						continue;
+					}
+					if (Date.now() > deadline) {
+						throw new ConfigError(
+							`${FILE_NAMES[file]} is locked by another writer`,
+							ErrorCodes.configConflict,
+						);
+					}
+					await sleep(LOCK_RETRY_MS);
+				}
+			}
 			return await fn();
 		} finally {
-			await rm(lockDir, { recursive: true, force: true }).catch(() => {});
+			if (acquired) await rm(lockDir, { recursive: true, force: true }).catch(() => {});
 			release();
 		}
 	}
@@ -147,7 +184,7 @@ export class ConfigService {
 			return { file, path, exists: false, revision: "", content: "" };
 		}
 		if (Buffer.byteLength(content, "utf8") > MAX_CONFIG_BYTES) {
-			throw new ConfigError(`${FILE_NAMES[file]} exceeds the 1 MiB cap`, ErrorCodes.configTooLarge);
+			throw new ConfigError("config_too_large", ErrorCodes.configTooLarge);
 		}
 		return { file, path, exists: true, revision: revisionOf(content), content };
 	}
@@ -162,18 +199,18 @@ export class ConfigService {
 		expectedRevision?: string,
 	): Promise<{ file: ConfigFile; revision: string }> {
 		if (Buffer.byteLength(content, "utf8") > MAX_CONFIG_BYTES) {
-			throw new ConfigError(`${FILE_NAMES[file]} exceeds the 1 MiB cap`, ErrorCodes.configTooLarge);
+			throw new ConfigError("config_too_large", ErrorCodes.configTooLarge);
 		}
 		parseObject(content, file);
 		const current = await this.readUnlocked(file);
 		if (expectedRevision !== undefined && expectedRevision !== current.revision) {
-			throw new ConfigError(`${FILE_NAMES[file]} changed on disk`, ErrorCodes.configConflict);
+			throw new ConfigError("config_conflict", ErrorCodes.configConflict);
 		}
 		const path = this.pathOf(file);
 		const target = await realpath(path).catch(() => path);
 		const previousMode = await stat(target).then((info) => info.mode & 0o777).catch(() => null);
 		const tmp = `${target}.pie-tmp-${process.pid}-${randomBytes(4).toString("hex")}`;
-		await writeFile(tmp, content, "utf8");
+		await writeFile(tmp, content, { encoding: "utf8", mode: 0o600 });
 		try {
 			if (previousMode !== null) await chmod(tmp, previousMode);
 			await rename(tmp, target);
@@ -238,8 +275,8 @@ export class ConfigService {
 			const read = await this.readUnlocked("models");
 			const data = read.exists ? parseObject(read.content, "models") : {};
 			const providers = isRecord(data.providers) ? { ...data.providers } : {};
-			if (!(providerId in providers)) {
-				throw new ConfigError(`Provider not found: ${providerId}`, "invalid_args");
+			if (!Object.hasOwn(providers, providerId)) {
+				throw new ConfigError("invalid_args", "invalid_args");
 			}
 			delete providers[providerId];
 			data.providers = providers;
@@ -276,7 +313,7 @@ export class ConfigService {
 		expectedRevision?: string,
 	): Promise<{ revision: string }> {
 		if (!provider.trim() || !model.trim()) {
-			throw new ConfigError("provider and model are required", ErrorCodes.configInvalid);
+			throw new ConfigError("config_invalid", ErrorCodes.configInvalid);
 		}
 		return this.withLock("settings", async () => {
 			const read = await this.readUnlocked("settings");
@@ -292,32 +329,7 @@ export class ConfigService {
 		});
 	}
 
-	async overview(): Promise<{
-		agentDir: string;
-		files: Record<ConfigFile, ConfigFileInfo>;
-		authProviders: string[];
-		settings: {
-			defaultProvider?: string;
-			defaultModel?: string;
-			defaultThinkingLevel?: string;
-			theme?: string;
-			defaultProjectTrust?: string;
-		};
-		models: {
-			providers: string[];
-			details: Array<{
-				id: string;
-				name?: string;
-				baseUrl?: string;
-				api?: string;
-				modelCount: number;
-				hasApiKey: boolean;
-				models: Array<{ id: string; name?: string; contextWindow?: number; maxTokens?: number }>;
-			}>;
-		};
-		mcp: { servers: string[] };
-		errors?: Partial<Record<ConfigFile, string>>;
-	}> {
+	async overview(): Promise<CommandResult<"config.overview">> {
 		const errors: Partial<Record<ConfigFile, string>> = {};
 		const files = {} as Record<ConfigFile, ConfigFileInfo>;
 		const contents: Partial<Record<ConfigFile, Record<string, unknown>>> = {};

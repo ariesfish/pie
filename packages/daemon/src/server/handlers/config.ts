@@ -9,7 +9,7 @@ const CONFIG_FILE_SET = new Set<string>(CONFIG_FILES);
 function configFile(args: Record<string, unknown>): ConfigFile {
 	const value = requiredString(args, "file");
 	if (!CONFIG_FILE_SET.has(value)) {
-		throw new ConfigError(`Unknown config file: ${value}`, "invalid_args");
+		throw new ConfigError("invalid_args", "invalid_args");
 	}
 	return value as ConfigFile;
 }

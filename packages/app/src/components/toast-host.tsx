@@ -187,7 +187,10 @@ export function ToastViewport({
 
   const headerHeight = isMobile ? HEADER_INNER_HEIGHT_MOBILE : HEADER_INNER_HEIGHT;
   const headerTopPadding = isMobile ? HEADER_TOP_PADDING_MOBILE : 0;
-  const topOffset = placement === "app-shell" ? insets.top + headerTopPadding + headerHeight : 0;
+  // Native toasts live inside the root SafeAreaFrame, which already pads the
+  // status bar. Web toasts portal outside that frame, so only web adds insets.
+  const safeTop = Platform.OS === "web" ? insets.top : 0;
+  const topOffset = placement === "app-shell" ? safeTop + headerTopPadding + headerHeight : 0;
 
   const content = (
     <View

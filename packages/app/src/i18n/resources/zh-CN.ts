@@ -11,6 +11,7 @@ export const zhCN = {
 		back: "返回",
 		connecting: "连接中…",
 		connectionFailed: "连接失败",
+		clear: "清空",
 		disconnected: "已断开",
 	},
 	chat: {
@@ -66,6 +67,9 @@ export const zhCN = {
 		explorer: "切换资源栏",
 		sidebar: "切换侧栏",
 		split: "分栏",
+		resizeExplorer: "调整检查器宽度",
+		resizeSplit: "调整分栏宽度",
+		focusPane: "聚焦窗格 {{id}}",
 	},
 	settings: {
 		title: "设置",

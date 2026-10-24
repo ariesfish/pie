@@ -122,6 +122,7 @@ function getNodeKey(node: SplitNode): string {
  * resize, so consecutive gestures never fight a stale baseline). */
 function SplitDivider({ row, onResize }: { row: boolean; onResize: (deltaPx: number) => void }) {
 	const { theme } = useUnistyles();
+	const { t } = useTranslation();
 	const [active, setActive] = useState(false);
 	const startRef = useRef(0);
 	const pan = Gesture.Pan()
@@ -139,7 +140,7 @@ function SplitDivider({ row, onResize }: { row: boolean; onResize: (deltaPx: num
 	return (
 		<GestureDetector gesture={pan}>
 			<View
-				accessibilityLabel="resize split"
+				accessibilityLabel={t("panels.resizeSplit")}
 				style={[styles.dividerHit, row ? styles.dividerRow : styles.dividerColumn]}
 			>
 				<View
@@ -181,7 +182,7 @@ function SplitPaneView({ pane, compact = false }: { pane: SplitPane; compact?: b
 			<Pressable
 				onPress={() => focusPane(pane.id)}
 				style={styles.paneHeaderHit}
-				accessibilityLabel={`focus pane ${pane.id}`}
+				accessibilityLabel={t("panels.focusPane", { id: pane.id })}
 			>
 				<View
 					style={[

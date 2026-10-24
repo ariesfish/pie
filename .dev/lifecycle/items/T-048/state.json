@@ -1,0 +1,239 @@
+{
+  "id": "T-048",
+  "title": "Native light-mode hardening",
+  "opened": "2026-10-24T13:02:51Z",
+  "closed": "2026-10-24T13:20:16Z",
+  "budget": 3,
+  "blocked": null,
+  "gates": {
+    "check": {
+      "class": "D",
+      "pass": true,
+      "runs": 3,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-24T13:20:02Z"
+    },
+    "verify": {
+      "class": "D",
+      "pass": true,
+      "runs": 2,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-24T13:15:39Z"
+    },
+    "web": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-24T13:12:45Z"
+    },
+    "doctor": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-24T13:12:53Z"
+    },
+    "packaged": {
+      "class": "D",
+      "pass": true,
+      "runs": 2,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-24T13:19:49Z"
+    },
+    "review": {
+      "class": "A",
+      "verdict": "PASS+NOTES",
+      "runs": 1,
+      "ts": "2026-10-24T13:20:16Z",
+      "file": ".dev/audit/evidence/review-native-fixes/verdict.json",
+      "fails": 0
+    }
+  },
+  "history": [
+    {
+      "step": 1,
+      "ts": "2026-10-24T13:02:51Z",
+      "type": "open",
+      "budget": 3
+    },
+    {
+      "step": 2,
+      "ts": "2026-10-24T13:11:45Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "\n> pie@0.1.0 check\n> npm run typecheck && npm run test\n\n\n> pie@0.1.0 typecheck\n> npm run typecheck --workspaces --if-present\n\n\n> @pie/protocol@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/client@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/daemon@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/app@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/desktop@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> pie@0.1.0 test\n> vitest run\n\n\n RUN  v5.0.5 /home/ariesfish/Projects/harness/pie\n\n\n Test Files  97 passed (97)\n      Tests  773 passed | 1 skipped (774)\n   Start at  21:11:40\n   Duration  4.83s (import 49%, tests 18%, transform 15%, environment 12%, setup 4%, worker 2%)\n\n    Isolate  97 workers spawned · ~168ms startup each (spawn + environment, per file)\n             at least ~1.31s faster with isolate: false — reuses workers across files instead of one per file\n\n(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:\n  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:7:1). Use a `.mjs` extension or set `\"type\": \"module\"` in the closest package.json\nSet `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.\n",
+      "note": "light-mode native fixes: 97 files, 773 passed"
+    },
+    {
+      "step": 3,
+      "ts": "2026-10-24T13:12:42Z",
+      "type": "run",
+      "gate": "verify",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "ui-walkthrough"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": " 6 modes — segments=6\nPASS  03 open app.ts → files tab + CodeMirror mounted — cm-editors=1\nPASS  03b README.md → md preview (frontmatter + code copy + mermaid) — heading=true copyBtn=1 svg=1 fm=1\nPASS  03c edit → autosave CAS write lands on disk — editor=true disk=true\nPASS  04 changes tab → diff document renders (canvas + sticky headers) — headers=2 canvas=3\nPASS  04b layout toggle → unified/split flips (canvas alive) — before=\"Split view\" after=\"Unified view\" canvas=3\nPASS  04c wrap toggle present\nPASS  05a single new-session entry (no pinned creator tab) — entries=1\nPASS  05b creator panel shows Start session\nPASS  05c session created → session tab + composer — composer=true\nPASS  05d usage rail → token quartet + message stats — tokens=true counts=true\nPASS  06 split pane → two pane headers — split=2 close=2\nPASS  07 drag drop → files tab still present — app.ts nodes=1\nPASS  08 rail resize handle widens rail — x 1138 → 1070\nPASS  09 compact → sessions drawer opens (edge swipe)\nPASS  09b sessions drawer closes (push-away swipe) — backdrop=0\nPASS  10 compact → explorer drawer opens (right edge swipe) — backdrop=1 filesTab=1\nPASS  R1 fork inherits the name at the fork point — fork=分叉源名字\nPASS  R2 renaming the parent does not affect the fork — parent=改父名 fork=分叉源名字\nPASS  R3 rename leaves the branch label entry intact — label={\"type\":\"label\",\"id\":\"l0000001\",\"parentI…\nPASS  R4 labeled session renamed\nPASS  R5 renamed parent row visible in sidebar\nPASS  R6 UI rename: row shows the new name\nPASS  R7 wire state matches UI rename\nPASS  R8 UI clear: row falls back to the first message\nPASS  R9 wire state matches UI clear\nPASS  R9b history panel shows the session tree\nPASS  R9c history tree renders entry rows — rows=6\nPASS  R9d history selection exposes navigate/fork actions\nPASS  R10 desktop row updates live after an off-device rename (no reload)\nPASS  R11 phone shows the same session name as the desktop\nscreenshots: /home/ariesfish/Projects/harness/pie/ui-walkthrough-shots\n",
+      "note": "walkthrough 38/38 incl. compact drawers"
+    },
+    {
+      "step": 4,
+      "ts": "2026-10-24T13:12:45Z",
+      "type": "run",
+      "gate": "web",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "app:build:web"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "odules/expo-router/assets/arrow_down.017bc6ba3fc25503e5eb5e53826d48a8.png (9.5KB)\nnode_modules/expo-router/assets/error.d1ea1496f9057eb392d5bbf3732a61b7.png (469B)\nnode_modules/expo-router/assets/file.19eeb73b9593a38f8e9f418337fc7d10.png (138B)\nnode_modules/expo-router/assets/forward.d8b800c443b8972542883e0b9de2bdc6.png (188B)\nnode_modules/expo-router/assets/pkg.ab19f4cbc543357183a20571f68380a3.png (364B)\nnode_modules/expo-router/assets/react-navigation/elements/back-icon-mask.0a328cd9c1afd0afe8e3b1ec5165b1b4.png (653B)\nnode_modules/expo-router/assets/react-navigation/elements/back-icon.35ba0eaec5a4f5ed12ca16fabeae451d.png (207B)\nnode_modules/expo-router/assets/react-navigation/elements/clear-icon.c94f6478e7ae0cdd9f15de1fcb9e5e55.png (4 variations | 425B)\nnode_modules/expo-router/assets/react-navigation/elements/close-icon.808e1b1b9b53114ec2838071a7e6daa7.png (4 variations | 235B)\nnode_modules/expo-router/assets/react-navigation/elements/search-icon.286d67d3f74808a60a78d3ebf1a5fb57.png (928B)\nnode_modules/expo-router/assets/sitemap.412dd9275b6b48ad28f5e3d81bb1f626.png (465B)\nnode_modules/expo-router/assets/unmatched.20e71bdf79e3a97bf55fd9e164041578.png (4.8KB)\n\n› web bundles (10):\n_expo/static/js/web/__common-c3719ed6a0ac2d37073a0b071bb019a5.js (5.2MB)\n_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js (3.8KB)\n_expo/static/js/web/_layout-795111895fbc737629455b4396a49b7c.js (190KB)\n_expo/static/js/web/_layout-c7c6a8f9994b16f820035f5eaeb6a856.js (480B)\n_expo/static/js/web/entry-5b3c9a2135b3f3d64b9929278444d8fb.js (1.1MB)\n_expo/static/js/web/index-b879ac34c3637dc2c8fa7f284679e6a9.js (2.8KB)\n_expo/static/js/web/index-d9ca081558aaaf655c0ab7202b051ab2.js (2.7MB)\n_expo/static/js/web/sessions-450deaff826b825b8891e4c48ed8e3c0.js (7.9KB)\n_expo/static/js/web/settings-f94483d08d7750629dfea1e39219d9fc.js (34KB)\n_expo/static/js/web/workspaces-9bea2bacc71dedea25d643abb131fbbf.js (6.5KB)\n\n› Files (2):\nindex.html (1.4KB)\nmetadata.json (49B)\n\nExported: dist\n",
+      "note": "web export after safe-area/font fixes"
+    },
+    {
+      "step": 5,
+      "ts": "2026-10-24T13:12:53Z",
+      "type": "run",
+      "gate": "doctor",
+      "class": "D",
+      "argv": [
+        "bash",
+        "-lc",
+        "cd packages/app && npx expo-doctor"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "Running 20 checks on your project...\n20/20 checks passed. No issues detected!\n",
+      "note": "expo-doctor after app config"
+    },
+    {
+      "step": 6,
+      "ts": "2026-10-24T13:13:19Z",
+      "type": "run",
+      "gate": "packaged",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "smoke:packaged",
+        "-w",
+        "@pie/desktop"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": " : \nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 172: invalid constant used : ui-serif\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 180: invalid attribute 'xsi:nil'\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 181: invalid constant used : \nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 184: invalid constant used : ui-monospace\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 192: invalid attribute 'xsi:nil'\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 193: invalid constant used : \nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 196: invalid constant used : ui-rounded\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 204: invalid attribute 'xsi:nil'\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 205: invalid constant used : \nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 208: invalid constant used : fangsong\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-spacing.conf\", line 14: invalid constant used : monospace\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/49-sansserif.conf\", line 10: invalid constant used : serif\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/49-sansserif.conf\", line 18: invalid constant used : sans-serif\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/49-sansserif.conf\", line 26: invalid constant used : monospace\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/49-sansserif.conf\", line 34: invalid constant used : emoji\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/49-sansserif.conf\", line 42: invalid constant used : math\n[429604:1024/211318.809562:WARNING:sandbox/policy/linux/sandbox_linux.cc:415] InitializeSandbox() called with multiple threads in process gpu-process.\n",
+      "note": "packaged smoke with white floor"
+    },
+    {
+      "step": 7,
+      "ts": "2026-10-24T13:14:38Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "\n> pie@0.1.0 check\n> npm run typecheck && npm run test\n\n\n> pie@0.1.0 typecheck\n> npm run typecheck --workspaces --if-present\n\n\n> @pie/protocol@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/client@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/daemon@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/app@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/desktop@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> pie@0.1.0 test\n> vitest run\n\n\n RUN  v5.0.5 /home/ariesfish/Projects/harness/pie\n\n\n Test Files  97 passed (97)\n      Tests  773 passed | 1 skipped (774)\n   Start at  21:14:33\n   Duration  4.86s (import 47%, tests 19%, transform 17%, environment 12%, setup 4%, worker 2%)\n\n    Isolate  97 workers spawned · ~167ms startup each (spawn + environment, per file)\n             at least ~1.31s faster with isolate: false — reuses workers across files instead of one per file\n\n(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:\n  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:7:1). Use a `.mjs` extension or set `\"type\": \"module\"` in the closest package.json\nSet `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.\n",
+      "note": "final: 97 files, 773 passed"
+    },
+    {
+      "step": 8,
+      "ts": "2026-10-24T13:15:39Z",
+      "type": "run",
+      "gate": "verify",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "ui-walkthrough"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "rror mounted — cm-editors=1\nPASS  03b README.md → md preview (frontmatter + code copy + mermaid) — heading=true copyBtn=1 svg=1 fm=1\nPASS  03c edit → autosave CAS write lands on disk — editor=true disk=true\nPASS  04 changes tab → diff document renders (canvas + sticky headers) — headers=2 canvas=3\nPASS  04b layout toggle → unified/split flips (canvas alive) — before=\"Split view\" after=\"Unified view\" canvas=3\nPASS  04c wrap toggle present\nPASS  05a single new-session entry (no pinned creator tab) — entries=1\nPASS  05b creator panel shows Start session\nPASS  05c session created → session tab + composer — composer=true\nPASS  05d usage rail → token quartet + message stats — tokens=true counts=true\nPASS  06 split pane → two pane headers — split=2 close=2\nPASS  07 drag drop → files tab still present — app.ts nodes=1\nPASS  08 rail resize handle widens rail — x 1138 → 1070\nPASS  09 compact → sessions drawer opens (edge swipe)\nPASS  09b sessions drawer closes (push-away swipe) — backdrop=0\nPASS  10 compact → explorer drawer opens (right edge swipe) — backdrop=1 filesTab=1\nPASS  R1 fork inherits the name at the fork point — fork=分叉源名字\nPASS  R2 renaming the parent does not affect the fork — parent=改父名 fork=分叉源名字\nPASS  R3 rename leaves the branch label entry intact — label={\"type\":\"label\",\"id\":\"l0000001\",\"parentI…\nPASS  R4 labeled session renamed\nPASS  R5 renamed parent row visible in sidebar\nPASS  R6 UI rename: row shows the new name\nPASS  R7 wire state matches UI rename\nPASS  R8 UI clear: row falls back to the first message\nPASS  R9 wire state matches UI clear\nPASS  R9b history panel shows the session tree\nPASS  R9c history tree renders entry rows — rows=6\nPASS  R9d history selection exposes navigate/fork actions\nPASS  R10 desktop row updates live after an off-device rename (no reload)\nPASS  R11 phone shows the same session name as the desktop\nscreenshots: /home/ariesfish/Projects/harness/pie/ui-walkthrough-shots\nSomething prevented Expo from exiting, forcefully exiting now.\n",
+      "note": "final walkthrough 38/38"
+    },
+    {
+      "step": 9,
+      "ts": "2026-10-24T13:19:49Z",
+      "type": "run",
+      "gate": "packaged",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "smoke:packaged",
+        "-w",
+        "@pie/desktop"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": " : \nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 172: invalid constant used : ui-serif\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 180: invalid attribute 'xsi:nil'\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 181: invalid constant used : \nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 184: invalid constant used : ui-monospace\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 192: invalid attribute 'xsi:nil'\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 193: invalid constant used : \nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 196: invalid constant used : ui-rounded\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 204: invalid attribute 'xsi:nil'\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 205: invalid constant used : \nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-guessfamily.conf\", line 208: invalid constant used : fangsong\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/48-spacing.conf\", line 14: invalid constant used : monospace\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/49-sansserif.conf\", line 10: invalid constant used : serif\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/49-sansserif.conf\", line 18: invalid constant used : sans-serif\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/49-sansserif.conf\", line 26: invalid constant used : monospace\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/49-sansserif.conf\", line 34: invalid constant used : emoji\nFontconfig warning: \"/usr/share/fontconfig/conf.avail/49-sansserif.conf\", line 42: invalid constant used : math\n[436805:1024/211948.329337:WARNING:sandbox/policy/linux/sandbox_linux.cc:415] InitializeSandbox() called with multiple threads in process gpu-process.\n",
+      "note": "final packaged smoke incl. expo-system-ui and white floor"
+    },
+    {
+      "step": 10,
+      "ts": "2026-10-24T13:20:02Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "\n> pie@0.1.0 check\n> npm run typecheck && npm run test\n\n\n> pie@0.1.0 typecheck\n> npm run typecheck --workspaces --if-present\n\n\n> @pie/protocol@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/client@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/daemon@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/app@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/desktop@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> pie@0.1.0 test\n> vitest run\n\n\n RUN  v5.0.5 /home/ariesfish/Projects/harness/pie\n\n\n Test Files  97 passed (97)\n      Tests  773 passed | 1 skipped (774)\n   Start at  21:19:57\n   Duration  4.90s (import 49%, tests 19%, transform 15%, environment 12%, setup 4%, worker 2%)\n\n    Isolate  97 workers spawned · ~170ms startup each (spawn + environment, per file)\n             at least ~1.33s faster with isolate: false — reuses workers across files instead of one per file\n\n(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:\n  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:7:1). Use a `.mjs` extension or set `\"type\": \"module\"` in the closest package.json\nSet `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.\n",
+      "note": "final tree: 97 files, 773 passed"
+    },
+    {
+      "step": 11,
+      "ts": "2026-10-24T13:20:16Z",
+      "type": "verdict",
+      "gate": "review",
+      "class": "A",
+      "file": ".dev/audit/evidence/review-native-fixes/verdict.json",
+      "sha256": "8e7db0c6ae0d8f23",
+      "verdict": "PASS+NOTES"
+    },
+    {
+      "step": 12,
+      "ts": "2026-10-24T13:20:16Z",
+      "type": "close",
+      "note": "Light-only native hardening: safe area, platform fonts, 44 targets+labels, orientation, white floor, DESIGN v1.8, error-boundary ink. check/walkthrough/web/doctor/packaged PASS; review PASS+NOTES."
+    }
+  ]
+}

@@ -4,9 +4,9 @@
 		"slug": "pie",
 		"scheme": "pie",
 		"version": "0.1.0",
-		"orientation": "portrait",
-		"userInterfaceStyle": "automatic",
-		"backgroundColor": "#101216",
+		"orientation": "default",
+		"userInterfaceStyle": "light",
+		"backgroundColor": "#FFFFFF",
 		"platforms": [
 			"ios",
 			"android",

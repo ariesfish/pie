@@ -11,6 +11,7 @@ export const en = {
 		back: "Back",
 		connecting: "Connecting…",
 		connectionFailed: "Connection failed",
+		clear: "Clear",
 		disconnected: "Disconnected",
 	},
 	chat: {
@@ -66,6 +67,9 @@ export const en = {
 		explorer: "Toggle explorer rail",
 		sidebar: "Toggle sidebar",
 		split: "Split pane",
+		resizeExplorer: "resize explorer rail",
+		resizeSplit: "resize split",
+		focusPane: "focus pane {{id}}",
 	},
 	settings: {
 		title: "Settings",

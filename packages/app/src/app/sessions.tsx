@@ -48,7 +48,7 @@ export default function SessionsScreen() {
 		<View style={styles.container}>
 			{/* MenuHeader analog: title + leading action. */}
 			<View style={styles.header}>
-				<Pressable onPress={() => router.back()} hitSlop={6} style={styles.headerBack}>
+				<Pressable onPress={() => router.back()} hitSlop={6} accessibilityLabel={t("common.back")} style={styles.headerBack}>
 					<ChevronLeft size={18} color={theme.colors.foregroundMuted} strokeWidth={1.75} />
 				</Pressable>
 				<Text style={styles.headerTitle}>{t("sessions.title")}</Text>
@@ -63,7 +63,7 @@ export default function SessionsScreen() {
 					placeholder={t("sessions.searchPlaceholder")}
 				/>
 				{search.length > 0 ? (
-					<Pressable onPress={() => setSearch("")} hitSlop={6}>
+					<Pressable onPress={() => setSearch("")} hitSlop={8} accessibilityLabel={t("common.clear")} style={styles.clearButton}>
 						<X size={14} color={theme.colors.foregroundExtraMuted} strokeWidth={1.5} />
 					</Pressable>
 				) : null}
@@ -159,8 +159,8 @@ const styles = StyleSheet.create((theme) => ({
 		borderBottomColor: theme.colors.border,
 	},
 	headerBack: {
-		width: 28,
-		height: 28,
+		width: { xs: 44, md: 28 },
+		height: { xs: 44, md: 28 },
 		alignItems: "center",
 		justifyContent: "center",
 		borderRadius: theme.borderRadius.md,
@@ -208,6 +208,13 @@ const styles = StyleSheet.create((theme) => ({
 		paddingHorizontal: theme.spacing[3],
 		paddingVertical: 8,
 		gap: 2,
+		minHeight: { xs: 44, md: 32 },
+	},
+	clearButton: {
+		width: 28,
+		height: 28,
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	rowPressed: { opacity: 0.7 },
 	rowTitle: { color: theme.colors.foreground, fontSize: theme.fontSize.sm },
@@ -228,6 +235,7 @@ const styles = StyleSheet.create((theme) => ({
 		gap: theme.spacing[1.5],
 		paddingHorizontal: theme.spacing[3],
 		paddingVertical: theme.spacing[1.5],
+		minHeight: { xs: 44, md: 32 },
 		borderRadius: theme.borderRadius.md,
 		backgroundColor: theme.colors.accent,
 	},

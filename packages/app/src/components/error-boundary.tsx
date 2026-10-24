@@ -3,7 +3,7 @@
 // and offer a retry. Deliberately free of react-native-unistyles: when the
 // crash is itself a theme/registry failure, the fallback must still render.
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 
 interface Props {
 	children: ReactNode;
@@ -41,7 +41,7 @@ const COLORS = {
 	muted: "#5d6678",
 	surface: "#f6f7f9",
 	border: "#e4e7ec",
-	accent: "#3b5bdb",
+	accent: "#14161a",
 	onAccent: "#ffffff",
 };
 
@@ -55,7 +55,7 @@ function CrashScreen({ error, onRetry }: { error: Error; onRetry(): void }) {
 				{error.message || String(error)}
 			</Text>
 			<ScrollView style={{ maxHeight: 260, width: "100%", backgroundColor: COLORS.surface, borderRadius: 10, borderWidth: 1, borderColor: COLORS.border }} contentContainerStyle={{ padding: 12 }}>
-				<Text style={{ color: COLORS.muted, fontSize: 12, fontFamily: "monospace" }} selectable>
+				<Text style={{ color: COLORS.muted, fontSize: 12, fontFamily: Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" }) }} selectable>
 					{String(error.stack ?? "").slice(0, 800)}
 				</Text>
 			</ScrollView>

@@ -3,7 +3,8 @@
 // Host runtime bootstrap, keyboard, portals and command center are not ported.)
 import { Text, TextInput, View } from "react-native";
 import { Stack } from "expo-router";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -68,6 +69,25 @@ function RootStack() {
 	);
 }
 
+function SafeAreaFrame({ children }: { children: React.ReactNode }) {
+	const insets = useSafeAreaInsets();
+	return (
+		<View
+			style={[
+				styles.surfaceFill,
+				{
+					paddingTop: insets.top,
+					paddingBottom: insets.bottom,
+					paddingLeft: insets.left,
+					paddingRight: insets.right,
+				},
+			]}
+		>
+			{children}
+		</View>
+	);
+}
+
 function RootAppTree() {
 	return (
 		<AppErrorBoundary>
@@ -76,10 +96,11 @@ function RootAppTree() {
 					<KeyboardProvider>
 						<GestureHandlerRootView style={flexStyle}>
 							<SafeAreaProvider>
+								<StatusBar style="dark" />
 								<BottomSheetModalProvider>
-									<View style={styles.surfaceFill}>
+									<SafeAreaFrame>
 										<AppShell />
-									</View>
+									</SafeAreaFrame>
 								</BottomSheetModalProvider>
 							</SafeAreaProvider>
 						</GestureHandlerRootView>

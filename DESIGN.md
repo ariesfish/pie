@@ -1,5 +1,5 @@
 ---
-version: 1.7
+version: 1.8
 name: Pie design system
 description: 近白纸上的工程工具：墨字、墨色强调、1px 细线 + 表面阶梯做深度；界面退到会话后面，强调只给操作与焦点，彩色只留给语义状态。
 resolved-from-defaults:
@@ -22,17 +22,17 @@ colors:
   on-accent: "#FFFFFF"
 typography:
   display:
-    fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', sans-serif"
+    fontFamily: "System (iOS/Android) / platform system-ui stack (web)"
     fontSize: "20px"
     fontWeight: 600
     lineHeight: 1.3
   body:
-    fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', sans-serif"
+    fontFamily: "System (iOS/Android) / platform system-ui stack (web)"
     fontSize: "15px"
     fontWeight: 400
     lineHeight: 1.62
   mono:
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
+    fontFamily: "Menlo (iOS) / monospace (Android) / ui-monospace stack (web)"
     fontSize: "12.5px"
     lineHeight: 1.7
 ---
@@ -123,8 +123,11 @@ Paseo 皮肤层的唯一依据见 ADR-0007。
 
 ### Font Family
 
-- UI / 正文：系统栈（`system-ui` … `PingFang SC`）。不引入需要授权的字体。
-- Mono：`ui-monospace` 栈，只给代码、命令、diff、token 数。
+- UI / 正文：平台系统字体。iOS 用 `System`，Android 用 `sans-serif`，
+  Web 用 `system-ui` 栈。React Native 的 `fontFamily` 只接受真实平台字体名，
+  不接受 CSS font stack。
+- Mono：iOS `Menlo`，Android `monospace`，Web `ui-monospace` 栈；只给代码、命令、
+  diff、token 数。
 - 中文与英文共用同一套尺寸；不因语言切换字号。
 
 ### Hierarchy
@@ -175,8 +178,30 @@ chip 内衬这类控件内部微调，不做分栏与页面级留白。禁止 3 
 
 - 断点沿用 `md: 720` / `lg: 992`；`< md` 为 compact。
 - compact：侧栏与检查器变成左右抽屉（边缘手势 + 顶部按钮），不引入第三套导航。
-- compact 触控目标 ≥ 44×44；桌面控件高度 28–32。
+- compact 触控目标 ≥ 44×44；桌面控件高度 28–32。header 返回/清空、列表删除、
+  空态主操作同样适用，不能只靠 `hitSlop` 补到 40。
 - 会话行：桌面 32，compact 44；tab：桌面 33，compact 40。
+- 手机与 iPad 允许横竖屏（`orientation: default`）；compact/desktop 继续按宽度
+  断点决定，不为旋转单独做第三套导航。
+- Safe area：根布局统一消费 top/bottom/left/right insets；sheet、toast、menu 在
+  自己的 portal 内继续消费 insets，避免双重 padding。
+
+## Native (iOS / Android)
+
+- **只发布浅色**：`app.json` 使用 `userInterfaceStyle: "light"`，根布局显式
+  `StatusBar style="dark"`。深色主题等功能完善后单独立项，不允许“自动深色 +
+  只有浅色 token”的中间态。
+- **字体**：见 Typography 的平台映射。iOS 使用 `System` / `Menlo`，Android 使用
+  `sans-serif` / `monospace`；CSS font stack 只给 Web。
+- **Safe area**：根布局的 `SafeAreaFrame` 用 `useSafeAreaInsets` 消费四边 inset；浮层在自己 portal 内
+  处理 inset，不叠两层。
+- **方向**：手机与 iPad 都允许横竖屏；宽度断点决定 compact/desktop，不锁死
+  portrait。
+- **Dynamic Type**：正文跟随系统字号缩放；固定高度控件必须有 `minHeight`，不能
+  在大字号下裁切内容。原生大字号回归属于发布前检查。
+- **键盘与手势**：composer 跟随键盘上移；抽屉边缘手势避开系统返回/主屏手势区；
+  home indicator 区域不得放唯一主操作。
+- **Haptics**：本期不作为硬要求；删除、权限批准、抽屉开合可后续按 HIG 评估。
 
 ## Elevation & Depth
 
@@ -280,6 +305,12 @@ chip 内衬这类控件内部微调，不做分栏与页面级留白。禁止 3 
 ## Iteration Guide
 
 - 本文件是设计决策记录：每次修改写清「改什么 / 为什么 / 代价」，并 bump `version`。
+- v1.8（2026-10-24，T-048）：**RN/Expo 原生原则收口**。显式锁定浅色模式
+  （`userInterfaceStyle: light` + `StatusBar style="dark"`），放弃“自动深色 + 只有
+  浅色 token”的混合态；补根布局 Safe area、平台字体映射（iOS `System`/`Menlo`，
+  Android `sans-serif`/`monospace`，Web 才用 CSS stack）、手机/iPad 横竖屏、compact
+  44 目标覆盖 header/清空/列表删除/空态。error boundary 的旧蓝色 accent 改回 ink。
+  代价：深色模式推迟到功能完善后；Dynamic Type 与真机手势仍需设备验证。
 - v1.7（2026-10-23，T-037）：设置页聚焦 Pi 核心：**模型配置 + 扩展/包**。标签改为
   通用 / 模型 / 扩展；模型页展示自定义 provider（名称、baseUrl、api、模型数、key
   是否配置）、默认模型与可用模型目录，原始 `models.json` 仍在下方可编辑；扩展页

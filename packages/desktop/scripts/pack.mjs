@@ -77,13 +77,13 @@ execFileSync("npx", ["expo", "export", "--platform", "web", "--output-dir", join
 {
 	const htmlPath = join(pkgDir, "dist", "app-web", "index.html");
 	let html = readFileSync(htmlPath, "utf8");
-	if (!html.includes("pie-dark-floor")) {
+	if (!html.includes("pie-canvas-floor")) {
 		html = html.replace(
 			"</head>",
-			`\t<style id="pie-dark-floor">html, body, #root { margin: 0; background: #101216; }</style>\n  </head>`,
+			`\t<style id="pie-canvas-floor">html, body, #root { margin: 0; background: #FFFFFF; }</style>\n  </head>`,
 		);
 		writeFileSync(htmlPath, html);
-		console.log("[pack] injected pie-dark-floor into index.html");
+		console.log("[pack] injected pie-canvas-floor into index.html");
 	}
 }
 

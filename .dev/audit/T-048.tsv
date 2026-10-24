@@ -1,0 +1,8 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T048-1	lock light mode + explicit dark status bar	one light theme only; automatic dark mixes native/system surfaces	app.json userInterfaceStyle=light; StatusBar style dark; expo-system-ui	PASS	N/A	ui-walkthrough-shots/00-settings.png
+T048-2	root SafeAreaFrame consumes insets	native notch/home indicator; avoid portal double-inset	_layout SafeAreaFrame; toast web-only inset fix	PASS	N/A	
+T048-3	platform font names	iOS CSS system-ui/ui-monospace are not RN font names	theme.ts System/Menlo; Android sans-serif/monospace	PASS	N/A	
+T048-4	compact 44 targets + i18n a11y labels	header/clear/remove/empty/footer were 28-40	responsive sizes; sessions/workspaces/left-sidebar labels	PASS	N/A	
+T048-5	orientation default / white launch floor	portrait lock conflicted with tablet; dark launch floor conflicted with canvas	app.json default/#FFFFFF; pack canvas floor	PASS	N/A	
+T048-6	DESIGN v1.8 Native section	contract lacked safe-area/status-bar/font/orientation rules	DESIGN.md v1.8	PASS	N/A	
+T048-7	error-boundary ink	old blue accent survived v1.4	error-boundary accent #14161A	PASS	N/A	

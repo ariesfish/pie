@@ -241,7 +241,7 @@ export function LeftSidebar() {
 					<Pressable
 						hitSlop={6}
 						onPress={clearRenameError}
-						accessibilityLabel="dismiss"
+						accessibilityLabel={t("common.close")}
 					>
 						<X size={12} color={theme.colors.destructiveForeground} strokeWidth={1.75} />
 					</Pressable>
@@ -327,6 +327,7 @@ function SearchField({
 	placeholder: string;
 }) {
 	const { theme } = useUnistyles();
+	const { t } = useTranslation();
 	return (
 		<View style={styles.searchRow}>
 			<Search size={13} color={theme.colors.foregroundExtraMuted} strokeWidth={1.75} />
@@ -338,7 +339,7 @@ function SearchField({
 				style={styles.searchInput}
 			/>
 			{value.length > 0 ? (
-				<Pressable hitSlop={6} onPress={() => onChangeText("")} accessibilityLabel="clear">
+				<Pressable hitSlop={8} onPress={() => onChangeText("")} accessibilityLabel={t("common.clear")} style={styles.clearButton}>
 					<X size={12} color={theme.colors.foregroundExtraMuted} strokeWidth={1.75} />
 				</Pressable>
 			) : null}
@@ -418,13 +419,13 @@ const styles = StyleSheet.create((theme) => ({
 		flexDirection: "row",
 		alignItems: "center",
 		paddingRight: theme.spacing[1],
-		minHeight: 34,
+		minHeight: { xs: 44, md: 34 },
 	},
 	workspaceRowActive: {
 		backgroundColor: theme.colors.surfaceSidebarSelected,
 	},
 	chevronCell: {
-		width: 22,
+		width: { xs: 28, md: 22 },
 		alignItems: "center",
 		justifyContent: "center",
 		alignSelf: "stretch",
@@ -470,7 +471,13 @@ const styles = StyleSheet.create((theme) => ({
 		paddingLeft: 38,
 		paddingRight: theme.spacing[2],
 		paddingVertical: 6,
-		minHeight: 30,
+		minHeight: { xs: 44, md: 32 },
+	},
+	clearButton: {
+		width: 28,
+		height: 28,
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	sessionRowSelected: {
 		backgroundColor: theme.colors.surfaceSidebarSelected,
@@ -517,8 +524,8 @@ const styles = StyleSheet.create((theme) => ({
 		borderTopColor: theme.colors.border,
 	},
 	footerButton: {
-		width: 28,
-		height: 28,
+		width: { xs: 44, md: 28 },
+		height: { xs: 44, md: 28 },
 		alignItems: "center",
 		justifyContent: "center",
 		borderRadius: theme.borderRadius.md,

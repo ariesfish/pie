@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 import { isWeb } from "@/constants/platform";
 import { clampRailWidth } from "@/constants/layout";
 import type { ViewInstance } from "react-native";
@@ -19,6 +20,7 @@ export function RailResizeHandle({
 	onResize: (px: number) => void;
 }) {
 	const { theme } = useUnistyles();
+	const { t } = useTranslation();
 	const [dragging, setDragging] = useState(false);
 	const startWidthRef = useRef(width);
 	const viewRef = useRef<ViewInstance>(null);
@@ -68,7 +70,7 @@ export function RailResizeHandle({
 			<View
 				ref={viewRef}
 				accessibilityRole="adjustable"
-				accessibilityLabel="resize explorer rail"
+				accessibilityLabel={t("panels.resizeExplorer")}
 				style={[
 					styles.handle,
 					isWeb && (styles.cursor as never),

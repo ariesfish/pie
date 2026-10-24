@@ -37,7 +37,7 @@ pi-dev-mode 默认把整个 `.dev/` 当单开发者的过程记忆（gitignore�
 - `lifecycle/` 与 `audit/T-*.tsv` **入库**：账本和决策行是审计记录，`gate.sh replay` 需要它们随 clone 存在。
 - `audit/evidence/`、`inbox/`、`feature-<slug>/`、`feature-archive/` **不入库**：体积大、可重跑生成，或只是过程稿。
 
-当前 feature：`feature-stack-upgrade/`（Expo 58 / RNGH 3.3 / vitest 5，T-043…T-047）；Pi 配置波次见 `feature-pi-config/`，历史 UI 波次见 `feature-archive/`。
+当前 feature：`feature-ui-native-fixes/`（浅色模式 + RN/Expo 原生原则，T-048）；前序见 `feature-stack-upgrade/`、`feature-pi-config/`。
 
 ## 常用命令
 

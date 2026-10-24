@@ -76,11 +76,11 @@ export default function WorkspacesScreen() {
 	return (
 		<View style={styles.container}>
 			<View style={styles.header}>
-				<Pressable onPress={() => router.back()} hitSlop={6} style={styles.headerBack}>
+				<Pressable onPress={() => router.back()} hitSlop={6} accessibilityLabel={t("common.back")} style={styles.headerBack}>
 					<ArrowLeft size={18} color={theme.colors.foregroundMuted} strokeWidth={1.75} />
 				</Pressable>
 				<Text style={styles.headerTitle}>{t("workspaces.title")}</Text>
-				<Pressable hitSlop={6} onPress={() => setAdding((v) => !v)} style={styles.headerAdd}>
+				<Pressable hitSlop={6} onPress={() => setAdding((v) => !v)} accessibilityLabel={t("workspaces.add")} style={styles.headerAdd}>
 					{adding ? (
 						<X size={16} color={theme.colors.foregroundMuted} strokeWidth={1.75} />
 					) : (
@@ -173,8 +173,8 @@ const styles = StyleSheet.create((theme) => ({
 		borderBottomColor: theme.colors.border,
 	},
 	headerBack: {
-		width: 28,
-		height: 28,
+		width: { xs: 44, md: 28 },
+		height: { xs: 44, md: 28 },
 		alignItems: "center",
 		justifyContent: "center",
 		borderRadius: theme.borderRadius.md,
@@ -186,8 +186,8 @@ const styles = StyleSheet.create((theme) => ({
 		fontWeight: theme.fontWeight.semibold,
 	},
 	headerAdd: {
-		width: 28,
-		height: 28,
+		width: { xs: 44, md: 28 },
+		height: { xs: 44, md: 28 },
 		alignItems: "center",
 		justifyContent: "center",
 		borderRadius: theme.borderRadius.md,
@@ -216,6 +216,7 @@ const styles = StyleSheet.create((theme) => ({
 		backgroundColor: theme.colors.accent,
 		borderRadius: theme.borderRadius.lg,
 		paddingVertical: theme.spacing[2],
+		minHeight: { xs: 44, md: 32 },
 	},
 	addBtnBusy: { opacity: 0.6 },
 	addBtnText: { color: theme.colors.accentForeground, fontSize: theme.fontSize.sm, fontWeight: theme.fontWeight.semibold },
@@ -227,6 +228,7 @@ const styles = StyleSheet.create((theme) => ({
 		paddingHorizontal: theme.spacing[3],
 		paddingVertical: theme.spacing[2],
 		gap: 2,
+		minHeight: { xs: 44, md: 32 },
 	},
 	rowOn: { backgroundColor: theme.colors.surface2 },
 	rowPressed: { opacity: 0.7 },
@@ -240,7 +242,13 @@ const styles = StyleSheet.create((theme) => ({
 		textTransform: "uppercase",
 		letterSpacing: 0.5,
 	},
-	rowRemove: { padding: theme.spacing[2] },
+	rowRemove: {
+		padding: theme.spacing[2],
+		minWidth: { xs: 44, md: 28 },
+		minHeight: { xs: 44, md: 28 },
+		alignItems: "center",
+		justifyContent: "center",
+	},
 	emptyText: {
 		color: theme.colors.foregroundExtraMuted,
 		fontSize: theme.fontSize.base,

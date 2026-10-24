@@ -83,16 +83,20 @@ export const OPACITY = {
 
 export const ICON_STROKE_WIDTH = 1.5;
 
+// React Native fontFamily takes a real platform font name, not a CSS stack.
+// iOS special-cases "System"; Android uses its sans-serif/monospace families.
 export const DEFAULT_UI_FONT_STACK: string = Platform.select({
-	ios: "system-ui",
-	default: "normal",
+	ios: "System",
+	android: "sans-serif",
 	web: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+	default: "System",
 });
 
 export const DEFAULT_MONO_FONT_STACK: string = Platform.select({
-	ios: "ui-monospace",
-	default: "monospace",
+	ios: "Menlo",
+	android: "monospace",
 	web: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+	default: "monospace",
 });
 
 /** Conversation column max width (DESIGN.md §Layout). */

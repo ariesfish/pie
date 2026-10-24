@@ -4,6 +4,7 @@
 // (right), home surface in the middle with edge-swipe open gestures.)
 import type { ReactNode } from "react";
 import { Pressable, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { Menu } from "lucide-react-native";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
@@ -124,12 +125,13 @@ function MobileExplorerRail() {
 /** Compact header affordance: open the sessions drawer. */
 export function MobileSessionsButton() {
 	const { theme } = useUnistyles();
+	const { t } = useTranslation();
 	const showMobileSessions = useTabsStore((s) => s.showMobileSessions);
 	return (
 		<Pressable
 			hitSlop={6}
 			onPress={showMobileSessions}
-			accessibilityLabel="sessions"
+			accessibilityLabel={t("sessions.title")}
 			style={styles.headerIcon}
 		>
 			<Menu size={14} color={theme.colors.foregroundMuted} strokeWidth={1.5} />

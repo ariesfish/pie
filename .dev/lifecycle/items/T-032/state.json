@@ -1,0 +1,49 @@
+{
+  "id": "T-032",
+  "title": "Split daemon command handlers by domain",
+  "opened": "2026-10-24T05:56:05Z",
+  "closed": "2026-10-24T06:08:55Z",
+  "budget": 3,
+  "blocked": null,
+  "gates": {
+    "check": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-24T06:07:48Z"
+    }
+  },
+  "history": [
+    {
+      "step": 1,
+      "ts": "2026-10-24T05:56:05Z",
+      "type": "open",
+      "budget": 3
+    },
+    {
+      "step": 2,
+      "ts": "2026-10-24T06:07:48Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "upport act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal presentation > only replaces when the callsite asks for replacement\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n",
+      "note": "final tree: typecheck + 94 test files (743 passed, 1 skipped)"
+    },
+    {
+      "step": 3,
+      "ts": "2026-10-24T06:08:55Z",
+      "type": "close",
+      "note": "In 9a8f0ae: 48 handlers split into server/handlers/{system,workspace,session,resources,permissions}.ts behind HandlerDeps + CommandRouter; server.ts 913->404 lines, keeps transport/sequencing/summary. New handlers.test.ts registers daemon.status without WS. All 12 daemon test files (94 tests) pass; check PASS."
+    }
+  ]
+}

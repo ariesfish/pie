@@ -1,0 +1,49 @@
+{
+  "id": "T-031",
+  "title": "Typed activity events and i18n timeline labels",
+  "opened": "2026-10-24T05:56:05Z",
+  "closed": "2026-10-24T06:08:55Z",
+  "budget": 3,
+  "blocked": null,
+  "gates": {
+    "check": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-24T06:07:21Z"
+    }
+  },
+  "history": [
+    {
+      "step": 1,
+      "ts": "2026-10-24T05:56:05Z",
+      "type": "open",
+      "budget": 3
+    },
+    {
+      "step": 2,
+      "ts": "2026-10-24T06:07:21Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "upport act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal presentation > only replaces when the callsite asks for replacement\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n",
+      "note": "final tree: typecheck + 94 test files (743 passed, 1 skipped)"
+    },
+    {
+      "step": 3,
+      "ts": "2026-10-24T06:08:55Z",
+      "type": "close",
+      "note": "In 980ac81: timeline stores ActivityItem {kind,name?,count?} instead of English text; right-rail formats via timeline.* keys in en/zh-CN; deriveTimeline(revision) replaced by useSessionTimeline() with revision as the real cache key. Added i18n key-set test (plural suffixes normalized). Gate: check PASS."
+    }
+  ]
+}

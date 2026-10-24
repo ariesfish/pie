@@ -4,7 +4,7 @@ import { FlatList, Text, View, type ListRenderItem } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { highlightCode, type HighlightToken } from "@getpaseo/highlight";
 import { syntaxTokenStyleFor } from "@/styles/syntax-token-styles";
-import type { WorkspaceFileLocation } from "@/workspace/file-open";
+import type { WorkspaceFileLocation } from "@/file-pane/location";
 import type { EditorVisualTheme } from "../editor/extensions.web";
 import { selectSourcePresentation } from "./presentation";
 

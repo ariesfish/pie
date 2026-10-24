@@ -2,14 +2,14 @@
 // [pie] W4b-2: both platform strategies are the real ones. The web
 // viewport's chat-find bridge is stubbed until the find cone lands.
 import type { ResolveStreamRenderStrategyInput, StreamStrategy } from "./strategy";
-import { createNativeStreamStrategyFallback } from "./strategy-fallback";
-import { createWebStreamStrategyFallback } from "./strategy-fallback";
+import { createNativeStreamStrategy } from "./strategy-native";
+import { createWebStreamStrategy } from "./strategy-web";
 
 export function resolveStreamRenderStrategy(
   input: ResolveStreamRenderStrategyInput,
 ): StreamStrategy {
   if (input.platform === "web") {
-    return createWebStreamStrategyFallback();
+    return createWebStreamStrategy({ isMobileBreakpoint: false });
   }
-  return createNativeStreamStrategyFallback();
+  return createNativeStreamStrategy();
 }

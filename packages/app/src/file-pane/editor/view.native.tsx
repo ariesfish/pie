@@ -8,7 +8,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
 import type { FileEditorModel } from "./model";
 import type { EditorVisualTheme } from "./extensions.web";
-import type { WorkspaceFileLocation } from "@/workspace/file-open";
+import type { WorkspaceFileLocation } from "@/file-pane/location";
 
 interface FileEditorViewProps {
 	model: FileEditorModel;

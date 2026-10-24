@@ -1,0 +1,49 @@
+{
+  "id": "T-034",
+  "title": "Client windowed entries and chat history paging",
+  "opened": "2026-10-24T06:17:31Z",
+  "closed": "2026-10-24T06:38:37Z",
+  "budget": 3,
+  "blocked": null,
+  "gates": {
+    "check": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-24T06:37:18Z"
+    }
+  },
+  "history": [
+    {
+      "step": 1,
+      "ts": "2026-10-24T06:17:31Z",
+      "type": "open",
+      "budget": 3
+    },
+    {
+      "step": 2,
+      "ts": "2026-10-24T06:37:18Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "upport act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal presentation > only replaces when the callsite asks for replacement\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n",
+      "note": "final tree: typecheck + 95 test files (751 passed, 1 skipped)"
+    },
+    {
+      "step": 3,
+      "ts": "2026-10-24T06:38:37Z",
+      "type": "close",
+      "note": "In d35819c + fc0b834: SessionTreeStore tracks entryWindow and prepends older pages; connection-store exposes olderHistory/loadOlderEntries with session+leaf+cursor guards; ChatList drives the previously parked history-start machine. Tests cover prepend, cursor wiring, navigate/fork order, and stale-page rejection. Gate: check PASS."
+    }
+  ]
+}

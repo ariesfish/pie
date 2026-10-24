@@ -66,6 +66,15 @@ export const zhCN = {
 		sidebar: "切换侧栏",
 		split: "分栏",
 	},
+	history: {
+		title: "会话树",
+		count: "{{count}} 条记录",
+		empty: "还没有记录",
+		current: "当前",
+		goHere: "回到这里",
+		forkHere: "从这里分叉",
+		hint: "选择一条记录，回到该点或从这里分叉。",
+	},
 	timeline: {
 		title: "时间线",
 		empty: "暂无事件",
@@ -133,6 +142,7 @@ export const zhCN = {
 			files: "文件",
 			changes: "变更",
 			resources: "包",
+			history: "历史",
 			close: "收起侧栏",
 			usage: "用量",
 			title: "检查器",

@@ -103,7 +103,9 @@ export function sanitizeLayoutRecord(input: unknown): WorkspaceLayoutRecord {
 	const explorerMode: ExplorerMode =
 		record.explorerMode === "files" ||
 		record.explorerMode === "changes" ||
+		record.explorerMode === "history" ||
 		record.explorerMode === "resources" ||
+		record.explorerMode === "usage" ||
 		record.explorerMode === "activity"
 			? (record.explorerMode as ExplorerMode)
 			: null;

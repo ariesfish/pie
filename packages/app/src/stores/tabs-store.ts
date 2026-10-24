@@ -39,7 +39,14 @@ import {
 } from "./workspace-layout-record";
 
 /** Right-rail content mode; null = rail hidden (desktop). */
-export type ExplorerMode = "files" | "changes" | "resources" | "usage" | "activity" | null;
+export type ExplorerMode =
+	| "files"
+	| "changes"
+	| "history"
+	| "resources"
+	| "usage"
+	| "activity"
+	| null;
 
 /** Compact (mobile) panel targets — paseo mobile-panels semantics. */
 export type MobilePanelView = "home" | "sessions" | "explorer";

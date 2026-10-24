@@ -255,7 +255,7 @@ async function runAssertions(appUrl, workspacePath) {
 		.getByRole("button")
 		.count()
 		.catch(() => 0);
-	check("02b inspector segments = 5 modes", inspectorSegments === 5, `segments=${inspectorSegments}`);
+	check("02b inspector segments = 6 modes", inspectorSegments === 6, `segments=${inspectorSegments}`);
 	await shot(page, "02-rail-files");
 
 	// 03 open app.ts → files tab + CodeMirror
@@ -649,6 +649,28 @@ async function runRenameEvidence(appUrl, workspacePath, agentDir) {
 		await wire.request("session.attach", { sessionId: parentId, as: "readwrite", path: parentPath });
 		await page.locator('[aria-label="分叉源消息"]').first().click();
 		await sleep(2000);
+		await page.getByLabel("Toggle explorer rail").click();
+		await sleep(600);
+		await inspectorMode(page, "History");
+		await sleep(800);
+		check(
+			"R9b history panel shows the session tree",
+			await page.getByTestId("session-tree-panel").isVisible().catch(() => false),
+		);
+		check(
+			"R9c history tree renders entry rows",
+			(await page.getByTestId("session-tree-row").count()) >= 1,
+			`rows=${await page.getByTestId("session-tree-row").count()}`,
+		);
+		await page.getByTestId("session-tree-row").first().click();
+		check(
+			"R9d history selection exposes navigate/fork actions",
+			(await page.getByText("Go to this point").isVisible().catch(() => false)) &&
+				(await page.getByText("Fork from here").isVisible().catch(() => false)),
+		);
+		await shot(page, "17b-history-tree");
+		await inspectorMode(page, "Files");
+		await sleep(400);
 		await wire.request("session.rename", { sessionId: parentId, name: "手机端改名" });
 		await sleep(1500);
 		const desktopLive = await page.locator('[aria-label="手机端改名"]').first().isVisible().catch(() => false);

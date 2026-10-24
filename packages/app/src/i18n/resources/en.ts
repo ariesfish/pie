@@ -66,6 +66,15 @@ export const en = {
 		sidebar: "Toggle sidebar",
 		split: "Split pane",
 	},
+	history: {
+		title: "Session tree",
+		count: "{{count}} entries",
+		empty: "No entries yet",
+		current: "current",
+		goHere: "Go to this point",
+		forkHere: "Fork from here",
+		hint: "Select an entry to rewind or fork.",
+	},
 	timeline: {
 		title: "Timeline",
 		empty: "No events yet",
@@ -133,6 +142,7 @@ export const en = {
 			files: "Files",
 			changes: "Changes",
 			resources: "Packages",
+			history: "History",
 			close: "Hide rail",
 			usage: "Usage",
 			title: "Inspector",

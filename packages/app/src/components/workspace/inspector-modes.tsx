@@ -1,7 +1,7 @@
 // Inspector mode control — the single segmented control used by both the
 // desktop inspector rail and the compact explorer drawer (DESIGN.md
 // §Components/Navigation: one selected-state vocabulary, no accent fill).
-import { Activity, Gauge, GitCompare, Package, FolderOpen } from "lucide-react-native";
+import { Activity, Gauge, GitBranch, GitCompare, Package, FolderOpen } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 
@@ -12,11 +12,19 @@ import type { ExplorerMode } from "@/stores/tabs-store";
 
 export type InspectorMode = Exclude<ExplorerMode, null>;
 
-const MODES: InspectorMode[] = ["files", "changes", "resources", "usage", "activity"];
+const MODES: InspectorMode[] = [
+	"files",
+	"changes",
+	"history",
+	"resources",
+	"usage",
+	"activity",
+];
 
 const ICONS: Record<InspectorMode, typeof FolderOpen> = {
 	files: FolderOpen,
 	changes: GitCompare,
+	history: GitBranch,
 	resources: Package,
 	usage: Gauge,
 	// `activity` is part of ExplorerMode (tabs-store) but is not one of the

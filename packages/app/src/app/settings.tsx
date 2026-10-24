@@ -1014,7 +1014,9 @@ function configError(t: (key: string) => string, err: unknown): string {
 	if (code === ErrorCodes.configConflict) return t("settings.conflict");
 	if (code === ErrorCodes.configInvalid) {
 		const detail = errorMessage(err);
-		return detail ? `${t("settings.invalidConfig")} ${detail}` : t("settings.invalidConfig");
+		return detail && detail !== code
+			? `${t("settings.invalidConfig")} ${detail}`
+			: t("settings.invalidConfig");
 	}
 	if (code === ErrorCodes.configTooLarge) return t("settings.tooLarge");
 	if (code === ErrorCodes.configComments) return t("settings.commentsBlockForm");

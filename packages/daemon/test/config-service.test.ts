@@ -198,15 +198,28 @@ describe("ConfigService", () => {
 		});
 	});
 
-	it("does not leak the validation temp path", async () => {
+	it("does not leak the validation temp path and leaves the file unchanged", async () => {
+		const broken = JSON.stringify({
+			providers: { broken: { name: 42, models: [] } },
+		});
+		writeFileSync(join(dir, "models.json"), broken);
+		const before = await service.read("models");
+
 		await expect(
 			service.upsertProvider({
 				id: "acme",
 				baseUrl: "https://acme.test/v1",
 				api: "openai-completions",
-				models: [{ id: "m1", contextWindow: 0 }],
+				models: [{ id: "m1" }],
 			}),
-		).rejects.not.toMatchObject({ message: expect.stringContaining(tmpdir()) });
+		).rejects.toMatchObject({
+			code: "config_invalid",
+			message: expect.stringContaining("providers.broken.name"),
+		});
+		const after = await service.read("models");
+		expect(after.content).toBe(broken);
+		expect(after.revision).toBe(before.revision);
+		expect(after.content).not.toContain(tmpdir());
 	});
 
 	it("rejects duplicate model ids", async () => {

@@ -38,9 +38,11 @@ export async function validateModelsConfig(
 		const error = runtime.getError();
 		return error ? withoutTempPath(error) : undefined;
 	} catch (err) {
-		const message = err instanceof Error ? err.message : String(err);
-		return withoutTempPath(message);
+		// File-system/runtime setup failures are infra errors, not user config
+		// errors. Keep the original detail out of the wire response; it may
+		// contain a temporary path.
+		throw new Error("Failed to validate models.json with Pi", { cause: err });
 	} finally {
-		await rm(dir, { recursive: true, force: true });
+		await rm(dir, { recursive: true, force: true }).catch(() => {});
 	}
 }

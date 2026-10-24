@@ -3,3 +3,4 @@ T041-1	validate the merged models object with Pi's public ModelRuntime	the SDK o
 T041-2	reject Pi-invalid values and return the field path	contextWindow 0 and custom models without baseUrl/api would make Pi fail at load	config-service.test rejects contextWindow/baseUrl; UI appends daemon message	check PASS	N/A	
 T041-3	keep unknown provider/model fields and strip the temp path	the schema intentionally allows unknowns; temp paths are noise	existing preservation test + no-temp-path test	check PASS	N/A	
 T041-4	leave Advanced JSON as the escape hatch	form validation must not block hand-edited fields the SDK accepts	spec out-of-scope; config.write unchanged	check PASS	N/A	
+T041-5	review PASS after four required fixes	cleanup/infra/UI/test contract	independent review: .dev/audit/evidence/review-t041/verdict.json	PASS	N/A	

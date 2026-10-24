@@ -1,0 +1,4 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T036-1	config.overview/read/write behind daemon	桌面与远程共用配置面；不能让 Electron 直读	config-service.ts; handlers/config.ts	check PASS	N/A	ui-walkthrough-shots/00-settings.png
+T036-2	只写 settings/models/mcp，auth 仅 provider id	避免密钥跨线；auth 编辑需单独安全设计	config-service.test 密钥不外泄断言	check PASS	N/A	
+T036-3	写 JSON 对象 + 1MiB + temp/rename + revision CAS	防止无效配置与 last-writer-wins	config-service.test conflict/invalid	check PASS	N/A	

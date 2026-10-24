@@ -1,0 +1,296 @@
+{
+  "id": "T-040",
+  "title": "Address T-039 review blockers",
+  "opened": "2026-10-24T07:39:31Z",
+  "closed": "2026-10-24T08:34:10Z",
+  "budget": 3,
+  "blocked": null,
+  "gates": {
+    "tdd": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-24T07:39:58Z"
+    },
+    "check": {
+      "class": "D",
+      "pass": true,
+      "runs": 4,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-24T08:29:32Z"
+    },
+    "smoke": {
+      "class": "D",
+      "pass": true,
+      "runs": 4,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-24T08:30:34Z"
+    },
+    "verify": {
+      "class": "D",
+      "pass": true,
+      "runs": 5,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-24T08:33:27Z"
+    }
+  },
+  "history": [
+    {
+      "step": 1,
+      "ts": "2026-10-24T07:39:31Z",
+      "type": "open",
+      "budget": 3
+    },
+    {
+      "step": 2,
+      "ts": "2026-10-24T07:39:58Z",
+      "type": "run",
+      "gate": "tdd",
+      "class": "D",
+      "argv": [
+        "npx",
+        "vitest",
+        "run",
+        "packages/daemon/test/config-service.test.ts",
+        "packages/daemon/test/handlers.test.ts"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "\n RUN  v3.2.7 /home/ariesfish/Projects/harness/pie\n\n ✓ packages/daemon/test/config-service.test.ts (9 tests) 26ms\n ✓ packages/daemon/test/handlers.test.ts (2 tests) 10ms\n\n Test Files  2 passed (2)\n      Tests  11 passed (11)\n   Start at  15:39:57\n   Duration  751ms (transform 148ms, setup 49ms, collect 875ms, tests 36ms, environment 0ms, prepare 110ms)\n\n",
+      "note": "config-service and handler tests after review fixes"
+    },
+    {
+      "step": 3,
+      "ts": "2026-10-24T07:40:17Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "upport act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal presentation > only replaces when the callsite asks for replacement\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n",
+      "note": "full typecheck + vitest (96 files, 761 passed, 1 skipped)"
+    },
+    {
+      "step": 4,
+      "ts": "2026-10-24T07:40:18Z",
+      "type": "run",
+      "gate": "smoke",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "smoke"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "\n> pie@0.1.0 smoke\n> tsx scripts/pie-smoke.mts\n\npi-smoke (daemon v0.1.0)\n  ✓ listening on 127.0.0.1:8799\n  ✓ HTTP demo page serves\n  ✓ hello/helloAck (serverId srv-0.1.0-mvm3…)\n  ✓ daemon.status (daemon v0.1.0, pi 1.1.0)\n  ✓ workspace.open\n  ✓ session.create (id 01a16cda…)\n  ✓ session.attach (leaf d36199d4)\n  ✓ session.snapshot (tree 1 nodes, entries 1)\n  ✓ session.stats (0 messages)\n  ✓ models.list (0 models)\n  ✓ session.list (created session present)\n  ✓ session.attach by path (leaf e8a3afba…)\n  ✓ session.tree (3 nodes)\n  ✓ session.forkAt (new session 01a16cda…)\n  ✓ session.navigate (cancelled=false)\n  ✓ resources.overview (2 commands, 0 extensions)\n  ✓ session.forkPreview (1 fork points)\n  ✓ fs.list (4 entries, .git ignored)\n  ✓ fs.read (20 bytes, not truncated)\n  ✓ fs.watch (id fsw-1)\n  ✓ git.status (branch master, 3 entries)\n  ✓ git.diff (patch 8 lines)\n  ✓ git.diff includeUntracked (synthesize add patch)\n  ✓ workspace.fs.changed event (1 paths batched)\n  ✓ packages.list (empty) (0 configured)\n  ✓ packages.install (local) (1 configured)\n  ✓ packages.remove (local) (0 configured)\n  ✓ skills.list (3 skills, found fixture)\n  ✓ skills.read (75 chars)\n  ✓ skills.read (rejects unknown path) (not_found: Not a loaded skill of this se)\n  ✓ fs.unwatch (ok)\npi-smoke: ALL GREEN\n",
+      "note": "daemon smoke with package/config changes"
+    },
+    {
+      "step": 5,
+      "ts": "2026-10-24T07:41:28Z",
+      "type": "run",
+      "gate": "verify",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "ui-walkthrough"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "rs=1\nPASS  03b README.md → md preview (frontmatter + code copy + mermaid) — heading=true copyBtn=1 svg=1 fm=1\nPASS  03c edit → autosave CAS write lands on disk — editor=true disk=true\nPASS  04 changes tab → diff document renders (canvas + sticky headers) — headers=2 canvas=3\nPASS  04b layout toggle → unified/split flips (canvas alive) — before=\"Split view\" after=\"Unified view\" canvas=3\nPASS  04c wrap toggle present\nPASS  05a single new-session entry (no pinned creator tab) — entries=1\nPASS  05b creator panel shows Start session\nPASS  05c session created → session tab + composer — composer=true\nPASS  05d usage rail → token quartet + message stats — tokens=true counts=true\nPASS  06 split pane → two pane headers — split=2 close=2\nPASS  07 drag drop → files tab still present — app.ts nodes=1\nPASS  08 rail resize handle widens rail — x 1138 → 1070\nPASS  09 compact → sessions drawer opens (edge swipe)\nPASS  09b sessions drawer closes (push-away swipe) — backdrop=0\nPASS  10 compact → explorer drawer opens (right edge swipe) — backdrop=1 filesTab=1\nPASS  R1 fork inherits the name at the fork point — fork=分叉源名字\nPASS  R2 renaming the parent does not affect the fork — parent=改父名 fork=分叉源名字\nPASS  R3 rename leaves the branch label entry intact — label={\"type\":\"label\",\"id\":\"l0000001\",\"parentI…\nPASS  R4 labeled session renamed\nPASS  R5 renamed parent row visible in sidebar\nPASS  R6 UI rename: row shows the new name\nPASS  R7 wire state matches UI rename\nPASS  R8 UI clear: row falls back to the first message\nPASS  R9 wire state matches UI clear\nPASS  R9b history panel shows the session tree\nPASS  R9c history tree renders entry rows — rows=6\nPASS  R9d history selection exposes navigate/fork actions\nPASS  R10 desktop row updates live after an off-device rename (no reload)\nPASS  R11 phone shows the same session name as the desktop\nscreenshots: /home/ariesfish/Projects/harness/pie/ui-walkthrough-shots\nFavicon source file in Expo config (web.favicon) does not exist: ./assets/favicon.png\n",
+      "note": "walkthrough 38/38 incl. model form with labels, advanced JSON hidden, save/default/edit/delete"
+    },
+    {
+      "step": 6,
+      "ts": "2026-10-24T07:54:34Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "upport act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal presentation > only replaces when the callsite asks for replacement\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n",
+      "note": "final: typecheck + 96 files, 763 passed, 1 skipped"
+    },
+    {
+      "step": 7,
+      "ts": "2026-10-24T07:54:36Z",
+      "type": "run",
+      "gate": "smoke",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "smoke"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "\n> pie@0.1.0 smoke\n> tsx scripts/pie-smoke.mts\n\npi-smoke (daemon v0.1.0)\n  ✓ listening on 127.0.0.1:8799\n  ✓ HTTP demo page serves\n  ✓ hello/helloAck (serverId srv-0.1.0-mvm3…)\n  ✓ daemon.status (daemon v0.1.0, pi 1.1.0)\n  ✓ workspace.open\n  ✓ session.create (id 01a16ce7…)\n  ✓ session.attach (leaf 7e90640a)\n  ✓ session.snapshot (tree 1 nodes, entries 1)\n  ✓ session.stats (0 messages)\n  ✓ models.list (0 models)\n  ✓ session.list (created session present)\n  ✓ session.attach by path (leaf 6bf9c61e…)\n  ✓ session.tree (3 nodes)\n  ✓ session.forkAt (new session 01a16ce7…)\n  ✓ session.navigate (cancelled=false)\n  ✓ resources.overview (2 commands, 0 extensions)\n  ✓ session.forkPreview (1 fork points)\n  ✓ fs.list (4 entries, .git ignored)\n  ✓ fs.read (20 bytes, not truncated)\n  ✓ fs.watch (id fsw-1)\n  ✓ git.status (branch master, 3 entries)\n  ✓ git.diff (patch 8 lines)\n  ✓ git.diff includeUntracked (synthesize add patch)\n  ✓ workspace.fs.changed event (1 paths batched)\n  ✓ config.overview (/tmp/pie-smoke-Kit4vP/agent-home (models absent))\n  ✓ config.models.upsertProvider (smoke-model/1 model)\n  ✓ config.models.removeProvider (smoke-model)\n  ✓ packages.list (empty) (0 configured)\n  ✓ packages.install (local) (1 configured)\n  ✓ packages.remove (local) (0 configured)\n  ✓ skills.list (3 skills, found fixture)\n  ✓ skills.read (75 chars)\n  ✓ skills.read (rejects unknown path) (not_found: Not a loaded skill of this se)\n  ✓ fs.unwatch (ok)\npi-smoke: ALL GREEN\n",
+      "note": "smoke now covers config.overview + provider upsert/remove"
+    },
+    {
+      "step": 8,
+      "ts": "2026-10-24T07:55:41Z",
+      "type": "run",
+      "gate": "verify",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "ui-walkthrough"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "rs=1\nPASS  03b README.md → md preview (frontmatter + code copy + mermaid) — heading=true copyBtn=1 svg=1 fm=1\nPASS  03c edit → autosave CAS write lands on disk — editor=true disk=true\nPASS  04 changes tab → diff document renders (canvas + sticky headers) — headers=2 canvas=3\nPASS  04b layout toggle → unified/split flips (canvas alive) — before=\"Split view\" after=\"Unified view\" canvas=3\nPASS  04c wrap toggle present\nPASS  05a single new-session entry (no pinned creator tab) — entries=1\nPASS  05b creator panel shows Start session\nPASS  05c session created → session tab + composer — composer=true\nPASS  05d usage rail → token quartet + message stats — tokens=true counts=true\nPASS  06 split pane → two pane headers — split=2 close=2\nPASS  07 drag drop → files tab still present — app.ts nodes=1\nPASS  08 rail resize handle widens rail — x 1138 → 1070\nPASS  09 compact → sessions drawer opens (edge swipe)\nPASS  09b sessions drawer closes (push-away swipe) — backdrop=0\nPASS  10 compact → explorer drawer opens (right edge swipe) — backdrop=1 filesTab=1\nPASS  R1 fork inherits the name at the fork point — fork=分叉源名字\nPASS  R2 renaming the parent does not affect the fork — parent=改父名 fork=分叉源名字\nPASS  R3 rename leaves the branch label entry intact — label={\"type\":\"label\",\"id\":\"l0000001\",\"parentI…\nPASS  R4 labeled session renamed\nPASS  R5 renamed parent row visible in sidebar\nPASS  R6 UI rename: row shows the new name\nPASS  R7 wire state matches UI rename\nPASS  R8 UI clear: row falls back to the first message\nPASS  R9 wire state matches UI clear\nPASS  R9b history panel shows the session tree\nPASS  R9c history tree renders entry rows — rows=6\nPASS  R9d history selection exposes navigate/fork actions\nPASS  R10 desktop row updates live after an off-device rename (no reload)\nPASS  R11 phone shows the same session name as the desktop\nscreenshots: /home/ariesfish/Projects/harness/pie/ui-walkthrough-shots\nFavicon source file in Expo config (web.favicon) does not exist: ./assets/favicon.png\n",
+      "note": "final walkthrough 38/38 incl. model form"
+    },
+    {
+      "step": 9,
+      "ts": "2026-10-24T08:05:09Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "upport act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal presentation > only replaces when the callsite asks for replacement\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n",
+      "note": "final tree: 96 files, 763 passed, 1 skipped"
+    },
+    {
+      "step": 10,
+      "ts": "2026-10-24T08:06:12Z",
+      "type": "run",
+      "gate": "verify",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "ui-walkthrough"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "rs=1\nPASS  03b README.md → md preview (frontmatter + code copy + mermaid) — heading=true copyBtn=1 svg=1 fm=1\nPASS  03c edit → autosave CAS write lands on disk — editor=true disk=true\nPASS  04 changes tab → diff document renders (canvas + sticky headers) — headers=2 canvas=3\nPASS  04b layout toggle → unified/split flips (canvas alive) — before=\"Split view\" after=\"Unified view\" canvas=3\nPASS  04c wrap toggle present\nPASS  05a single new-session entry (no pinned creator tab) — entries=1\nPASS  05b creator panel shows Start session\nPASS  05c session created → session tab + composer — composer=true\nPASS  05d usage rail → token quartet + message stats — tokens=true counts=true\nPASS  06 split pane → two pane headers — split=2 close=2\nPASS  07 drag drop → files tab still present — app.ts nodes=1\nPASS  08 rail resize handle widens rail — x 1138 → 1070\nPASS  09 compact → sessions drawer opens (edge swipe)\nPASS  09b sessions drawer closes (push-away swipe) — backdrop=0\nPASS  10 compact → explorer drawer opens (right edge swipe) — backdrop=1 filesTab=1\nPASS  R1 fork inherits the name at the fork point — fork=分叉源名字\nPASS  R2 renaming the parent does not affect the fork — parent=改父名 fork=分叉源名字\nPASS  R3 rename leaves the branch label entry intact — label={\"type\":\"label\",\"id\":\"l0000001\",\"parentI…\nPASS  R4 labeled session renamed\nPASS  R5 renamed parent row visible in sidebar\nPASS  R6 UI rename: row shows the new name\nPASS  R7 wire state matches UI rename\nPASS  R8 UI clear: row falls back to the first message\nPASS  R9 wire state matches UI clear\nPASS  R9b history panel shows the session tree\nPASS  R9c history tree renders entry rows — rows=6\nPASS  R9d history selection exposes navigate/fork actions\nPASS  R10 desktop row updates live after an off-device rename (no reload)\nPASS  R11 phone shows the same session name as the desktop\nscreenshots: /home/ariesfish/Projects/harness/pie/ui-walkthrough-shots\nFavicon source file in Expo config (web.favicon) does not exist: ./assets/favicon.png\n",
+      "note": "final walkthrough 38/38"
+    },
+    {
+      "step": 11,
+      "ts": "2026-10-24T08:06:13Z",
+      "type": "run",
+      "gate": "smoke",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "smoke"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "\n> pie@0.1.0 smoke\n> tsx scripts/pie-smoke.mts\n\npi-smoke (daemon v0.1.0)\n  ✓ listening on 127.0.0.1:8799\n  ✓ HTTP demo page serves\n  ✓ hello/helloAck (serverId srv-0.1.0-mvm4…)\n  ✓ daemon.status (daemon v0.1.0, pi 1.1.0)\n  ✓ workspace.open\n  ✓ session.create (id 01a16cf2…)\n  ✓ session.attach (leaf 9f2e5d54)\n  ✓ session.snapshot (tree 1 nodes, entries 1)\n  ✓ session.stats (0 messages)\n  ✓ models.list (0 models)\n  ✓ session.list (created session present)\n  ✓ session.attach by path (leaf e3c5e203…)\n  ✓ session.tree (3 nodes)\n  ✓ session.forkAt (new session 01a16cf2…)\n  ✓ session.navigate (cancelled=false)\n  ✓ resources.overview (2 commands, 0 extensions)\n  ✓ session.forkPreview (1 fork points)\n  ✓ fs.list (4 entries, .git ignored)\n  ✓ fs.read (20 bytes, not truncated)\n  ✓ fs.watch (id fsw-1)\n  ✓ git.status (branch master, 3 entries)\n  ✓ git.diff (patch 8 lines)\n  ✓ git.diff includeUntracked (synthesize add patch)\n  ✓ workspace.fs.changed event (1 paths batched)\n  ✓ config.overview (/tmp/pie-smoke-pZ7WGT/agent-home (models absent))\n  ✓ config.models.upsertProvider (smoke-model/1 model)\n  ✓ config.models.removeProvider (smoke-model)\n  ✓ packages.list (empty) (0 configured)\n  ✓ packages.install (local) (1 configured)\n  ✓ packages.remove (local) (0 configured)\n  ✓ skills.list (3 skills, found fixture)\n  ✓ skills.read (75 chars)\n  ✓ skills.read (rejects unknown path) (not_found: Not a loaded skill of this se)\n  ✓ fs.unwatch (ok)\npi-smoke: ALL GREEN\n",
+      "note": "config + package smoke"
+    },
+    {
+      "step": 12,
+      "ts": "2026-10-24T08:29:32Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "upport act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal presentation > only replaces when the callsite asks for replacement\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n",
+      "note": "final: 96 files, 763 passed, 1 skipped"
+    },
+    {
+      "step": 13,
+      "ts": "2026-10-24T08:30:33Z",
+      "type": "run",
+      "gate": "verify",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "ui-walkthrough"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "rs=1\nPASS  03b README.md → md preview (frontmatter + code copy + mermaid) — heading=true copyBtn=1 svg=1 fm=1\nPASS  03c edit → autosave CAS write lands on disk — editor=true disk=true\nPASS  04 changes tab → diff document renders (canvas + sticky headers) — headers=2 canvas=3\nPASS  04b layout toggle → unified/split flips (canvas alive) — before=\"Split view\" after=\"Unified view\" canvas=3\nPASS  04c wrap toggle present\nPASS  05a single new-session entry (no pinned creator tab) — entries=1\nPASS  05b creator panel shows Start session\nPASS  05c session created → session tab + composer — composer=true\nPASS  05d usage rail → token quartet + message stats — tokens=true counts=true\nPASS  06 split pane → two pane headers — split=2 close=2\nPASS  07 drag drop → files tab still present — app.ts nodes=1\nPASS  08 rail resize handle widens rail — x 1138 → 1070\nPASS  09 compact → sessions drawer opens (edge swipe)\nPASS  09b sessions drawer closes (push-away swipe) — backdrop=0\nPASS  10 compact → explorer drawer opens (right edge swipe) — backdrop=1 filesTab=1\nPASS  R1 fork inherits the name at the fork point — fork=分叉源名字\nPASS  R2 renaming the parent does not affect the fork — parent=改父名 fork=分叉源名字\nPASS  R3 rename leaves the branch label entry intact — label={\"type\":\"label\",\"id\":\"l0000001\",\"parentI…\nPASS  R4 labeled session renamed\nPASS  R5 renamed parent row visible in sidebar\nPASS  R6 UI rename: row shows the new name\nPASS  R7 wire state matches UI rename\nPASS  R8 UI clear: row falls back to the first message\nPASS  R9 wire state matches UI clear\nPASS  R9b history panel shows the session tree\nPASS  R9c history tree renders entry rows — rows=6\nPASS  R9d history selection exposes navigate/fork actions\nPASS  R10 desktop row updates live after an off-device rename (no reload)\nPASS  R11 phone shows the same session name as the desktop\nscreenshots: /home/ariesfish/Projects/harness/pie/ui-walkthrough-shots\nFavicon source file in Expo config (web.favicon) does not exist: ./assets/favicon.png\n",
+      "note": "final walkthrough 38/38"
+    },
+    {
+      "step": 14,
+      "ts": "2026-10-24T08:30:34Z",
+      "type": "run",
+      "gate": "smoke",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "smoke"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "\n> pie@0.1.0 smoke\n> tsx scripts/pie-smoke.mts\n\npi-smoke (daemon v0.1.0)\n  ✓ listening on 127.0.0.1:8799\n  ✓ HTTP demo page serves\n  ✓ hello/helloAck (serverId srv-0.1.0-mvm5…)\n  ✓ daemon.status (daemon v0.1.0, pi 1.1.0)\n  ✓ workspace.open\n  ✓ session.create (id 01a16d08…)\n  ✓ session.attach (leaf 4ec1bf8b)\n  ✓ session.snapshot (tree 1 nodes, entries 1)\n  ✓ session.stats (0 messages)\n  ✓ models.list (0 models)\n  ✓ session.list (created session present)\n  ✓ session.attach by path (leaf b7a52a6e…)\n  ✓ session.tree (3 nodes)\n  ✓ session.forkAt (new session 01a16d08…)\n  ✓ session.navigate (cancelled=false)\n  ✓ resources.overview (2 commands, 0 extensions)\n  ✓ session.forkPreview (1 fork points)\n  ✓ fs.list (4 entries, .git ignored)\n  ✓ fs.read (20 bytes, not truncated)\n  ✓ fs.watch (id fsw-1)\n  ✓ git.status (branch master, 3 entries)\n  ✓ git.diff (patch 8 lines)\n  ✓ git.diff includeUntracked (synthesize add patch)\n  ✓ workspace.fs.changed event (1 paths batched)\n  ✓ config.overview (/tmp/pie-smoke-nsXgKp/agent-home (models absent))\n  ✓ config.models.upsertProvider (smoke-model/1 model)\n  ✓ config.models.removeProvider (smoke-model)\n  ✓ packages.list (empty) (0 configured)\n  ✓ packages.install (local) (1 configured)\n  ✓ packages.remove (local) (0 configured)\n  ✓ skills.list (3 skills, found fixture)\n  ✓ skills.read (75 chars)\n  ✓ skills.read (rejects unknown path) (not_found: Not a loaded skill of this se)\n  ✓ fs.unwatch (ok)\npi-smoke: ALL GREEN\n",
+      "note": "config + packages smoke"
+    },
+    {
+      "step": 15,
+      "ts": "2026-10-24T08:33:27Z",
+      "type": "run",
+      "gate": "verify",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "ui-walkthrough"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "rs=1\nPASS  03b README.md → md preview (frontmatter + code copy + mermaid) — heading=true copyBtn=1 svg=1 fm=1\nPASS  03c edit → autosave CAS write lands on disk — editor=true disk=true\nPASS  04 changes tab → diff document renders (canvas + sticky headers) — headers=2 canvas=3\nPASS  04b layout toggle → unified/split flips (canvas alive) — before=\"Split view\" after=\"Unified view\" canvas=3\nPASS  04c wrap toggle present\nPASS  05a single new-session entry (no pinned creator tab) — entries=1\nPASS  05b creator panel shows Start session\nPASS  05c session created → session tab + composer — composer=true\nPASS  05d usage rail → token quartet + message stats — tokens=true counts=true\nPASS  06 split pane → two pane headers — split=2 close=2\nPASS  07 drag drop → files tab still present — app.ts nodes=1\nPASS  08 rail resize handle widens rail — x 1138 → 1070\nPASS  09 compact → sessions drawer opens (edge swipe)\nPASS  09b sessions drawer closes (push-away swipe) — backdrop=0\nPASS  10 compact → explorer drawer opens (right edge swipe) — backdrop=1 filesTab=1\nPASS  R1 fork inherits the name at the fork point — fork=分叉源名字\nPASS  R2 renaming the parent does not affect the fork — parent=改父名 fork=分叉源名字\nPASS  R3 rename leaves the branch label entry intact — label={\"type\":\"label\",\"id\":\"l0000001\",\"parentI…\nPASS  R4 labeled session renamed\nPASS  R5 renamed parent row visible in sidebar\nPASS  R6 UI rename: row shows the new name\nPASS  R7 wire state matches UI rename\nPASS  R8 UI clear: row falls back to the first message\nPASS  R9 wire state matches UI clear\nPASS  R9b history panel shows the session tree\nPASS  R9c history tree renders entry rows — rows=6\nPASS  R9d history selection exposes navigate/fork actions\nPASS  R10 desktop row updates live after an off-device rename (no reload)\nPASS  R11 phone shows the same session name as the desktop\nscreenshots: /home/ariesfish/Projects/harness/pie/ui-walkthrough-shots\nFavicon source file in Expo config (web.favicon) does not exist: ./assets/favicon.png\n",
+      "note": "final walkthrough after delete-confirm target fix"
+    },
+    {
+      "step": 16,
+      "ts": "2026-10-24T08:34:10Z",
+      "type": "close",
+      "note": "Review blockers addressed in 65a06bf/e903d18/58488b0/56421ee: config_* codes, C7 copy, type reuse, 44px compact targets, disabled state, one primary, lock ownership/stale, strict settings vs comment-tolerant models, comments protection, tests + config smoke. Gates: check/verify/smoke PASS; final review PASS."
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T035-1	检查器新增 History 段（6 模式）	会话树需要产品入口，不是只读 API	session-tree-panel.tsx; walkthrough R9b	verify PASS	N/A	ui-walkthrough-shots/17b-history-tree.png
+T035-2	树行支持 Navigate / Fork	Pi 的树能力要能在 UI 里用	connection-store navigate/forkAt; wire-smoke tree ops	verify PASS	N/A	ui-walkthrough-shots/17b-history-tree.png
+T035-3	layout sanitizer 保留 history/usage	持久化 rail 模式不能把新模式丢掉	workspace-layout-record.ts	check PASS	N/A	

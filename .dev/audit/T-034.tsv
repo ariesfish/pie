@@ -1,0 +1,4 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T034-1	SessionTreeStore 维护 entryWindow + prependEntries	快照只有一页，旧页要拼回当前路径	client/src/tree-store.ts; tree-store.test	check PASS	N/A	
+T034-2	ChatList 接真实 cursor，解冻 history-start 分页	PARKED_HISTORY 是假的 dormant 状态	app/src/components/chat/chat-list.tsx; walkthrough	check PASS	N/A	
+T034-3	切分支时丢弃在途旧页	navigate/切换后旧页会污染新分支	connection-store.ts loadOlderEntries; session-scope.test	check PASS	N/A	

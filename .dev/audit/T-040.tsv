@@ -1,0 +1,5 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T040-1	declared config_* codes; UI matches code not message	wire codes 稳定，daemon 不再传展示文案	errors.ts; settings configError	check PASS	N/A	
+T040-2	lock: owner token, stale steal, release on failures, mode preserved	CAS 需要跨进程/崩溃安全	config-service withLock/write; tests lock release	check PASS	N/A	
+T040-3	settings/mcp strict, models comments+BOM tolerated	Pi 对 settings 是 strict JSON，对 models 允许注释	config-service parseObject; tests	check PASS	N/A	
+T040-4	DESIGN density/labels/one primary/radius/hover	review design lens	settings.tsx; screenshots 00d/00e/00c	verify PASS	N/A	ui-walkthrough-shots/00d-model-form.png

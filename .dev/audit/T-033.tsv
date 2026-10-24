@@ -1,0 +1,4 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T033-1	snapshot 保留最近 120 条 + entryWindow	长会话不能整条路径一次下发；旧页按需加载	daemon/src/core/host-session.ts; wire-smoke 130 条 fixture	check PASS	N/A	
+T033-2	session.entries 加 leafId/before/limit	客户端要能翻旧页、也能预览非活动分支	protocol commands; host-session entriesPage	check PASS	N/A	
+T033-3	TreeNodeMeta 带 role/preview	树面板不拉全文也能显示可读行；label 条目解析 label	daemon/src/pi/adapter.ts; adapter.test	check PASS	N/A	

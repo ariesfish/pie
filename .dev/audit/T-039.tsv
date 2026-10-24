@@ -1,0 +1,2 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T039-1	five-lens review FAIL then PASS	T-036/T-037 首次 review 发现 9 个 blocker	review-pi-config/verdict.json; verdict-final.json	PASS after fixes	N/A	

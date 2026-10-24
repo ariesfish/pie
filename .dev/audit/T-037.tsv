@@ -1,0 +1,4 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T037-1	设置页聚焦 General/Models/Extensions	MCP 不是 Pi 核心；模型和扩展才是日常配置	settings.tsx; DESIGN v1.7	verify PASS	N/A	ui-walkthrough-shots/00b-settings-models.png; 00c-settings-extensions.png
+T037-2	Extensions 复用 Pi PackageManager	不另写包管理，与 pi install/remove/update 同源	settings.tsx packages.*; package-service.test	verify PASS	N/A	ui-walkthrough-shots/00c-settings-extensions.png
+T037-3	本波缺少 spec/ticket/review 门，已回填	流程债：T-033..T-037 直接在 gate ledger 实现	plan.md 回填 + 本 TSV; 待 T-039 review	debt recorded	N/A	

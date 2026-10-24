@@ -1,0 +1,52 @@
+{
+  "id": "T-039",
+  "title": "Retroactive review gate for T-036/T-037",
+  "opened": "2026-10-24T07:12:30Z",
+  "closed": "2026-10-24T08:34:10Z",
+  "budget": 3,
+  "blocked": null,
+  "gates": {
+    "review": {
+      "class": "A",
+      "verdict": "PASS",
+      "runs": 2,
+      "ts": "2026-10-24T08:33:40Z",
+      "file": ".dev/audit/evidence/review-pi-config/verdict-final.json",
+      "fails": 0
+    }
+  },
+  "history": [
+    {
+      "step": 1,
+      "ts": "2026-10-24T07:12:30Z",
+      "type": "open",
+      "budget": 3
+    },
+    {
+      "step": 2,
+      "ts": "2026-10-24T07:15:04Z",
+      "type": "verdict",
+      "gate": "review",
+      "class": "A",
+      "file": ".dev/audit/evidence/review-pi-config/verdict.json",
+      "sha256": "652ad773d1952a88",
+      "verdict": "FAIL"
+    },
+    {
+      "step": 3,
+      "ts": "2026-10-24T08:33:40Z",
+      "type": "verdict",
+      "gate": "review",
+      "class": "A",
+      "file": ".dev/audit/evidence/review-pi-config/verdict-final.json",
+      "sha256": "47376ccbe34c5bf4",
+      "verdict": "PASS"
+    },
+    {
+      "step": 4,
+      "ts": "2026-10-24T08:34:10Z",
+      "type": "close",
+      "note": "Five-lens review ran: first verdict FAIL (9 blockers), T-040 fixed them; final verdict PASS with notes (verdict-final.json). Gate: review PASS."
+    }
+  ]
+}

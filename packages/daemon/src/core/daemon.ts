@@ -97,7 +97,7 @@ export class SessionRegistry {
 	): Promise<{ sessionId: string; sessionFile?: string; selectedText?: string }> {
 		const host = this.sessions.get(sessionId);
 		if (!host) throw new HostSessionError(`Session not open: ${sessionId}`, "not_found");
-		if (host.session.isStreaming) {
+		if (host.session.isStreaming || host.isApplyingConfig) {
 			throw new HostSessionError("Wait for the current response before forking", "session_streaming");
 		}
 		const sourceFile = host.sessionFile;

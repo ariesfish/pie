@@ -296,6 +296,12 @@ try {
 		expectedRevision: cfg1.files.models.revision,
 	});
 	ok("config.models.removeProvider", "smoke-model");
+	const applied = await request("config.apply", { files: ["models"] });
+	if (!Array.isArray(applied.sessions)) throw new Error("config.apply missing sessions");
+	if (applied.sessions.some((session) => session.status === "error")) {
+		throw new Error("config.apply failed for an open session");
+	}
+	ok("config.apply", `${applied.sessions.length} open sessions`);
 
 	const pkgs0 = await request("packages.list", { workspaceId: workspace });
 	ok("packages.list (empty)", `${(pkgs0.packages as unknown[]).length} configured`);

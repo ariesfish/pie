@@ -18,6 +18,8 @@ import {
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type {
+	ConfigApplySessionResult,
+	ConfigFile,
 	ContextUsage,
 	EventData,
 	EventName,
@@ -150,6 +152,10 @@ export class HostSession {
 	private emittedEntryIds = new Set<string>();
 	/** Connection holding write presentation; P0: first attach wins. */
 	writerConnection: string | null = null;
+	/** Serialize config reloads per session so two clients cannot interleave them. */
+	private applyTail: Promise<void> = Promise.resolve();
+	/** Prompt/setModel must not interleave with a resource reload. */
+	private applyingConfig = false;
 
 	private constructor(
 		readonly session: AgentSession,
@@ -448,6 +454,10 @@ export class HostSession {
 		delivery: "auto" | "steer" | "followUp",
 		onAccepted: (disposition: "started" | "queued" | "handled" | "error", error?: string) => void,
 	): void {
+		if (this.applyingConfig) {
+			onAccepted("error", "session_streaming: wait for config to finish applying");
+			return;
+		}
 		if (this.session.isStreaming && delivery === "auto") {
 			onAccepted("error", "steer_or_follow_required: session is streaming; choose steer or followUp");
 			return;
@@ -475,10 +485,12 @@ export class HostSession {
 	}
 
 	async steer(message: string, images?: Array<{ data: string; mimeType: string }>): Promise<"queued" | "handled"> {
+		this.assertNotApplying();
 		return (await this.session.steer(message, mapImages(images), { source: "rpc" })) as "queued" | "handled";
 	}
 
 	async followUp(message: string, images?: Array<{ data: string; mimeType: string }>): Promise<"queued" | "handled"> {
+		this.assertNotApplying();
 		return (await this.session.followUp(message, mapImages(images), { source: "rpc" })) as
 			| "queued"
 			| "handled";
@@ -493,6 +505,7 @@ export class HostSession {
 	}
 
 	async navigate(entryId: string, summarize: boolean, label?: string): Promise<{ cancelled: boolean }> {
+		this.assertNotApplying();
 		if (this.session.isStreaming) {
 			throw new HostSessionError("Wait for the current response before navigating", "session_streaming");
 		}
@@ -523,8 +536,64 @@ export class HostSession {
 		this.session.setSessionName(name);
 	}
 
+	get isApplyingConfig(): boolean {
+		return this.applyingConfig;
+	}
+
+	private assertNotApplying(): void {
+		if (this.applyingConfig) {
+			throw new HostSessionError("Wait for config to finish applying", "session_streaming");
+		}
+	}
+
+	/**
+	 * Apply config files to this session. Models refresh the runtime catalog;
+	 * settings/MCP reload resources. Only idle sessions are touched.
+	 */
+	applyConfig(files: readonly ConfigFile[]): Promise<Omit<ConfigApplySessionResult, "sessionId">> {
+		const run = this.applyTail.then(() => this.applyConfigNow(files));
+		this.applyTail = run.then(
+			() => undefined,
+			() => undefined,
+		);
+		return run;
+	}
+
+	private async applyConfigNow(
+		files: readonly ConfigFile[],
+	): Promise<Omit<ConfigApplySessionResult, "sessionId">> {
+		if (!this.session.isIdle) return { status: "busy" };
+		this.applyingConfig = true;
+		const current = this.session.model;
+		const warnings: string[] = [];
+		try {
+			// Refresh first so extension session_start hooks observe the new catalog.
+			if (files.includes("models")) {
+				const refreshed = await this.session.modelRuntime.refresh({ allowNetwork: false });
+				for (const providerId of refreshed.errors.keys()) warnings.push(providerId);
+				if (this.session.modelRuntime.getError()) warnings.push("models.json");
+			}
+			if (files.some((file) => file !== "models")) {
+				await this.session.reload();
+			}
+			if (files.includes("models") && current) {
+				const next = this.session.modelRuntime.getModel(current.provider, current.id);
+				// Rebind the refreshed model object without appending a transcript
+				// model_change or resetting the session's thinking override.
+				if (next) this.session.agent.state.model = next;
+				else warnings.push(`${current.provider}/${current.id}`);
+			}
+			return warnings.length > 0 ? { status: "applied", warnings } : { status: "applied" };
+		} catch {
+			return { status: "error" };
+		} finally {
+			this.applyingConfig = false;
+		}
+	}
+
 	/** Set an active model by provider/id (resolves through the runtime catalog). */
 	setModel(provider: string, modelId: string, thinkingLevel?: ThinkingLevel): ModelRef {
+		this.assertNotApplying();
 		const runtime = this.session.modelRuntime;
 		const model = runtime.getModel(provider, modelId);
 		if (!model) {
@@ -559,8 +628,9 @@ export class HostSession {
 		return this.session.getUserMessagesForForking();
 	}
 
-	compact(customInstructions?: string): Promise<Record<string, unknown>> {
-		return this.session.compact(customInstructions) as unknown as Promise<Record<string, unknown>>;
+	async compact(customInstructions?: string): Promise<Record<string, unknown>> {
+		this.assertNotApplying();
+		return (await this.session.compact(customInstructions)) as unknown as Record<string, unknown>;
 	}
 
 	setAutoCompaction(enabled: boolean): void {

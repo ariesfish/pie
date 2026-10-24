@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -47,6 +47,65 @@ describe("daemon command handlers", () => {
 				pi: { version: "0.0.0-test", agentDir: "/tmp/agent" },
 			},
 		});
+	});
+
+	it("applies config changes to open sessions and aggregates busy", async () => {
+		const router = new CommandRouter();
+		const applied = vi.fn(async () => ({ status: "applied" as const }));
+		const busy = vi.fn(async () => ({ status: "busy" as const }));
+		const changed = vi.fn();
+		const deps = {
+			registry: {
+				size: 2,
+				open: [
+					{ sessionId: "s1", applyConfig: applied },
+					{ sessionId: "s2", applyConfig: busy },
+				],
+			},
+			configService: new ConfigService(configDir),
+			onConfigChanged: changed,
+		} as unknown as HandlerDeps;
+		registerConfigCommands(router, deps);
+		const ctx = {
+			registry: deps.registry,
+			connection: {} as never,
+			serverId: "srv-test",
+			uptimeMs: 0,
+		};
+
+		const result = await router.dispatch("config.apply", { files: ["models"] }, ctx);
+		expect(result).toMatchObject({
+			ok: true,
+			data: {
+				sessions: [
+					{ sessionId: "s1", status: "applied" },
+					{ sessionId: "s2", status: "busy" },
+				],
+			},
+		});
+		expect(applied).toHaveBeenCalledWith(["models"]);
+		expect(busy).toHaveBeenCalledWith(["models"]);
+		expect(changed).toHaveBeenCalledTimes(1);
+	});
+
+	it("rejects config.apply without valid files", async () => {
+		const router = new CommandRouter();
+		const deps = {
+			registry: { size: 0, open: [] },
+			configService: new ConfigService(configDir),
+		} as unknown as HandlerDeps;
+		registerConfigCommands(router, deps);
+		const ctx = {
+			registry: deps.registry,
+			connection: {} as never,
+			serverId: "srv-test",
+			uptimeMs: 0,
+		};
+
+		for (const files of [[], ["nope"], ["models", "models"]]) {
+			const result = await router.dispatch("config.apply", { files }, ctx);
+			expect(result).toMatchObject({ ok: false, error: { code: "invalid_args" } });
+		}
 	});
 
 	it("reads and writes config through the router", async () => {

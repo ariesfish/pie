@@ -34,6 +34,15 @@ export interface ModelProviderDraft {
 	models: ModelProviderModelDraft[];
 }
 
+export type ConfigApplyStatus = "applied" | "busy" | "error";
+
+export interface ConfigApplySessionResult {
+	sessionId: string;
+	status: ConfigApplyStatus;
+	/** Provider ids whose catalog refresh failed, or a removed current model. */
+	warnings?: string[];
+}
+
 export interface ConfigFileInfo {
 	file: ConfigFile;
 	path: string;
@@ -116,6 +125,11 @@ export interface CommandMap {
 	"config.models.setDefault": {
 		args: { provider: string; model: string; expectedRevision?: string };
 		result: { revision: string };
+	};
+	/** Apply written config to idle open sessions; busy sessions are skipped. */
+	"config.apply": {
+		args: { files: ConfigFile[] };
+		result: { sessions: ConfigApplySessionResult[] };
 	};
 
 	/** Track a workspace and (re)check project trust. */

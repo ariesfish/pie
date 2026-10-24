@@ -1,0 +1,9 @@
+id	decision	reason	evidence	verdict	skip_test	show
+T042-1	config.apply applies to all open sessions	保存后不能只对新会话生效	handler test fan-out; smoke config.apply (3 open sessions)	tdd PASS	N/A	ui-walkthrough-shots/00e-model-default.png
+T042-2	models refresh first, then settings/mcp reload	extension session_start must see the new catalog	HostSession apply order test [refresh,reload]	check PASS	N/A	
+T042-3	rebind model via agent.state.model, not setModel	setModel appends model_change and resets thinking override	HostSession test: no setModel, agent state points at refreshed model	check PASS	N/A	
+T042-4	idle-only; busy sessions skipped	do not interrupt streaming/compacting turns	HostSession busy test; per-session results	check PASS	N/A	
+T042-5	allSettled + 10s timeout per session	one hung MCP reload must not block other sessions or the save path	handler allSettled implementation	check PASS	N/A	
+T042-6	UI auto-applies after writes and package changes; shows counts	setDefault/package paths previously skipped apply	settings.tsx applyConfig calls; walkthrough note	verify PASS	N/A	ui-walkthrough-shots/00e-model-default.png
+T042-7	guard apply against prompt/steer/compact/navigate/setModel/fork	prompt could start a run while reload swaps the extension runner	HostSession.assertNotApplying; fork isApplyingConfig; test covers all five	PASS	N/A	
+T042-8	independent review PASS after two rounds	idle/order/rebind/timeout/races were the review focus	.dev/audit/evidence/review-t042/verdict.json	PASS	N/A	

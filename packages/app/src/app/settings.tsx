@@ -66,6 +66,7 @@ export default function SettingsScreen() {
 	const [busy, setBusy] = useState<"load" | "save" | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [saved, setSaved] = useState(false);
+	const [applyNote, setApplyNote] = useState<string | null>(null);
 
 	const [draft, setDraft] = useState<ModelProviderDraft | null>(null);
 	const [draftIsNew, setDraftIsNew] = useState(false);
@@ -160,6 +161,35 @@ export default function SettingsScreen() {
 		}
 	}, [conn, workspaceId]);
 
+	const applyConfig = async (files: ConfigFile[]) => {
+		if (!conn) return;
+		setApplyNote(null);
+		try {
+			const result = await conn.request("config.apply", { files });
+			if (files.includes("models")) void loadCatalog();
+			if (files.some((file) => file !== "models")) void loadResources();
+			if (result.sessions.length === 0) {
+				setApplyNote(t("settings.applyNoSessions"));
+				return;
+			}
+			const applied = result.sessions.filter((session) => session.status === "applied").length;
+			const busy = result.sessions.filter((session) => session.status === "busy").length;
+			const failed = result.sessions.filter((session) => session.status === "error").length;
+			const warnings = result.sessions.reduce(
+				(count, session) => count + (session.warnings?.length ?? 0),
+				0,
+			);
+			const parts: string[] = [];
+			if (applied > 0) parts.push(t("settings.applyApplied", { count: applied }));
+			if (busy > 0) parts.push(t("settings.applyBusy", { count: busy }));
+			if (failed > 0) parts.push(t("settings.applyFailed", { count: failed }));
+			if (warnings > 0) parts.push(t("settings.applyWarnings", { count: warnings }));
+			setApplyNote(parts.join(" "));
+		} catch {
+			setApplyNote(t("settings.applyUnavailable"));
+		}
+	};
+
 	useEffect(() => {
 		if (!conn) return;
 		void loadOverview();
@@ -204,6 +234,7 @@ export default function SettingsScreen() {
 				},
 				expectedRevision: overview?.files.models.revision ?? "",
 			});
+			await applyConfig(["models"]);
 			await refreshModels();
 			setDraft(null);
 		} catch (err) {
@@ -222,6 +253,7 @@ export default function SettingsScreen() {
 				providerId,
 				expectedRevision: overview?.files.models.revision ?? "",
 			});
+			await applyConfig(["models"]);
 			await refreshModels();
 			setConfirmDelete(null);
 		} catch (err) {
@@ -241,6 +273,7 @@ export default function SettingsScreen() {
 				model: modelId,
 				expectedRevision: overview?.files.settings.revision ?? "",
 			});
+			await applyConfig(["settings"]);
 			await loadOverview();
 		} catch (err) {
 			setError(configError(t, err));
@@ -269,6 +302,7 @@ export default function SettingsScreen() {
 			setDirty(false);
 			setSaved(true);
 			void loadOverview();
+			await applyConfig([file]);
 		} catch (err) {
 			setError(configError(t, err));
 		} finally {
@@ -287,6 +321,7 @@ export default function SettingsScreen() {
 				project: packageScope === "project",
 			});
 			setPackageSource("");
+			await applyConfig(["settings"]);
 			await loadPackages();
 			await loadResources();
 		} catch {
@@ -306,6 +341,7 @@ export default function SettingsScreen() {
 				source: pkg.source,
 				project: pkg.scope === "project",
 			});
+			await applyConfig(["settings"]);
 			await loadPackages();
 			await loadResources();
 		} catch {
@@ -321,6 +357,7 @@ export default function SettingsScreen() {
 		setError(null);
 		try {
 			await conn.request("packages.update", { workspaceId });
+			await applyConfig(["settings"]);
 			await loadPackages();
 			await loadResources();
 		} catch {
@@ -391,6 +428,7 @@ export default function SettingsScreen() {
 					onValueChange={(next) => setTab(next as SettingsTab)}
 				/>
 				{error ? <Text style={styles.error}>{error}</Text> : null}
+				{applyNote ? <Text style={styles.hint}>{applyNote}</Text> : null}
 
 				{tab === "extensions" ? (
 					<ExtensionsPanel

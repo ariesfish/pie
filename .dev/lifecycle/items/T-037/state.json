@@ -1,0 +1,74 @@
+{
+  "id": "T-037",
+  "title": "Settings focus: model config and Pi extensions",
+  "opened": "2026-10-24T06:59:33Z",
+  "closed": "2026-10-24T07:05:30Z",
+  "budget": 3,
+  "blocked": null,
+  "gates": {
+    "check": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-24T07:04:11Z"
+    },
+    "verify": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-24T07:05:22Z"
+    }
+  },
+  "history": [
+    {
+      "step": 1,
+      "ts": "2026-10-24T06:59:33Z",
+      "type": "open",
+      "budget": 3
+    },
+    {
+      "step": 2,
+      "ts": "2026-10-24T07:04:11Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "upport act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal presentation > only replaces when the callsite asks for replacement\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > loses callsite context without a bridge\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > carries callsite context across the portal when bridged\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\nThe current testing environment is not configured to support act(...)\n\nstderr | packages/app/src/components/ui/isolated-bottom-sheet-modal/index.test.tsx > IsolatedBottomSheetModal context bridging > marks content rendered through the modal as inside a bottom sheet\nThe current testing environment is not configured to support act(...)\n\n",
+      "note": "typecheck + 96 test files (757 passed, 1 skipped)"
+    },
+    {
+      "step": 3,
+      "ts": "2026-10-24T07:05:22Z",
+      "type": "run",
+      "gate": "verify",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "ui-walkthrough"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "rs=1\nPASS  03b README.md → md preview (frontmatter + code copy + mermaid) — heading=true copyBtn=1 svg=1 fm=1\nPASS  03c edit → autosave CAS write lands on disk — editor=true disk=true\nPASS  04 changes tab → diff document renders (canvas + sticky headers) — headers=2 canvas=3\nPASS  04b layout toggle → unified/split flips (canvas alive) — before=\"Split view\" after=\"Unified view\" canvas=3\nPASS  04c wrap toggle present\nPASS  05a single new-session entry (no pinned creator tab) — entries=1\nPASS  05b creator panel shows Start session\nPASS  05c session created → session tab + composer — composer=true\nPASS  05d usage rail → token quartet + message stats — tokens=true counts=true\nPASS  06 split pane → two pane headers — split=2 close=2\nPASS  07 drag drop → files tab still present — app.ts nodes=1\nPASS  08 rail resize handle widens rail — x 1138 → 1070\nPASS  09 compact → sessions drawer opens (edge swipe)\nPASS  09b sessions drawer closes (push-away swipe) — backdrop=0\nPASS  10 compact → explorer drawer opens (right edge swipe) — backdrop=1 filesTab=1\nPASS  R1 fork inherits the name at the fork point — fork=分叉源名字\nPASS  R2 renaming the parent does not affect the fork — parent=改父名 fork=分叉源名字\nPASS  R3 rename leaves the branch label entry intact — label={\"type\":\"label\",\"id\":\"l0000001\",\"parentI…\nPASS  R4 labeled session renamed\nPASS  R5 renamed parent row visible in sidebar\nPASS  R6 UI rename: row shows the new name\nPASS  R7 wire state matches UI rename\nPASS  R8 UI clear: row falls back to the first message\nPASS  R9 wire state matches UI clear\nPASS  R9b history panel shows the session tree\nPASS  R9c history tree renders entry rows — rows=6\nPASS  R9d history selection exposes navigate/fork actions\nPASS  R10 desktop row updates live after an off-device rename (no reload)\nPASS  R11 phone shows the same session name as the desktop\nscreenshots: /home/ariesfish/Projects/harness/pie/ui-walkthrough-shots\nFavicon source file in Expo config (web.favicon) does not exist: ./assets/favicon.png\n",
+      "note": "walkthrough 37/37: settings route + Models tab (providers) + Extensions tab (packages); screenshots 00b/00c"
+    },
+    {
+      "step": 4,
+      "ts": "2026-10-24T07:05:30Z",
+      "type": "close",
+      "note": "In 0bcbccf: settings becomes General / Models / Extensions. Models shows custom providers, key status, default model, catalog, and keeps models.json editable; Extensions uses Pi PackageManager for list/install/remove/update and shows loaded extensions/skills/prompts for the active session. MCP removed from the primary UI; config.mcp stays backend-only. config.overview now returns provider details. Gate: check PASS; verify PASS 37/37 (screenshots 00b/00c)."
+    }
+  ]
+}

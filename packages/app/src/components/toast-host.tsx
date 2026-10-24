@@ -60,9 +60,9 @@ const ThemedCheckCircle = withUnistyles(CheckCircle2);
 const ThemedInfo = withUnistyles(Info);
 const ThemedWarning = withUnistyles(AlertTriangle);
 const foregroundIcon = (theme: Theme) => ({ color: theme.colors.foreground });
-const infoIcon = (theme: Theme) => ({ color: theme.colors.palette.blue[300] });
-const successIcon = (theme: Theme) => ({ color: theme.colors.primary });
-const warningIcon = (theme: Theme) => ({ color: theme.colors.palette.amber[500] });
+const infoIcon = (theme: Theme) => ({ color: theme.colors.accent });
+const successIcon = (theme: Theme) => ({ color: theme.colors.statusSuccess });
+const warningIcon = (theme: Theme) => ({ color: theme.colors.statusWarning });
 const errorIcon = (theme: Theme) => ({ color: theme.colors.destructive });
 
 export function useToastHost(): {
@@ -298,10 +298,10 @@ const styles = StyleSheet.create((theme) => ({
     ...theme.shadow.md,
   },
   toastInfo: {
-    borderColor: theme.colors.palette.blue[300],
+    borderColor: theme.colors.accent,
   },
   toastWarning: {
-    borderColor: theme.colors.palette.amber[500],
+    borderColor: theme.colors.statusWarning,
   },
   toastError: {
     borderColor: theme.colors.destructive,

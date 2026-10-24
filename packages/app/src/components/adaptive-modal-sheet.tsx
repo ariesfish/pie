@@ -483,8 +483,8 @@ export function AdaptiveModalSheet({
     [footer, footerClearanceStyle, footerContainerStyle],
   );
   const handleIndicatorStyle = useMemo(
-    () => ({ backgroundColor: theme.colors.palette.zinc[600] }),
-    [theme.colors.palette.zinc],
+    () => ({ backgroundColor: theme.colors.foregroundExtraMuted }),
+    [theme.colors.foregroundExtraMuted],
   );
   useEffect(() => {
     if (!isWeb && visible) {

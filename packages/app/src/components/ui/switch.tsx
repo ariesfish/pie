@@ -70,7 +70,7 @@ function SwitchTrack({
 const ThemedSwitchTrack = withUnistyles(SwitchTrack, (theme: Theme) => ({
   trackOffColor: theme.colors.surface3,
   trackOnColor: theme.colors.accent,
-  thumbOffColor: theme.colors.palette.white,
+  thumbOffColor: theme.colors.surface0,
   thumbOnColor: theme.colors.accentForeground,
 }));
 

@@ -32,6 +32,8 @@ import {
 import {
 	DEFAULT_RAIL_WIDTH,
 	clampRailWidth,
+} from "@/constants/layout";
+import {
 	readLayoutRecord,
 	writeLayoutRecord,
 } from "./workspace-layout-record";

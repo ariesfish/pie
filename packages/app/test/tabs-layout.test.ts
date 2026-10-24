@@ -5,13 +5,29 @@ import { describe, expect, it } from "vitest";
 
 import { sanitizeLayoutRecord } from "../src/stores/workspace-layout-record";
 import { findPaneById, collectAllTabs } from "../src/stores/workspace-layout-actions";
+import {
+	DEFAULT_RAIL_WIDTH,
+	MAX_RAIL_WIDTH,
+	MIN_RAIL_WIDTH,
+	clampRailWidth,
+} from "../src/constants/layout";
+
+describe("rail width source (DESIGN.md §Grid & Container)", () => {
+	it("defaults to 300 and clamps to the documented 264–520 range", () => {
+		expect(DEFAULT_RAIL_WIDTH).toBe(300);
+		expect(MIN_RAIL_WIDTH).toBe(264);
+		expect(MAX_RAIL_WIDTH).toBe(520);
+		expect(clampRailWidth(200)).toBe(264);
+		expect(clampRailWidth(9000)).toBe(520);
+	});
+});
 
 describe("sanitizeLayoutRecord (v2, tree)", () => {
 	it("falls back to the default layout for garbage input", () => {
 		const record = sanitizeLayoutRecord(null);
 		expect(record.layout.focusedPaneId).toBeTruthy();
 		expect(record.explorerMode).toBeNull();
-		expect(record.railWidth).toBe(264);
+		expect(record.railWidth).toBe(DEFAULT_RAIL_WIDTH);
 		const panes = (function collect(node: unknown): unknown[] {
 			const n = node as { kind: string; pane?: unknown; group?: { children: unknown[] } };
 			if (n?.kind === "pane") return [n.pane];

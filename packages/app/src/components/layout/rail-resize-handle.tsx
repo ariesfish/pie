@@ -7,19 +7,7 @@ import { View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { isWeb } from "@/constants/platform";
-import {
-	MIN_RAIL_WIDTH,
-	MAX_RAIL_WIDTH,
-	DEFAULT_RAIL_WIDTH,
-	clampRailWidth,
-} from "@/stores/workspace-layout-record";
-
-export {
-	MIN_RAIL_WIDTH,
-	MAX_RAIL_WIDTH,
-	DEFAULT_RAIL_WIDTH,
-	clampRailWidth,
-} from "@/stores/workspace-layout-record";
+import { clampRailWidth } from "@/constants/layout";
 
 export function RailResizeHandle({
 	width,
@@ -47,6 +35,19 @@ export function RailResizeHandle({
 		node.addEventListener("dragstart", refuseNativeDrag);
 		return () => node.removeEventListener("dragstart", refuseNativeDrag);
 	}, []);
+
+	// Web-only: a drag that starts on the handle must not paint a text selection
+	// across the rail and the pane behind it. RNGH's pan does not cancel the
+	// browser's default selection, so suppress it for the duration of the drag.
+	useEffect(() => {
+		if (!isWeb || !dragging) return;
+		const previous = document.body.style.userSelect;
+		document.body.style.userSelect = "none";
+		window.getSelection()?.removeAllRanges();
+		return () => {
+			document.body.style.userSelect = previous;
+		};
+	}, [dragging]);
 
 	const pan = Gesture.Pan()
 		.minDistance(2)

@@ -227,7 +227,7 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	panel: {
 		alignSelf: "center",
-		marginTop: theme.spacing[16],
+		marginTop: theme.spacing[12],
 		width: "92%",
 		maxWidth: 560,
 		maxHeight: MAX_HEIGHT_PICK,
@@ -275,8 +275,8 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	sectionTitle: {
 		color: theme.colors.foregroundExtraMuted,
-		fontSize: 10,
-		fontWeight: "600",
+		fontSize: theme.fontSize.sm,
+		fontWeight: theme.fontWeight.semibold,
 		textTransform: "uppercase",
 		letterSpacing: 0.5,
 	},

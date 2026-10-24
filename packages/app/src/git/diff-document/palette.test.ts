@@ -1,7 +1,6 @@
 // Ported from getpaseo/paseo (Apache-2.0)
 import { describe, expect, it } from "vitest";
 import { lightTheme } from "@/styles/theme";
-import { hexColorWithAlpha } from "@/utils/color";
 import { codeLineNumberTone, codeTextColor, createDiffPalette, retainDiffPalette } from "./palette";
 import type { DiffCell, DiffPalette } from "./types";
 
@@ -44,13 +43,16 @@ describe("diff palette retention", () => {
 
 describe("semantic diff colors", () => {
   const theme = lightTheme;
-  it("uses the app status palette for gutter text and derived row tints", () => {
+  it("uses the fixed DESIGN diff tints on the code paper", () => {
     const created = createDiffPalette(theme);
 
+    expect(created.surface).toBe(theme.colors.surfaceCode);
+    expect(created.headerSurface).toBe(theme.colors.surfaceCode);
+    expect(created.emptyBackground).toBe(theme.colors.surfaceCode);
     expect(created.addition).toBe(theme.colors.statusSuccess);
     expect(created.deletion).toBe(theme.colors.statusDanger);
-    expect(created.additionBackground).toBe(hexColorWithAlpha(theme.colors.statusSuccess, 0.15));
-    expect(created.deletionBackground).toBe(hexColorWithAlpha(theme.colors.statusDanger, 0.1));
+    expect(created.additionBackground).toBe(theme.colors.diffAdd);
+    expect(created.deletionBackground).toBe(theme.colors.diffDel);
   });
 });
 

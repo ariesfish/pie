@@ -18,13 +18,12 @@ interface StatusBadgeProps {
  * state, a matching status-coloured dot names the colour, and the label stays
  * on `ink`.
  *
- * Why the label is not status-coloured: at the chip's 12px the status hue does
- * not clear D1 (4.5:1) on the tints it sits on. The fill here is the status hue
- * at 12% over whatever surface is behind it (roughly #f3ede0 for warning over
- * canvas, #e4dfd6 over raise), where the hue measures 3.67–4.17:1 and the ink-3
- * token would drop to 4.16:1. DESIGN.md §Colors rules that out ("这些组合只允许
- * 用于图标或形状，不允许承载小字"), so the colour moves to the dot and the label
- * rides on `ink`. Do not put ink-3 text on a status tinted chip.
+ * The fills are the fixed DESIGN soft tokens, not a status hue at 12% over the
+ * surface. On those values the hue measures: success 4.70:1, danger 5.75:1,
+ * warning 4.17:1. Warning is still below the 4.5:1 text floor, so the label
+ * does not take the status hue; `ink-3` on the same tints measures 4.95–5.10:1
+ * but would make three chip variants speak two different label tones. The dot
+ * carries the hue, the label rides on `ink` — one vocabulary for all variants.
  */
 export function StatusBadge({ label, variant = "muted", leading, size = "sm" }: StatusBadgeProps) {
   const pillStyle = useMemo(
@@ -75,15 +74,15 @@ const styles = StyleSheet.create((theme) => ({
   // Soft tint background + transparent border = the state reads as a state,
   // not as a fill competing with the accent.
   pillSuccess: {
-    backgroundColor: theme.colors.statusSuccessTint,
+    backgroundColor: theme.colors.statusSuccessSoft,
     borderColor: "transparent",
   },
   pillWarning: {
-    backgroundColor: theme.colors.statusWarningTint,
+    backgroundColor: theme.colors.statusWarningSoft,
     borderColor: "transparent",
   },
   pillError: {
-    backgroundColor: theme.colors.statusDangerTint,
+    backgroundColor: theme.colors.statusDangerSoft,
     borderColor: "transparent",
   },
   dot: {

@@ -165,7 +165,12 @@ const styles = StyleSheet.create((theme) => ({
 		justifyContent: "center",
 		borderRadius: theme.borderRadius.md,
 	},
-	headerTitle: { flex: 1, color: theme.colors.foreground, fontSize: theme.fontSize.lg, fontWeight: theme.fontWeight.bold },
+	headerTitle: {
+		flex: 1,
+		color: theme.colors.foreground,
+		fontSize: theme.fontSize.lg,
+		fontWeight: theme.fontWeight.semibold,
+	},
 	headerTrailing: { width: 28 },
 	filterRow: {
 		flexDirection: "row",
@@ -190,13 +195,13 @@ const styles = StyleSheet.create((theme) => ({
 	listContent: { paddingBottom: theme.spacing[4] },
 	bucketLabel: {
 		color: theme.colors.foregroundExtraMuted,
-		fontSize: 10,
-		fontWeight: "600",
+		fontSize: theme.fontSize.sm,
+		fontWeight: theme.fontWeight.semibold,
 		textTransform: "uppercase",
 		letterSpacing: 0.5,
 		paddingHorizontal: theme.spacing[3],
 		paddingTop: theme.spacing[3],
-		paddingBottom: 4,
+		paddingBottom: theme.spacing[1],
 	},
 	row: {
 		borderRadius: theme.borderRadius.md,
@@ -207,8 +212,8 @@ const styles = StyleSheet.create((theme) => ({
 	rowPressed: { opacity: 0.7 },
 	rowTitle: { color: theme.colors.foreground, fontSize: theme.fontSize.sm },
 	rowMeta: { flexDirection: "row", gap: theme.spacing[2], alignItems: "center" },
-	rowTime: { color: theme.colors.foregroundExtraMuted, fontSize: 10 },
-	rowCount: { color: theme.colors.border, fontSize: 10 },
+	rowTime: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
+	rowCount: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
 	emptyContainer: {
 		flexGrow: 1,
 		justifyContent: "center",

@@ -140,5 +140,9 @@ const styles = StyleSheet.create((theme) => ({
 	planBoxOn: { color: theme.colors.statusSuccess },
 	planText: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.content, flex: 1 },
 	planTextOn: { color: theme.colors.foregroundExtraMuted, textDecorationLine: "line-through" },
-	placement: { color: theme.colors.foregroundExtraMuted, fontSize: 10, alignSelf: "flex-end" },
+	placement: {
+		color: theme.colors.foregroundExtraMuted,
+		fontSize: theme.fontSize.sm,
+		alignSelf: "flex-end",
+	},
 }));

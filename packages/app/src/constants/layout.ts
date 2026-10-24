@@ -30,3 +30,15 @@ export function useIsCompactFormFactor(): boolean {
 
 /** Desktop sidebar width (DESIGN.md §Grid & Container: fixed 232). */
 export const SIDEBAR_WIDTH = 232;
+
+/**
+ * Inspector rail width (DESIGN.md §Grid & Container: 300 default, draggable
+ * 264–520). The numbers live here, next to the other layout constants — the
+ * persisted layout record is a consumer, not the source.
+ */
+export const MIN_RAIL_WIDTH = 264;
+export const MAX_RAIL_WIDTH = 520;
+export const DEFAULT_RAIL_WIDTH = 300;
+
+export const clampRailWidth = (px: number): number =>
+	Math.max(MIN_RAIL_WIDTH, Math.min(MAX_RAIL_WIDTH, Math.round(px)));

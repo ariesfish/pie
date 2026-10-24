@@ -362,7 +362,7 @@ const styles = StyleSheet.create((theme) => ({
 	brand: {
 		color: theme.colors.foreground,
 		fontSize: theme.fontSize.lg,
-		fontWeight: theme.fontWeight.bold,
+		fontWeight: theme.fontWeight.semibold,
 	},
 	searchRow: {
 		flexDirection: "row",
@@ -439,15 +439,15 @@ const styles = StyleSheet.create((theme) => ({
 	workspaceLogo: {
 		width: 20,
 		height: 20,
-		borderRadius: 5,
+		borderRadius: theme.borderRadius.md,
 		backgroundColor: theme.colors.accent,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	workspaceLogoText: {
 		color: theme.colors.accentForeground,
-		fontSize: 11,
-		fontWeight: theme.fontWeight.bold,
+		fontSize: theme.fontSize.sm,
+		fontWeight: theme.fontWeight.semibold,
 	},
 	workspaceName: {
 		color: theme.colors.foreground,
@@ -459,7 +459,7 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	emptySessions: {
 		color: theme.colors.foregroundExtraMuted,
-		fontSize: 11,
+		fontSize: theme.fontSize.sm,
 		paddingLeft: 38,
 		paddingVertical: 4,
 	},

@@ -98,7 +98,7 @@ const styles = StyleSheet.create((theme) => ({
 		paddingHorizontal: theme.spacing[8],
 		gap: theme.spacing[2],
 	},
-	brand: { color: theme.colors.foreground, fontSize: theme.fontSize["4xl"], fontWeight: "700" },
+	brand: { color: theme.colors.foreground, fontSize: theme.fontSize["4xl"], fontWeight: theme.fontWeight.semibold },
 	subtitle: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.content, marginBottom: theme.spacing[4] },
 	fieldLabel: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm, alignSelf: "stretch" },
 	input: {

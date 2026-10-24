@@ -67,7 +67,7 @@ export function createMarkdownStyles(theme: Theme) {
     heading1: {
       ...webSelectableTextStyle,
       fontSize: contentHeadingSize(theme.fontSize.content, "4xl"),
-      fontWeight: theme.fontWeight.bold,
+      fontWeight: theme.fontWeight.semibold,
       color: theme.colors.foreground,
       marginTop: theme.spacing[6],
       marginBottom: theme.spacing[3],
@@ -80,7 +80,7 @@ export function createMarkdownStyles(theme: Theme) {
     heading2: {
       ...webSelectableTextStyle,
       fontSize: contentHeadingSize(theme.fontSize.content, "3xl"),
-      fontWeight: theme.fontWeight.bold,
+      fontWeight: theme.fontWeight.semibold,
       color: theme.colors.foreground,
       marginTop: theme.spacing[6],
       marginBottom: theme.spacing[3],
@@ -189,7 +189,7 @@ export function createMarkdownStyles(theme: Theme) {
 
     code_block: {
       ...webSelectableTextStyle,
-      backgroundColor: theme.colors.surface2,
+      backgroundColor: theme.colors.surfaceCode,
       color: theme.colors.foreground,
       padding: theme.spacing[3],
       borderRadius: theme.borderRadius.md,
@@ -200,7 +200,7 @@ export function createMarkdownStyles(theme: Theme) {
 
     fence: {
       ...webSelectableTextStyle,
-      backgroundColor: theme.colors.surface2,
+      backgroundColor: theme.colors.surfaceCode,
       color: theme.colors.foreground,
       padding: theme.spacing[3],
       borderRadius: theme.borderRadius.md,

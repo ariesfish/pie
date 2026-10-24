@@ -1,20 +1,17 @@
 // Ported from getpaseo/paseo (Apache-2.0)
 import type { Theme } from "@/styles/theme";
-import { hexColorWithAlpha } from "@/utils/color";
 import type { DiffCell, DiffPalette } from "./types";
 
 /**
- * DESIGN.md §Colors names the diff row tints (`diff-add` / `diff-del`), but the
- * theme module carries no diff group, so DESIGN.md's stated fallback applies:
- * the semantic status colours at a low alpha.
+ * The diff lives on the code paper (`surface-code`, DESIGN.md §Surface) and the
+ * row tints are the fixed `diff-add` / `diff-del` tokens. Both are opaque
+ * design values: an alpha over the canvas would change meaning if the paper
+ * token moved.
  */
-const DIFF_ADD_ALPHA = 0.15;
-const DIFF_DEL_ALPHA = 0.1;
-
 export function createDiffPalette(theme: Theme): DiffPalette {
   return {
-    surface: theme.colors.surface0,
-    headerSurface: theme.colors.surface0,
+    surface: theme.colors.surfaceCode,
+    headerSurface: theme.colors.surfaceCode,
     border: theme.colors.border,
     foreground: theme.colors.foreground,
     // Line numbers are the quietest text in the diff: ink-3 (DESIGN.md
@@ -23,9 +20,9 @@ export function createDiffPalette(theme: Theme): DiffPalette {
     foregroundMuted: theme.colors.foregroundExtraMuted,
     addition: theme.colors.statusSuccess,
     deletion: theme.colors.statusDanger,
-    additionBackground: hexColorWithAlpha(theme.colors.statusSuccess, DIFF_ADD_ALPHA),
-    deletionBackground: hexColorWithAlpha(theme.colors.statusDanger, DIFF_DEL_ALPHA),
-    emptyBackground: theme.colors.surface0,
+    additionBackground: theme.colors.diffAdd,
+    deletionBackground: theme.colors.diffDel,
+    emptyBackground: theme.colors.surfaceCode,
     // [pie] paseo reads xterm-blue from its ANSI terminal palette; pie's
     // theme carries no terminal group (W4 terminal ADR) — the accent plays
     // the selection role here.

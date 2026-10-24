@@ -11,13 +11,10 @@ import {
 	normalizeLayout,
 } from "./workspace-layout-actions";
 import type { ExplorerMode } from "./tabs-store";
-
-export const MIN_RAIL_WIDTH = 200;
-export const MAX_RAIL_WIDTH = 520;
-export const DEFAULT_RAIL_WIDTH = 264;
-
-export const clampRailWidth = (px: number): number =>
-	Math.max(MIN_RAIL_WIDTH, Math.min(MAX_RAIL_WIDTH, Math.round(px)));
+import {
+	DEFAULT_RAIL_WIDTH,
+	clampRailWidth,
+} from "@/constants/layout";
 
 export const NEW_TAB_ID = "new_tab";
 

@@ -179,7 +179,12 @@ const styles = StyleSheet.create((theme) => ({
 		justifyContent: "center",
 		borderRadius: theme.borderRadius.md,
 	},
-	headerTitle: { flex: 1, color: theme.colors.foreground, fontSize: theme.fontSize.lg, fontWeight: theme.fontWeight.bold },
+	headerTitle: {
+		flex: 1,
+		color: theme.colors.foreground,
+		fontSize: theme.fontSize.lg,
+		fontWeight: theme.fontWeight.semibold,
+	},
 	headerAdd: {
 		width: 28,
 		height: 28,
@@ -228,10 +233,10 @@ const styles = StyleSheet.create((theme) => ({
 	rowMain: { flex: 1 },
 	rowTitle: { color: theme.colors.foreground, fontSize: theme.fontSize.sm },
 	rowTitleOn: { color: theme.colors.foreground, fontWeight: theme.fontWeight.semibold },
-	rowPath: { color: theme.colors.foregroundExtraMuted, fontSize: 10 },
+	rowPath: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
 	rowTag: {
 		color: theme.colors.foregroundExtraMuted,
-		fontSize: 9,
+		fontSize: theme.fontSize.sm,
 		textTransform: "uppercase",
 		letterSpacing: 0.5,
 	},

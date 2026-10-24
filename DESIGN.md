@@ -1,5 +1,5 @@
 ---
-version: 1.2
+version: 1.3
 name: Pie design system
 description: 近白纸上的工程工具：墨字、单一蓝紫强调色、1px 细线 + 表面阶梯做深度；界面退到会话后面，强调色只给操作与状态。
 resolved-from-defaults:
@@ -58,7 +58,6 @@ Paseo 皮肤层的唯一依据见 ADR-0007。
 
 - `accent #3B5BDB`：唯一强调色。对白底 **5.67:1**，白字在其上 **5.67:1**。
 - `accent-hover #2F4BC0`：仅 hover/active。
-- `accent-soft #EDF1FF`：仅用于选中/提示的浅底（如运行指示的容器），不用于大面积区块。
 - **预算**：每视口最多 2 处彩色事件。通常是「一个主按钮 + 一个运行/焦点状态」。
 - 允许：主操作填充、链接文字、焦点环、运行状态点、图表中的单条强调。
 - 禁止：导航选中填充、正文着色、卡片整块着色、两个强调色并存、用强调色画分隔线。
@@ -71,8 +70,9 @@ Paseo 皮肤层的唯一依据见 ADR-0007。
 |---|---|---|
 | `surface0` (canvas) | `#FFFFFF` | 主内容、对话、编辑器 |
 | `surface1` (sub) | `#F6F7F9` | 侧栏、tab 条、检查器这类「框架」面 |
-| `surface2` (raise) | `#EEF0F4` | 选中行、hover、分段控件选中、代码块底 |
-| `surface-code` | `#F8F9FB` | 代码与 diff 的纸面 |
+| `surface2` (raise) | `#EEF0F4` | 选中行、hover、分段控件选中、行内 code |
+| `surface3` (strong) | `#E1E5EB` | 默认 chip 底、需要更强一档的填充 |
+| `surface-code` | `#F8F9FB` | 代码块、工具卡 header、diff 纸面 |
 | `hairline` | `#E4E7EC` | 1px 收边（装饰性，不单独承担结构） |
 | `hairline-strong` | `#D0D5DD` | 输入框、卡片边界等需要被看见的边 |
 
@@ -99,11 +99,14 @@ Paseo 皮肤层的唯一依据见 ADR-0007。
 | `warning` | `#9A6700` | 待授权、需要注意 |
 | `danger` | `#B42318` | 错误、拒绝、diff 删除文字 |
 | `success-soft` | `#E7F4EC` | 状态 chip 底 |
+| `warning-soft` | `#F3EDE0` | 待授权 / 运行中的 chip 底 |
 | `danger-soft` | `#FDECEA` | 错误 chip / diff 删除行底 |
 | `diff-add` | `#EAF6EE` | diff 新增行底 |
 | `diff-del` | `#FBEAE8` | diff 删除行底 |
 
-状态色只用于状态，不做装饰；语义色不参与导航选中。
+状态色只用于状态，不做装饰；语义色不参与导航选中。soft 底是**固定 hex**，
+不按 alpha 现算：同一个 chip 落在 canvas / sub / raise 上必须同色，对比度才能
+按写下的值复核。
 
 **对比度可达面**（实测，前景 / 实际底色）：`ink` 与 `ink-2` 在四档表面都 ≥ 6.1:1；
 `ink-3` 最低 4.57:1。语义色与 `accent` 作为**文字**只保证到 sub 档：
@@ -139,6 +142,9 @@ Paseo 皮肤层的唯一依据见 ADR-0007。
 层级来自字号 + 字重 + 颜色三者的组合，不靠加粗一切。同一屏最多两个层级的标题；
 正文保持 15px，代码保持 mono。中文行高略大于英文（1.62 起）。
 
+内容标题（markdown h1–h6）从 body 起按同一比例表派生（22 / 20 / 18 / 16），
+属于正文内部层级，不新增 UI 档位。
+
 ### Substitutes
 
 - 系统无 `PingFang SC`（Windows/Linux）：落到 `system-ui` 的 CJK 字体，不另配。
@@ -149,7 +155,8 @@ Paseo 皮肤层的唯一依据见 ADR-0007。
 
 ### Spacing System
 
-4 的倍数：`4 / 8 / 12 / 16 / 24 / 32 / 48`。禁止 2/3/5/6 这类裸值做布局间距；
+4 的倍数：`4 / 8 / 12 / 16 / 24 / 32 / 48`。两档半档 `2 / 6` 只用于图标旁距、
+chip 内衬这类控件内部微调，不做分栏与页面级留白。禁止 3 / 5 这类未声明的裸值；
 1px 只用于描边，2px 只用于选中下划线/左条。
 
 ### Grid & Container
@@ -267,6 +274,15 @@ Paseo 皮肤层的唯一依据见 ADR-0007。
 ## Iteration Guide
 
 - 本文件是设计决策记录：每次修改写清「改什么 / 为什么 / 代价」，并 bump `version`。
+- v1.3（2026-10-23，T-025）：**token 与实际代码对齐**。代码块 / 工具卡 header / diff
+  纸面统一到 `surface-code`（此前文档写了 token、组件用 surface1/2 顶替）；语义
+  soft 与 diff 行底色改为固定值（`success-soft #E7F4EC`、新增 `warning-soft
+  #F3EDE0`、`danger-soft #FDECEA`、`diff-add #EAF6EE`、`diff-del #FBEAE8`），
+  不再按 12% alpha 现算——固定值才能在每一档表面复核对比度；删除无人使用且从未
+  实现的 `accent-soft`；`surface3`（strong）补进表面表，此前只写在正文里。字重
+  700 档（`FONT_WEIGHT.bold`）从 token 与代码中移除，标题统一 600；间距表补上
+  控件内部的 2 / 6 半档，并删除未使用的 64+ 档。检查器宽度代码回到文档值
+  300 / 264–520。
 - v1.2（2026-10-23，T-019）：检查器分段补齐「包」与「活动」——v1.1 只写了三项，
   但资源面板与事件流是既有能力，不能因为没写进契约就消失；同时明确新会话只有一个
   入口（tab 行尾 `+`），并新增 `FONT_SIZE.ui = 13` 作为会话行/控件标签档。

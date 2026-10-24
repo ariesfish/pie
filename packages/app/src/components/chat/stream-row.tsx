@@ -94,10 +94,10 @@ function ThoughtRow({ text, loading }: { text: string; loading: boolean }) {
 	);
 }
 
-/** Tool card (DESIGN.md §Components/Cards): header strip on the code paper
- *  (`surface1` stands in for `surface-code` in this theme) with the tool
- *  name, a mono argument digest and a semantic status chip; the expanded
- *  body is mono on the canvas. Tap the header to expand parameters/result. */
+/** Tool card (DESIGN.md §Components/Cards): header strip on `surface-code`
+ *  with the tool name, a mono argument digest and a semantic status chip; the
+ *  expanded body is mono on the canvas. Tap the header to expand
+ *  parameters/result. */
 function toolIcon(name: string): typeof Wrench {
 	const n = name.toLowerCase();
 	if (n.startsWith("bash") || n.startsWith("shell") || n.includes("exec"))
@@ -279,8 +279,7 @@ const styles = StyleSheet.create((theme) => ({
 		textAlign: "right",
 	},
 	toolSnippetSpacer: { flex: 1, minWidth: 0 },
-	// Tool card: header strip on the code paper (surface1 stands in for
-	// DESIGN's surface-code in this theme), body mono on the canvas.
+	// Tool card: header strip on the code paper, body mono on the canvas.
 	toolCard: {
 		alignSelf: "stretch",
 		backgroundColor: theme.colors.surface0,
@@ -297,7 +296,7 @@ const styles = StyleSheet.create((theme) => ({
 		paddingHorizontal: theme.spacing[2],
 		paddingVertical: theme.spacing[1.5],
 		minHeight: 28,
-		backgroundColor: theme.colors.surface1,
+		backgroundColor: theme.colors.surfaceCode,
 		borderBottomWidth: theme.borderWidth[1],
 		borderBottomColor: theme.colors.border,
 	},
@@ -315,7 +314,7 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	toolErrorSection: {
 		gap: theme.spacing[0.5],
-		backgroundColor: theme.colors.statusDangerTint,
+		backgroundColor: theme.colors.statusDangerSoft,
 		borderRadius: theme.borderRadius.sm,
 		paddingHorizontal: theme.spacing[2],
 		paddingVertical: theme.spacing[1.5],

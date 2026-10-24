@@ -305,5 +305,5 @@ const styles = StyleSheet.create((theme) => ({
 		paddingVertical: theme.spacing[1],
 		backgroundColor: theme.colors.surface1,
 	},
-	errorText: { color: theme.colors.statusDanger, fontSize: 10 },
+	errorText: { color: theme.colors.statusDanger, fontSize: theme.fontSize.sm },
 }));

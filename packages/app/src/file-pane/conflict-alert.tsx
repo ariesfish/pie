@@ -7,7 +7,7 @@ import { Text, View } from "react-native";
 import { StyleSheet, withUnistyles } from "react-native-unistyles";
 
 const ThemedAlertTriangle = withUnistyles(AlertTriangle);
-const warningIconMapping = (theme: Theme) => ({ color: theme.colors.palette.amber[500] });
+const warningIconMapping = (theme: Theme) => ({ color: theme.colors.statusWarning });
 
 export type FileConflictAlertState =
   | { kind: "changed"; canOverwrite: boolean; onReload(): void; onOverwrite(): void }
@@ -63,7 +63,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.spacing[3],
     paddingVertical: theme.spacing[2],
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.palette.amber[500],
+    borderBottomColor: theme.colors.statusWarning,
     backgroundColor: theme.colors.surface1,
   },
   message: {
@@ -73,7 +73,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: theme.spacing[1],
   },
   title: {
-    color: theme.colors.palette.amber[500],
+    color: theme.colors.statusWarning,
     fontSize: theme.fontSize.base,
     fontWeight: theme.fontWeight.medium,
   },

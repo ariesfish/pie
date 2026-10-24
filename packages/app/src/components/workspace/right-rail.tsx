@@ -7,17 +7,10 @@ import { Activity, Hammer, MessageSquare, Trash2 } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
+import { relativeTimeLabel } from "@/lib/relative-time";
 import { useConnectionStore } from "@/stores/connection-store";
 
 const KIND_ICON = { run: MessageSquare, tool: Hammer, queue: Activity } as const;
-
-function clockOf(ts: number): string {
-	const d = new Date(ts);
-	const hh = String(d.getHours()).padStart(2, "0");
-	const mm = String(d.getMinutes()).padStart(2, "0");
-	const ss = String(d.getSeconds()).padStart(2, "0");
-	return `${hh}:${mm}:${ss}`;
-}
 
 export function RightRail() {
 	const { t } = useTranslation();
@@ -49,7 +42,9 @@ export function RightRail() {
 									<Text style={styles.text} numberOfLines={1}>
 										{item.text}
 									</Text>
-									<Text style={styles.time}>{clockOf(item.ts)}</Text>
+									<Text style={styles.time}>
+										{relativeTimeLabel(t, new Date(item.ts).toISOString())}
+									</Text>
 								</View>
 							);
 						})
@@ -61,7 +56,7 @@ export function RightRail() {
 
 const styles = StyleSheet.create((theme) => ({
 	root: {
-		width: 264,
+		flex: 1,
 		borderLeftWidth: theme.borderWidth[1],
 		borderLeftColor: theme.colors.border,
 		backgroundColor: theme.colors.surfaceSidebar,
@@ -76,16 +71,16 @@ const styles = StyleSheet.create((theme) => ({
 		borderBottomColor: theme.colors.border,
 	},
 	title: { color: theme.colors.foreground, fontSize: theme.fontSize.sm, fontWeight: theme.fontWeight.semibold },
-	list: { padding: theme.spacing[2], gap: 2 },
+	list: { padding: theme.spacing[2], gap: theme.spacing[0.5] },
 	row: {
 		flexDirection: "row",
 		alignItems: "center",
 		gap: theme.spacing[1.5],
-		paddingVertical: 3,
+		paddingVertical: theme.spacing[1],
 		paddingHorizontal: theme.spacing[1],
 		borderRadius: theme.borderRadius.md,
 	},
 	text: { flex: 1, color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm },
-	time: { color: theme.colors.border, fontSize: 10 },
+	time: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
 	empty: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm, padding: theme.spacing[3] },
 }));

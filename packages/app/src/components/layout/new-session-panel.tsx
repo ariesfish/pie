@@ -150,7 +150,12 @@ const styles = StyleSheet.create((theme) => ({
 		alignSelf: "center",
 		width: "100%",
 	},
-	title: { color: theme.colors.foreground, fontSize: theme.fontSize.xl, fontWeight: "600", marginBottom: theme.spacing[2] },
+	title: {
+		color: theme.colors.foreground,
+		fontSize: theme.fontSize.xl,
+		fontWeight: theme.fontWeight.semibold,
+		marginBottom: theme.spacing[2],
+	},
 	label: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
 	option: {
 		flexDirection: "row",
@@ -167,7 +172,7 @@ const styles = StyleSheet.create((theme) => ({
 	optionMain: { flex: 1 },
 	optionTitle: { color: theme.colors.foreground, fontSize: theme.fontSize.sm },
 	optionTitleOn: { color: theme.colors.foreground, fontWeight: theme.fontWeight.semibold },
-	optionPath: { color: theme.colors.foregroundExtraMuted, fontSize: 10 },
+	optionPath: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
 	error: { color: theme.colors.statusDanger, fontSize: theme.fontSize.sm },
 	empty: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.base, textAlign: "center", padding: theme.spacing[4] },
 }));

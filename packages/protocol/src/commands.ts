@@ -194,10 +194,19 @@ export interface CommandMap {
 		args: { sessionId: SessionId };
 		result: { tree: import("./tree.js").TreeNodeMeta[]; leafId: EntryId | null };
 	};
-	/** Entries along root -> given leaf (defaults to active leaf). */
+	/**
+	 * One page of entries along root -> given leaf (defaults to the active
+	 * leaf). `before` is exclusive: pass the previous page's `nextCursor`
+	 * to walk backwards; `limit` is clamped by the daemon.
+	 */
 	"session.entries": {
-		args: { sessionId: SessionId; leafId?: EntryId; since?: EntryId };
-		result: { entries: SessionEntry[]; leafId: EntryId; truncated?: boolean };
+		args: { sessionId: SessionId; leafId?: EntryId; before?: EntryId; limit?: number };
+		result: {
+			entries: SessionEntry[];
+			leafId: EntryId;
+			hasMore: boolean;
+			nextCursor: EntryId | null;
+		};
 	};
 
 	// --- input ---------------------------------------------------------------------------
@@ -279,7 +288,7 @@ export interface CommandMap {
 	/** Fork at an entry (new session file, Pi fork semantics). */
 	"session.forkAt": {
 		args: { sessionId: SessionId; entryId: EntryId; position?: "at" | "before" };
-		result: { sessionId: SessionId; sessionFile?: string };
+		result: { sessionId: SessionId; sessionFile?: string; selectedText?: string };
 	};
 	/** Preview the messages that a fork at `entryId` would show. */
 	"session.forkPreview": {

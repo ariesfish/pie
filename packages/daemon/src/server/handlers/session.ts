@@ -58,11 +58,11 @@ export function registerSessionCommands(router: CommandRouter, deps: HandlerDeps
 	router.register("session.entries", async (args) => {
 		const host = requireHost(deps, args);
 		if (host instanceof HostSessionError) throw host;
-		const snapshot = host.snapshot();
-		return {
-			entries: snapshot.entries,
-			leafId: snapshot.leafId,
-		};
+		return host.entriesPage({
+			leafId: args["leafId"] as string | undefined,
+			before: args["before"] as string | undefined,
+			limit: typeof args["limit"] === "number" ? (args["limit"] as number) : undefined,
+		});
 	});
 
 	router.register("session.prompt", async (args, ctx) => {

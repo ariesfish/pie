@@ -77,6 +77,28 @@ describe("mapTree", () => {
 		expect(flat.find((n) => n.id === "b")).toMatchObject({ parentId: "a", label: "experiment" });
 		expect(flat.find((n) => n.id === "d")).toMatchObject({ parentId: "a" });
 	});
+
+	it("carries a plain-text preview and role for message rows", () => {
+		const node = {
+			entry: {
+				type: "message",
+				id: "m1",
+				parentId: null,
+				timestamp: "t",
+				message: {
+					role: "user",
+					content: [{ type: "text", text: "  hello\n  world  " }],
+				},
+			} as PiSessionEntry,
+			children: [],
+		} as SessionTreeNode;
+
+		expect(mapTree([node])[0]).toMatchObject({
+			id: "m1",
+			role: "user",
+			preview: "hello world",
+		});
+	});
 });
 
 describe("buildStateInfo (against a synthetic session)", () => {

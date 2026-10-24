@@ -75,6 +75,40 @@ export interface ClientHandle {
 	subscribed: Set<string>;
 }
 
+/** Entries in an attach snapshot; older entries load through session.entries. */
+export const SNAPSHOT_ENTRY_LIMIT = 120;
+/** Hard cap for one session.entries page. */
+export const ENTRY_PAGE_MAX = 500;
+export const ENTRY_PAGE_DEFAULT = 100;
+
+export interface EntryPage<T> {
+	page: T[];
+	hasMore: boolean;
+	nextCursor: string | null;
+}
+
+/**
+ * Page a branch backwards. `before` is exclusive; the returned newer page keeps
+ * file order (oldest -> newest) and `nextCursor` points at its oldest entry.
+ * Returns null when `before` is not on this branch.
+ */
+export function paginateEntries<T extends { id: string }>(
+	entries: readonly T[],
+	before: string | null,
+	limit: number,
+): EntryPage<T> | null {
+	const end = before ? entries.findIndex((entry) => entry.id === before) : entries.length;
+	if (end < 0) return null;
+	const size = Math.min(ENTRY_PAGE_MAX, Math.max(1, Math.floor(limit)));
+	const start = Math.max(0, end - size);
+	const page = entries.slice(start, end);
+	return {
+		page,
+		hasMore: start > 0,
+		nextCursor: start > 0 ? (page[0]?.id ?? null) : null,
+	};
+}
+
 export class HostSessionError extends Error {
 	constructor(
 		message: string,
@@ -332,6 +366,45 @@ export class HostSession {
 	}
 
 	// ---------------------------------------------------------------------------
+	// Entry paging
+	// ---------------------------------------------------------------------------
+
+	/**
+	 * One page of the root -> leaf branch. `leafId` selects a branch without
+	 * changing the active leaf (tree preview); `before` walks older pages.
+	 */
+	entriesPage(input: {
+		leafId?: string;
+		before?: string;
+		limit?: number;
+	}): {
+		entries: SessionSnapshot["entries"];
+		leafId: string;
+		hasMore: boolean;
+		nextCursor: string | null;
+	} {
+		const mgr = this.session.sessionManager;
+		const leafId = input.leafId ?? mgr.getLeafId();
+		if (!leafId) {
+			return { entries: [], leafId: "", hasMore: false, nextCursor: null };
+		}
+		if (!mgr.getEntry(leafId)) {
+			throw new HostSessionError(`Entry not found: ${leafId}`, "not_found");
+		}
+		const branch = mgr.getBranch(leafId);
+		const paged = paginateEntries(branch, input.before ?? null, input.limit ?? ENTRY_PAGE_DEFAULT);
+		if (!paged) {
+			throw new HostSessionError(`Entry not on this branch: ${String(input.before)}`, "not_found");
+		}
+		return {
+			entries: paged.page.map(mapSessionEntry),
+			leafId,
+			hasMore: paged.hasMore,
+			nextCursor: paged.nextCursor,
+		};
+	}
+
+	// ---------------------------------------------------------------------------
 	// Snapshot
 	// ---------------------------------------------------------------------------
 
@@ -342,21 +415,7 @@ export class HostSession {
 		for (const entry of mgr.getEntries()) this.emittedEntryIds.add(entry.id);
 		const tree: TreeNodeMeta[] = mapTree(mgr.getTree());
 		const leafId = mgr.getLeafId();
-		// Entries along root -> leaf by walking parents.
-		const path: string[] = [];
-		let cursor: string | null = leafId;
-		while (cursor) {
-			const node = tree.find((n) => n.id === cursor);
-			if (!node) break;
-			path.push(node.id);
-			cursor = node.parentId;
-		}
-		path.reverse();
-		const entriesById = new Map(mgr.getEntries().map((e) => [e.id, e]));
-		const entries = path
-			.map((id) => entriesById.get(id))
-			.filter((e): e is NonNullable<typeof e> => e !== undefined)
-			.map(mapSessionEntry);
+		const page = this.entriesPage({ limit: SNAPSHOT_ENTRY_LIMIT });
 		const state = buildStateInfo(this.session);
 		this.lastStateInfo = state;
 		return {
@@ -367,7 +426,8 @@ export class HostSession {
 			snapshotVersion: 1,
 			tree,
 			leafId,
-			entries,
+			entries: page.entries,
+			entryWindow: { hasMore: page.hasMore, nextCursor: page.nextCursor },
 			state,
 			queues: {
 				steering: [...this.session.getSteeringMessages()],

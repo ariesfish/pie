@@ -228,6 +228,55 @@ describe("wire protocol over real WebSocket", () => {
 		ws.close();
 	});
 
+	it("pages a long session and exposes tree previews", async () => {
+		const client = await WireClient.connect();
+		const fixtureDir = join(dir, "agent-home", "sessions", "--long--");
+		mkdirSync(fixtureDir, { recursive: true });
+		const fixturePath = join(fixtureDir, "2026-10-11T00-00-00-000Z_longpaging01.jsonl");
+		const entries = [
+			JSON.stringify({ type: "session", version: 3, id: "longpaging01", timestamp: "2026-10-11T00:00:00.000Z", cwd: workspace }),
+		];
+		for (let i = 1; i <= 130; i += 1) {
+			entries.push(
+				JSON.stringify({
+					type: "message",
+					id: `m${i}`,
+					parentId: i === 1 ? null : `m${i - 1}`,
+					timestamp: `2026-10-11T00:${String(Math.floor(i / 60)).padStart(2, "0")}:${String(i % 60).padStart(2, "0")}.000Z`,
+					message: { role: "user", content: `message ${i}`, timestamp: i },
+				}),
+			);
+		}
+		writeFileSync(fixturePath, entries.join("\n") + "\n");
+
+		client.events.length = 0;
+		await client.request("session.attach", { sessionId: "longpaging01", path: fixturePath });
+		const snap = await client.waitForEvent("session.snapshot", 5000);
+		const snapshot = snap.data.snapshot as {
+			entries: Array<{ id: string }>;
+			entryWindow: { hasMore: boolean; nextCursor: string | null };
+			leafId: string;
+		};
+		expect(snapshot.entries).toHaveLength(120);
+		expect(snapshot.entryWindow.hasMore).toBe(true);
+		expect(snapshot.entryWindow.nextCursor).toBe(snapshot.entries[0]!.id);
+
+		const older = await client.request("session.entries", {
+			sessionId: "longpaging01",
+			before: snapshot.entryWindow.nextCursor,
+			limit: 100,
+		});
+		expect(older.entries.map((entry: { id: string }) => entry.id)).toEqual(
+			Array.from({ length: 11 }, (_, index) => `m${index + 1}`),
+		);
+		expect(older.hasMore).toBe(false);
+		expect(older.nextCursor).toBeNull();
+
+		const tree = await client.request("session.tree", { sessionId: "longpaging01" });
+		expect(tree.tree[0]).toMatchObject({ id: "m1", role: "user", preview: "message 1" });
+		client.close();
+	});
+
 	it("session tree operations: tree / forkPreview / forkAt / navigate", async () => {
 		const client = await WireClient.connect();
 		const created = await client.request("session.create", { workspaceId: workspace });

@@ -69,16 +69,52 @@ export function mapSessionEntry(entry: PiSessionEntry): WireSessionEntry {
 	}
 }
 
+const TREE_PREVIEW_MAX_CHARS = 140;
+
+function messagePreview(message: PiAgentMessage): string {
+	if (!message) return "";
+	const content = (message as { content?: unknown }).content;
+	if (typeof content === "string") return content;
+	if (Array.isArray(content)) {
+		for (const part of content) {
+			if (
+				part &&
+				typeof part === "object" &&
+				"type" in part &&
+				(part as { type?: unknown }).type === "text" &&
+				typeof (part as { text?: unknown }).text === "string"
+			) {
+				return (part as { text: string }).text;
+			}
+		}
+	}
+	return "";
+}
+
+function treePreview(entry: PiSessionEntry): string | undefined {
+	if (entry.type !== "message") return undefined;
+	const text = messagePreview(entry.message).replace(/\s+/g, " ").trim();
+	return text ? text.slice(0, TREE_PREVIEW_MAX_CHARS) : undefined;
+}
+
 export function mapTree(nodes: readonly SessionTreeNode[]): TreeNodeMeta[] {
 	const out: TreeNodeMeta[] = [];
 	const walk = (node: SessionTreeNode): void => {
 		const entry = node.entry as { id: string; parentId: string | null; timestamp: string; type: string };
+		const message =
+			entry.type === "message"
+				? (node.entry as Extract<PiSessionEntry, { type: "message" }>).message
+				: undefined;
+		const labelEntry =
+			entry.type === "label" ? (node.entry as PiSessionEntry & { label?: string }) : undefined;
 		out.push({
 			id: entry.id,
 			parentId: entry.parentId,
 			type: entry.type,
+			role: message?.role,
+			preview: treePreview(node.entry),
 			timestamp: entry.timestamp,
-			label: node.label,
+			label: node.label ?? labelEntry?.label,
 			labelTimestamp: node.labelTimestamp,
 		});
 		for (const child of node.children) walk(child);

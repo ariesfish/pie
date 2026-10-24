@@ -25,6 +25,10 @@ export interface TreeNodeMeta {
 	parentId: EntryId | null;
 	/** Pi entry type marker ("message" | "usage" | ...) for lightweight glyphs. */
 	type: string;
+	/** Message role when the entry is a message (for tree-row icons). */
+	role?: string;
+	/** Short plain-text snippet for the tree row (no display formatting). */
+	preview?: string;
 	/** ISO timestamp (when the daemon knows it; used to order siblings). */
 	timestamp?: string;
 	/** Branch label, when one is attached at this entry (Pi LabelEntry). */
@@ -63,8 +67,13 @@ export interface SessionSnapshot {
 	/** Whole session tree as flat metadata. */
 	tree: TreeNodeMeta[];
 	leafId: EntryId | null;
-	/** Entries along the root -> leaf path (ordered oldest -> newest). */
+	/**
+	 * The most recent page of entries along the root -> leaf path (ordered
+	 * oldest -> newest). Older pages come from `session.entries`.
+	 */
 	entries: SessionEntry[];
+	/** Window descriptor for the snapshot page; absent means the whole path. */
+	entryWindow?: { hasMore: boolean; nextCursor: EntryId | null };
 	state: SessionStateInfo;
 	queues: { steering: string[]; followUp: string[] };
 	contextUsage?: ContextUsage;

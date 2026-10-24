@@ -24,9 +24,9 @@ export function createDiffPalette(theme: Theme): DiffPalette {
     deletionBackground: theme.colors.diffDel,
     emptyBackground: theme.colors.surfaceCode,
     // [pie] paseo reads xterm-blue from its ANSI terminal palette; pie's
-    // theme carries no terminal group (W4 terminal ADR) — the accent plays
-    // the selection role here.
-    selection: theme.colors.accent,
+    // theme carries no terminal group (W4 terminal ADR). With the monochrome
+    // ink accent, a neutral strong line is the selection fill.
+    selection: theme.colors.borderAccent,
     headerActiveSurface: theme.colors.surface1,
     headerBorder: theme.colors.borderAccent,
     statusSuccess: theme.colors.statusSuccess,

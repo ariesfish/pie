@@ -217,7 +217,7 @@ export function FilesPanel() {
 							}}
 						>
 							{entry.kind === "dir" ? (
-								<Folder size={16} color={theme.colors.accentBright} strokeWidth={1.5} />
+								<Folder size={16} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 							) : (
 								<FileText size={16} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 							)}

@@ -108,7 +108,7 @@ function contextTone(percent: number | null, theme: { colors: Theme["colors"] })
 	if (percent == null) return theme.colors.border;
 	if (percent >= 0.9) return theme.colors.statusDanger;
 	if (percent >= 0.7) return theme.colors.statusWarning;
-	return theme.colors.accentBright;
+	return theme.colors.accent;
 }
 
 function ContextRing({ usage }: { usage: ContextUsage | null }) {

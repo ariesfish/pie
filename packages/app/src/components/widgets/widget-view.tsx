@@ -118,7 +118,7 @@ const styles = StyleSheet.create((theme) => ({
 		gap: theme.spacing[2],
 	},
 	key: {
-		color: theme.colors.accentBright,
+		color: theme.colors.foregroundMuted,
 		fontSize: theme.fontSize.sm,
 		fontFamily: theme.fontFamily.mono,
 	},

@@ -1,5 +1,5 @@
 // Pie design tokens — the single source of truth for colour, type, spacing,
-// radius and elevation. Contract: /DESIGN.md (v1.3, quiet-saas).
+// radius and elevation. Contract: /DESIGN.md (v1.4, quiet-saas ink).
 //
 // Rules (docs/CONSTRAINTS.md C5): components read these tokens; they never
 // introduce their own hex/rgba. Adding or changing a value is a DESIGN.md
@@ -113,8 +113,8 @@ export interface ThemeTint {
 	foregroundExtraMuted: string;
 	border: string;
 	borderAccent: string;
+	/** Monochrome emphasis: ink itself, not a second hue. */
 	accent: string;
-	accentBright: string;
 	accentForeground: string;
 	destructive: string;
 }
@@ -123,7 +123,6 @@ const statusColors = {
 	statusSuccess: "#1f7a4d",
 	statusDanger: "#b42318",
 	statusWarning: "#9a6700",
-	statusMerged: "#6b4ba1",
 };
 
 /**
@@ -162,9 +161,10 @@ export function buildSemanticColors(tint: ThemeTint) {
 		border: tint.border,
 		borderAccent: tint.borderAccent,
 
-		// One accent hue, reserved for primary actions, running state and focus.
+		// Monochrome emphasis: ink is the accent, reserved for primary
+		// actions, running state and focus. Semantic status colours are the
+		// only remaining hues in the product UI.
 		accent: tint.accent,
-		accentBright: tint.accentBright,
 		accentForeground: tint.accentForeground,
 
 		destructive: tint.destructive,
@@ -203,8 +203,7 @@ const pieLightColors = buildSemanticColors({
 	foregroundExtraMuted: "#5d6678",
 	border: "#e4e7ec",
 	borderAccent: "#d0d5dd",
-	accent: "#3b5bdb",
-	accentBright: "#2f4bc0",
+	accent: "#14161a",
 	accentForeground: "#ffffff",
 	destructive: "#b42318",
 });

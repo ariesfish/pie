@@ -137,7 +137,7 @@ function FileTree() {
 							void openPath(row.entry.path);
 						}
 					}}
-					accent={theme.colors.accentBright}
+					folderColor={theme.colors.foregroundMuted}
 					fgMuted={theme.colors.foregroundExtraMuted}
 				/>
 			))}
@@ -151,7 +151,7 @@ function TreeRow({
 	expanded,
 	children_,
 	onPress,
-	accent,
+	folderColor,
 	fgMuted,
 }: {
 	entry: FsEntryInfo;
@@ -159,7 +159,7 @@ function TreeRow({
 	expanded: boolean;
 	children_: React.ReactNode;
 	onPress: () => void;
-	accent: string;
+	folderColor: string;
 	fgMuted: string;
 }) {
 	return (
@@ -178,7 +178,7 @@ function TreeRow({
 					<Text style={styles.rowSpacer}> </Text>
 				)}
 				{entry.kind === "dir" ? (
-					<Folder size={14} color={accent} strokeWidth={1.5} />
+					<Folder size={14} color={folderColor} strokeWidth={1.5} />
 				) : (
 					<FileText size={14} color={fgMuted} strokeWidth={1.5} />
 				)}
@@ -211,9 +211,9 @@ function ChangesList() {
 		const kind = statusKindOf(entry);
 		if (kind === "added") return theme.colors.statusSuccess;
 		if (kind === "deleted") return theme.colors.statusDanger;
-		if (kind === "renamed" || kind === "copied") return theme.colors.statusMerged;
+		if (kind === "renamed" || kind === "copied") return theme.colors.foregroundExtraMuted;
 		if (kind === "untracked") return theme.colors.statusWarning;
-		return theme.colors.accentBright;
+		return theme.colors.foregroundMuted;
 	};
 
 	return (

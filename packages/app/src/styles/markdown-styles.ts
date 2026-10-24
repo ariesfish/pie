@@ -154,8 +154,9 @@ export function createMarkdownStyles(theme: Theme) {
 
     link: {
       ...webSelectableTextStyle,
-      color: theme.colors.accentBright,
-      textDecorationLine: "none" as const,
+      color: theme.colors.accent,
+      textDecorationLine: "underline" as const,
+      textDecorationColor: theme.colors.foregroundExtraMuted,
       flexShrink: 1,
       minWidth: 0,
       overflowWrap: "anywhere" as const,
@@ -163,8 +164,9 @@ export function createMarkdownStyles(theme: Theme) {
 
     blocklink: {
       ...webSelectableTextStyle,
-      color: theme.colors.accentBright,
-      textDecorationLine: "none" as const,
+      color: theme.colors.accent,
+      textDecorationLine: "underline" as const,
+      textDecorationColor: theme.colors.foregroundExtraMuted,
       flexShrink: 1,
       minWidth: 0,
       overflowWrap: "anywhere" as const,

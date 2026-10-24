@@ -1,7 +1,7 @@
 ---
-version: 1.3
+version: 1.4
 name: Pie design system
-description: 近白纸上的工程工具：墨字、单一蓝紫强调色、1px 细线 + 表面阶梯做深度；界面退到会话后面，强调色只给操作与状态。
+description: 近白纸上的工程工具：墨字、墨色强调、1px 细线 + 表面阶梯做深度；界面退到会话后面，强调只给操作与焦点，彩色只留给语义状态。
 resolved-from-defaults:
   palette: light_clean        # quiet-saas 档；跨端工作台浅色为默认（沿用上一轮用户反馈）
   typography: inter           # 系统 UI 栈；不引入需授权的字体
@@ -16,8 +16,7 @@ colors:
   text-primary: "#14161A"
   text-secondary: "#4B5361"
   text-tertiary: "#5D6678"
-  accent: "#3B5BDB"
-  accent-hover: "#2F4BC0"
+  accent: "#14161A"
   hairline: "#E4E7EC"
   hairline-strong: "#D0D5DD"
   on-accent: "#FFFFFF"
@@ -44,9 +43,11 @@ Pie 是给 Pi coding agent 的跨设备客户端：桌面、移动、Web。主�
 批准它的动作**，不是浏览页面。因此视觉的第一目标是让会话内容清楚，第二目标是让当前
 上下文（哪个会话、哪个 tab、哪个检查器）不用找。
 
-方向：**近白纸 + 墨字 + 一个蓝紫强调色**。深度靠三档表面（canvas / sub / raise）加
-1px 细线，不靠阴影；强调色是稀缺资源，只出现在主操作、运行状态、链接和焦点环上。
-没有渐变、没有插画、没有第二种彩色；产品自己的 UI 是唯一的图像。
+方向：**近白纸 + 墨字 + 墨色强调**。深度靠三档表面（canvas / sub / raise）加
+1px 细线，不靠阴影；强调是稀缺资源，只出现在主操作、运行状态、链接和焦点环上，
+而且用 ink 本身，不引入第二个色相。彩色只保留给语义状态（成功 / 警告 / 错误）和
+代码语法高亮；界面不需要靠蓝色来证明可点击。
+没有渐变、没有插画、没有装饰性色块；产品自己的 UI 是唯一的图像。
 
 参考来源：`docs/design/audit-2026-10.md`（现状审计）、`docs/design/variants/index.html`
 （已选方案 A）。Paseo 只提供结构参照（ADR-0005），不复制其皮肤与商标；本文件取代
@@ -56,11 +57,14 @@ Paseo 皮肤层的唯一依据见 ADR-0007。
 
 ### Brand & Accent
 
-- `accent #3B5BDB`：唯一强调色。对白底 **5.67:1**，白字在其上 **5.67:1**。
-- `accent-hover #2F4BC0`：仅 hover/active。
-- **预算**：每视口最多 2 处彩色事件。通常是「一个主按钮 + 一个运行/焦点状态」。
-- 允许：主操作填充、链接文字、焦点环、运行状态点、图表中的单条强调。
-- 禁止：导航选中填充、正文着色、卡片整块着色、两个强调色并存、用强调色画分隔线。
+- `accent #14161A`：强调色就是 ink 本身，不另立色相。白字在其上 **18.1:1**；
+  作为文字落在任何一档表面上都是最高对比。
+- hover/active：主操作填充降到 90% 不透明度，不新增 token，也不换成第二种颜色。
+- **预算**：每视口最多 2 处墨色强调。通常是「一个主按钮 + 一个运行/焦点状态」。
+- 允许：主操作填充、运行状态点、焦点环、图表中的单条强调。
+- 链接：`ink` + 常驻下划线（不靠颜色区分），hover 只改变下划线/不透明度。
+- 禁止：导航选中填充、正文着色、卡片整块着色、用强调色画分隔线；
+  除语义状态与代码语法外，不引入任何彩色 token。
 
 ### Surface
 
@@ -109,10 +113,11 @@ Paseo 皮肤层的唯一依据见 ADR-0007。
 按写下的值复核。
 
 **对比度可达面**（实测，前景 / 实际底色）：`ink` 与 `ink-2` 在四档表面都 ≥ 6.1:1；
-`ink-3` 最低 4.57:1。语义色与 `accent` 作为**文字**只保证到 sub 档：
-`accent` 在 strong step 上 4.48:1、`statusWarning` 在 raise 上 4.27:1，均低于 4.5——
-这些组合只允许用于图标或形状，不允许承载小字。要在 raise 上写状态文字，用
-`ink-2` + soft tint 底，不要让状态色本身当正文色。
+`ink-3` 最低 4.57:1。墨色 `accent` 就是 `ink`，在所有表面都远超 4.5:1，可以安全
+承载小字。语义色作为**文字**只保证到 sub 档：`statusWarning` 在 raise 上 4.27:1，
+低于 4.5——只允许用于图标或形状。要在 raise 上写状态文字，用 `ink-2` + soft tint 底，
+不要让状态色本身当正文色。代码语法高亮使用独立的 highlight palette，不属于 UI
+强调色，也不参与每视口的强调预算。
 
 ## Typography
 
@@ -196,7 +201,7 @@ chip 内衬这类控件内部微调，不做分栏与页面级留白。禁止 3 
 ### Buttons
 
 - 高度：桌面 28（紧凑行内）/ 32（表单）；compact 44。
-- 主操作：`accent` 填充 + `on-accent` 文字，每视口最多一个。
+- 主操作：`accent`（ink）填充 + `on-accent`（白）文字，每视口最多一个。
 - 次要：canvas 底 + `hairline-strong` 边 + `ink` 文字。
 - 幽灵：透明底 + `ink-2` 文字，仅用于「拒绝 / 取消」这类低优先动作。
 - 发送按钮：`ink` 圆形 30px，白图标（不占强调色预算）。
@@ -205,14 +210,14 @@ chip 内衬这类控件内部微调，不做分栏与页面级留白。禁止 3 
 ### Cards & Containers
 
 - 卡片：canvas + 1px `hairline` + `radius-lg`；无阴影（浮层除外）。
-- 权限卡：`hairline-strong` 边 + 一层阴影 + 顶部状态 chip；主按钮唯一强调色。
+- 权限卡：`hairline-strong` 边 + 一层阴影 + 顶部状态 chip；主按钮唯一墨色填充。
 - 工具卡：header 用 `surface-code`，正文 mono；状态 chip 用语义 soft 底。
 - diff：容器 `radius-lg`，行底用 `diff-add` / `diff-del`，行号 `ink-3`。
 
 ### Inputs & Forms
 
 - 高度 32（桌面）/ 44（compact），`radius 6`，1px `hairline-strong`。
-- focus：2px `accent` 环（外扩 1px），不改变布局尺寸。
+- focus：2px `accent`（ink）环（外扩 1px），不改变布局尺寸。
 - placeholder 用 `ink-3`，不得更浅。
 - 错误：`danger` 边 + `danger` 文字一行，不用红色整块底。
 
@@ -220,13 +225,13 @@ chip 内衬这类控件内部微调，不做分栏与页面级留白。禁止 3 
 
 **两层，每类对象一个主入口：**
 
-1. **侧栏**：工作区 + 会话列表。选中 = `surface2` 底 + `ink` + 500；运行中 = `accent` 点。
+1. **侧栏**：工作区 + 会话列表。选中 = `surface2` 底 + `ink` + 500；运行中 = `accent`（ink）点。
 2. **主区 tab**：会话 / 文件 / 变更。选中 = canvas 底 + `ink` + 500（tab 条本身是 sub）。
 3. **检查器**：主区的上下文，不参与一级导航。一个开关（顶部图标）控制开合；
    内部用分段控件切换 文件 / 变更 / 包 / 用量 / 活动，选中 = `surface2` + `ink`。
 
 - 不设常驻「新会话」tab；新会话的唯一入口是 tab 行尾 `+`（侧栏不再放同名按钮）。
-- 导航选中态不用强调色填充；强调色只给运行状态点、主操作、焦点。
+- 导航选中态不用强调色填充；墨色强调只给运行状态点、主操作、焦点。
 - 同类控件只有一种选中语汇；禁止「一个用填充、一个用下划线、一个用白图标」。
 
 ## Motion & Interaction
@@ -242,7 +247,7 @@ chip 内衬这类控件内部微调，不做分栏与页面级留白。禁止 3 
 
 - 只用 `theme.ts` 的 token；新增 token 先改本文件再改代码。
 - 新文本先选层级（body / ui / caption）再选字号；不即兴写 `fontSize: 11`。
-- 每个视口数一遍彩色事件，超过 2 个就删。
+- 每个视口数一遍墨色强调事件，超过 2 个就删；语义状态不算强调。
 - 对比度按「实际前景 / 实际底色」计算并写进票；不靠截图感觉。
 - 图标按钮必须有 `accessibilityLabel`；focus 必须可见。
 - 浮层才用阴影；静态卡片用细线。
@@ -263,10 +268,10 @@ chip 内衬这类控件内部微调，不做分栏与页面级留白。禁止 3 
 
 1. 读本文件与 `docs/CONSTRAINTS.md`；票上写明涉及的 token 与对比度。
 2. 颜色只从 `packages/app/src/styles/theme.ts` 取；允许的字面量文件只有
-   `styles/theme.ts`、`components/files/syntax-palette.ts`、`components/material-file-icons.ts`
+   `styles/theme.ts`、`components/material-file-icons.ts`
    与 `*.platform.*` 适配层。
 3. 字号只从本文件的层级取；不新增档位。
-4. 强调色预算 ≤ 2/视口；主操作每视口 ≤ 1。
+4. 墨色强调预算 ≤ 2/视口；主操作每视口 ≤ 1。
 5. 新增/修改的图标按钮补 `accessibilityLabel`；交互元素补 focus 态。
 6. 改完跑 `npm run check`；UI 改动再跑 `npm run ui-walkthrough`，截图对照本文件。
 7. 视觉决策变化先改本文件并 bump `version`，再改代码——不做静默改版。
@@ -274,6 +279,13 @@ chip 内衬这类控件内部微调，不做分栏与页面级留白。禁止 3 
 ## Iteration Guide
 
 - 本文件是设计决策记录：每次修改写清「改什么 / 为什么 / 代价」，并 bump `version`。
+- v1.4（2026-10-23，T-029）：**去掉蓝色强调，改为全墨色**。`accent` 直接等于
+  `ink #14161A`，主按钮、焦点环、运行状态点、链接都用它；链接改为常驻下划线，
+  因为墨色不再靠色相区分可点击。删除 `accentBright`（与 accent 重复）和
+  `statusMerged`（重命名/复制文件状态改用 `ink-3`，不再引入紫色）；diff 选区改用
+  中性 `borderAccent`。彩色只剩语义状态与代码语法高亮。代价：强调的层级改由
+  填充/线宽/下划线承担，同一屏两个墨色主操作会比两个蓝色按钮更难区分——所以
+  每视口仍限一个主操作。
 - v1.3（2026-10-23，T-025）：**token 与实际代码对齐**。代码块 / 工具卡 header / diff
   纸面统一到 `surface-code`（此前文档写了 token、组件用 surface1/2 顶替）；语义
   soft 与 diff 行底色改为固定值（`success-soft #E7F4EC`、新增 `warning-soft

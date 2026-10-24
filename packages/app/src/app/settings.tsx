@@ -1038,7 +1038,7 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	buttonShape: { borderRadius: theme.borderRadius.md },
 	field: { flexGrow: 1, minWidth: 160, gap: 2 },
-	fieldLabel: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
+	fieldLabel: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.ui },
 	link: {
 		color: theme.colors.accent,
 		fontSize: theme.fontSize.sm,
@@ -1090,7 +1090,7 @@ const styles = StyleSheet.create((theme) => ({
 		borderWidth: theme.borderWidth[1],
 		borderColor: theme.colors.borderAccent,
 		borderRadius: theme.borderRadius.md,
-		backgroundColor: theme.colors.surface0,
+		backgroundColor: theme.colors.surface1,
 	},
 	formGrid: { flexDirection: "row", flexWrap: "wrap", gap: theme.spacing[2] },
 	formSection: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm, fontWeight: theme.fontWeight.semibold },

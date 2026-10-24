@@ -95,7 +95,7 @@ const styles = StyleSheet.create((theme) => {
       alignItems: "center",
       justifyContent: "center",
       gap: theme.spacing[2],
-      borderRadius: theme.borderRadius.lg,
+      borderRadius: theme.borderRadius.md,
       borderWidth: 1,
       borderColor: "transparent",
     },

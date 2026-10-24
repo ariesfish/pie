@@ -101,10 +101,17 @@ function validateProviderDraft(draft: ModelProviderDraft): void {
 	}
 }
 
+function stripBom(content: string): string {
+	return content.charCodeAt(0) === 0xfeff ? content.slice(1) : content;
+}
+
 function parseObject(content: string, file: ConfigFile): Record<string, unknown> {
+	const text = stripBom(content);
 	let value: unknown;
 	try {
-		value = JSON.parse(stripJsonComments(content));
+		// Pi accepts comments/trailing commas in models.json only; settings.json
+		// and mcp.json must stay strict or Pi silently resets them to defaults.
+		value = JSON.parse(file === "models" ? stripJsonComments(text) : text);
 	} catch {
 		throw new ConfigError("config_invalid", ErrorCodes.configInvalid);
 	}
@@ -144,6 +151,7 @@ export class ConfigService {
 		const lockDir = `${path}.lock`;
 		const deadline = Date.now() + LOCK_TIMEOUT_MS;
 		let acquired = false;
+		const owner = randomBytes(8).toString("hex");
 		try {
 			await mkdir(dirname(path), { recursive: true });
 			for (;;) {
@@ -156,20 +164,25 @@ export class ConfigService {
 					const info = await stat(lockDir).catch(() => null);
 					if (info && Date.now() - info.mtimeMs > 10_000) {
 						await rm(lockDir, { recursive: true, force: true }).catch(() => {});
+						if (Date.now() > deadline) {
+							throw new ConfigError("config_conflict", ErrorCodes.configConflict);
+						}
+						await sleep(LOCK_RETRY_MS);
 						continue;
 					}
 					if (Date.now() > deadline) {
-						throw new ConfigError(
-							`${FILE_NAMES[file]} is locked by another writer`,
-							ErrorCodes.configConflict,
-						);
+						throw new ConfigError("config_conflict", ErrorCodes.configConflict);
 					}
 					await sleep(LOCK_RETRY_MS);
 				}
 			}
+			await writeFile(join(lockDir, "owner"), owner, "utf8");
 			return await fn();
 		} finally {
-			if (acquired) await rm(lockDir, { recursive: true, force: true }).catch(() => {});
+			if (acquired) {
+				const current = await readFile(join(lockDir, "owner"), "utf8").catch(() => null);
+				if (current === owner) await rm(lockDir, { recursive: true, force: true }).catch(() => {});
+			}
 			release();
 		}
 	}
@@ -266,6 +279,7 @@ export class ConfigService {
 				JSON.stringify(data, null, 2) + "\n",
 				expectedRevision ?? read.revision,
 			);
+			await this.clearDefaultIfModelMissing(draft.id, draft.models.map((model) => model.id));
 			return { revision: written.revision };
 		});
 	}
@@ -278,6 +292,8 @@ export class ConfigService {
 			if (!Object.hasOwn(providers, providerId)) {
 				throw new ConfigError("invalid_args", "invalid_args");
 			}
+			// Clear the default first: a stale default is worse than a failed delete.
+			await this.clearDefaultForDeletedProvider(providerId);
 			delete providers[providerId];
 			data.providers = providers;
 			const written = await this.writeUnlocked(
@@ -285,12 +301,23 @@ export class ConfigService {
 				JSON.stringify(data, null, 2) + "\n",
 				expectedRevision ?? read.revision,
 			);
-			await this.clearDefaultForDeletedProvider(providerId);
 			return { revision: written.revision };
 		});
 	}
 
-	/** A deleted provider must not remain the default model. */
+	private async clearDefaultIfModelMissing(providerId: string, modelIds: string[]): Promise<void> {
+		await this.withLock("settings", async () => {
+			const read = await this.readUnlocked("settings");
+			if (!read.exists) return;
+			const data = parseObject(read.content, "settings");
+			if (data.defaultProvider !== providerId) return;
+			if (typeof data.defaultModel === "string" && modelIds.includes(data.defaultModel)) return;
+			delete data.defaultProvider;
+			delete data.defaultModel;
+			await this.writeUnlocked("settings", JSON.stringify(data, null, 2) + "\n", read.revision);
+		});
+	}
+
 	private async clearDefaultForDeletedProvider(providerId: string): Promise<void> {
 		await this.withLock("settings", async () => {
 			const read = await this.readUnlocked("settings");

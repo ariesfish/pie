@@ -203,7 +203,7 @@ const styles = StyleSheet.create((theme) => {
       backgroundColor: theme.colors.surface2,
     },
     segmentHover: {
-      backgroundColor: theme.colors.surface2,
+      backgroundColor: theme.colors.interactionHighlight,
     },
     segmentPressed: {
       backgroundColor: theme.colors.surface3,

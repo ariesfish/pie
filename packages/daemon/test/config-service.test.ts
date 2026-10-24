@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -42,12 +42,111 @@ describe("ConfigService", () => {
 
 		await expect(
 			service.write("mcp", JSON.stringify({ mcpServers: {} }), first.revision),
-		).rejects.toMatchObject({ code: "conflict" });
+		).rejects.toMatchObject({ code: "config_conflict" });
+	});
+
+	it("releases the file lock and caps oversized payloads", async () => {
+		await service.write("models", JSON.stringify({ providers: {} }));
+		expect(existsSync(join(dir, "models.json.lock"))).toBe(false);
+
+		await expect(
+			service.write("models", JSON.stringify({ padding: "x".repeat(1024 * 1024 + 1) })),
+		).rejects.toMatchObject({ code: "config_too_large" });
 	});
 
 	it("rejects invalid JSON and non-objects", async () => {
 		await expect(service.write("models", "{ nope")).rejects.toBeInstanceOf(ConfigError);
-		await expect(service.write("models", "[]")).rejects.toMatchObject({ code: "invalid_config" });
+		await expect(service.write("models", "[]")).rejects.toMatchObject({ code: "config_invalid" });
+	});
+
+	it("upserts a provider while preserving unknown provider/model fields", async () => {
+		writeFileSync(
+			join(dir, "models.json"),
+			JSON.stringify({
+				topLevelUnknown: true,
+				providers: {
+					acme: {
+						customProviderField: "keep",
+						name: "Old",
+						models: [
+							{ id: "m1", customModelField: "keep", contextWindow: 1000 },
+							{ id: "m2", name: "Second" },
+						],
+					},
+				},
+			}),
+		);
+		const before = await service.read("models");
+
+		await service.upsertProvider(
+			{
+				id: "acme",
+				name: "New",
+				baseUrl: "https://acme.test/v1",
+				api: "openai-completions",
+				apiKey: "secret-key",
+				models: [{ id: "m1", name: "First", maxTokens: 4096 }],
+			},
+			before.revision,
+		);
+
+		const parsed = JSON.parse((await service.read("models")).content);
+		expect(parsed.topLevelUnknown).toBe(true);
+		expect(parsed.providers.acme).toMatchObject({
+			customProviderField: "keep",
+			name: "New",
+			baseUrl: "https://acme.test/v1",
+			api: "openai-completions",
+			apiKey: "secret-key",
+		});
+		expect(parsed.providers.acme.models).toEqual([
+			{
+				id: "m1",
+				customModelField: "keep",
+				contextWindow: 1000,
+				name: "First",
+				maxTokens: 4096,
+			},
+		]);
+	});
+
+	it("removes a provider and sets the default model without touching other settings", async () => {
+		writeFileSync(
+			join(dir, "models.json"),
+			JSON.stringify({ providers: { acme: { models: [] }, other: { models: [] } } }),
+		);
+		writeFileSync(join(dir, "settings.json"), JSON.stringify({ theme: "dark", defaultModel: "old" }));
+
+		const settingsRevision = (await service.read("settings")).revision;
+		await service.setDefaultModel("acme", "m1", settingsRevision);
+		expect(JSON.parse((await service.read("settings")).content)).toMatchObject({
+			defaultProvider: "acme",
+			defaultModel: "m1",
+		});
+
+		const modelsRevision = (await service.read("models")).revision;
+		await service.removeProvider("acme", modelsRevision);
+		expect(JSON.parse((await service.read("models")).content).providers).toEqual({
+			other: { models: [] },
+		});
+		expect(JSON.parse((await service.read("settings")).content)).toEqual({ theme: "dark" });
+
+		const nextSettingsRevision = (await service.read("settings")).revision;
+		await service.setDefaultModel("other", "m1", nextSettingsRevision);
+		expect(JSON.parse((await service.read("settings")).content)).toEqual({
+			theme: "dark",
+			defaultProvider: "other",
+			defaultModel: "m1",
+		});
+	});
+
+	it("rejects duplicate model ids", async () => {
+		await expect(
+			service.upsertProvider({
+				id: "acme",
+				models: [{ id: "m1" }, { id: "m1" }],
+			}),
+		).rejects.toMatchObject({ code: "config_invalid" });
 	});
 
 	it("summarizes settings, providers, MCP servers and auth without secrets", async () => {
@@ -80,6 +179,7 @@ describe("ConfigService", () => {
 				api: undefined,
 				modelCount: 1,
 				hasApiKey: false,
+				models: [{ id: "m1", name: undefined, contextWindow: undefined, maxTokens: undefined }],
 			},
 			{
 				id: "openai-compatible",
@@ -88,6 +188,7 @@ describe("ConfigService", () => {
 				api: undefined,
 				modelCount: 0,
 				hasApiKey: true,
+				models: [],
 			},
 		]);
 		expect(overview.mcp.servers).toEqual(["browser", "files"]);

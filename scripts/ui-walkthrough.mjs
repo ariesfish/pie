@@ -259,6 +259,54 @@ async function runAssertions(appUrl, workspacePath) {
 		await page.getByText("Custom providers").first().isVisible().catch(() => false),
 	);
 	await shot(page, "00b-settings-models");
+
+	// Model form: add provider + model, set default, edit, delete.
+	await page.getByLabel("Add provider").click();
+	await sleep(300);
+	await page.getByLabel("provider id").fill("acme");
+	await page.getByLabel("provider name").fill("Acme");
+	await page.getByLabel("base URL").fill("http://127.0.0.1:9999/v1");
+	await page.getByLabel("api (e.g. openai-completions)").fill("openai-completions");
+	await page.getByLabel("API key").fill("test-key");
+	await page.getByLabel("model id").fill("m1");
+	await page.getByLabel("model name").fill("Model One");
+	await shot(page, "00d-model-form");
+	await page.getByText("Save provider", { exact: true }).click();
+	await sleep(1200);
+	check(
+		"01c1 model form saves provider and model",
+		(await page.getByText("Acme", { exact: true }).first().isVisible().catch(() => false)) &&
+			(await page.getByText("Model One", { exact: true }).first().isVisible().catch(() => false)),
+	);
+	await page.getByText("Set default", { exact: true }).first().click();
+	await sleep(900);
+	check(
+		"01c2 model form sets the default",
+		await page.getByText("default", { exact: true }).first().isVisible().catch(() => false),
+	);
+	await shot(page, "00e-model-default");
+
+	await page.getByLabel("Edit provider").click();
+	await sleep(300);
+	await page.getByLabel("provider name").fill("Acme Edited");
+	await page.getByText("Save provider", { exact: true }).click();
+	await sleep(1000);
+	check(
+		"01c3 model form edits the provider",
+		await page.getByText("Acme Edited", { exact: true }).first().isVisible().catch(() => false),
+	);
+
+	await page.getByLabel("Remove provider").click();
+	await sleep(300);
+	await page.getByText("Remove provider", { exact: true }).last().click();
+	await sleep(1000);
+	check(
+		"01c4 model form deletes the provider and clears the default",
+		(await page.getByText("No custom providers in models.json.").first().isVisible().catch(() => false)) &&
+			((await page.getByText("acme/m1", { exact: true }).count()) === 0),
+	);
+	await shot(page, "00f-model-deleted");
+
 	await page.getByText("Extensions", { exact: true }).first().click();
 	await sleep(1200);
 	check(

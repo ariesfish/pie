@@ -81,5 +81,38 @@ describe("daemon command handlers", () => {
 			ok: true,
 			data: { settings: { defaultProvider: "openai" } },
 		});
+
+		const upserted = await router.dispatch(
+			"config.models.upsertProvider",
+			{
+				draft: {
+					id: "acme",
+					api: "openai-completions",
+					models: [{ id: "m1", name: "Model One" }],
+				},
+			},
+			ctx,
+		);
+		expect(upserted.ok).toBe(true);
+		const afterUpsert = await router.dispatch("config.overview", {}, ctx);
+		expect(afterUpsert).toMatchObject({
+			ok: true,
+			data: {
+				models: { details: [{ id: "acme", modelCount: 1, models: [{ id: "m1" }] }] },
+			},
+		});
+
+		const defaulted = await router.dispatch(
+			"config.models.setDefault",
+			{ provider: "acme", model: "m1" },
+			ctx,
+		);
+		expect(defaulted.ok).toBe(true);
+		const removed = await router.dispatch(
+			"config.models.removeProvider",
+			{ providerId: "acme" },
+			ctx,
+		);
+		expect(removed.ok).toBe(true);
 	});
 });

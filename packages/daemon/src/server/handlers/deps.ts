@@ -31,4 +31,6 @@ export interface HandlerDeps {
 	broadcast: (sessionId: string, ev: EventName, data: unknown) => void;
 	forwardBySession: (ev: SessionEvent) => void;
 	getCatalogRuntime: () => Promise<(() => ReturnType<HostSession["models"]>) | null>;
+	/** Drop memoized config-derived state after a successful config write. */
+	onConfigChanged?: () => void;
 }

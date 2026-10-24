@@ -24,6 +24,12 @@ export const ErrorCodes = {
 	notImplemented: "not_implemented",
 	/** Error raised upstream by the Pi SDK. */
 	piError: "pi_error",
+	/** Config file changed between read and write. */
+	configConflict: "config_conflict",
+	/** Config JSON/schema rejected by the daemon. */
+	configInvalid: "config_invalid",
+	/** Config payload exceeds the daemon cap. */
+	configTooLarge: "config_too_large",
 	/** Unexpected internal error. */
 	internal: "internal",
 } as const;

@@ -127,7 +127,7 @@ export class DaemonServer {
 			res.end();
 		});
 
-		this.wss = new WebSocketServer({ server: http });
+		this.wss = new WebSocketServer({ server: http, maxPayload: 2 * 1024 * 1024 });
 		this.wss.on("connection", (ws) => this.onWsConnection(ws));
 
 		return new Promise((resolve, reject) => {
@@ -291,7 +291,7 @@ export class DaemonServer {
 			fsService: this.fsService,
 			gitService: this.gitService,
 			packageService: this.packageService,
-			configService: new ConfigService(this.opts.agentDir),
+			configService: new ConfigService(this.opts.agentDir ?? this.opts.piAgentDir),
 			piVersion: this.opts.piVersion,
 			piAgentDir: this.opts.piAgentDir,
 			permissionMode: this.opts.permissionMode,
@@ -300,6 +300,9 @@ export class DaemonServer {
 			broadcast: (sessionId, ev, data) => this.broadcast(sessionId, ev, data),
 			forwardBySession: (ev) => this.forwardBySession(ev),
 			getCatalogRuntime: () => this.getCatalogRuntime(),
+			onConfigChanged: () => {
+				this.catalogRuntime = undefined;
+			},
 		};
 		registerSystemCommands(this.router, deps);
 		registerWorkspaceCommands(this.router, deps);

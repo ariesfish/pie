@@ -135,7 +135,11 @@ const styles = StyleSheet.create((theme) => {
       opacity: 0.85,
     },
     disabled: {
-      opacity: theme.opacity[50],
+      backgroundColor: theme.colors.surface1,
+      borderColor: theme.colors.surface1,
+    },
+    disabledText: {
+      color: theme.colors.foregroundExtraMuted,
     },
     text: {
       color: theme.colors.foreground,
@@ -237,8 +241,9 @@ export function Button({
       variant === "ghost" ? styles.textGhost : null,
       textStyle,
       isGhostHovered ? styles.textGhostHovered : null,
+      isDisabled ? styles.disabledText : null,
     ],
-    [size, variant, textStyle, isGhostHovered],
+    [size, variant, textStyle, isGhostHovered, isDisabled],
   );
 
   const accessibilityState = useMemo(

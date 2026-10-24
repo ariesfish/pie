@@ -12,7 +12,25 @@ import type { SessionSnapshot } from "./tree.js";
 import type { ContextUsage, FileVersionInfo, FsEntryInfo, FsReadResult, FsWriteResult, GitDiffFile, GitStatusResult, ModelCatalogItem, ModelRef, PackageInfo, ScopedModel, SessionEntry, SkillInfo, ThinkingLevel } from "./values.js";
 
 /** User-editable Pi config files; auth.json is intentionally excluded. */
-export type ConfigFile = "settings" | "models" | "mcp";
+export const CONFIG_FILES = ["settings", "models", "mcp"] as const;
+export type ConfigFile = (typeof CONFIG_FILES)[number];
+
+export interface ModelProviderModelDraft {
+	id: string;
+	name?: string;
+	contextWindow?: number;
+	maxTokens?: number;
+}
+
+export interface ModelProviderDraft {
+	id: string;
+	name?: string;
+	baseUrl?: string;
+	api?: string;
+	/** Omitted = keep the current key; empty string = clear it. */
+	apiKey?: string;
+	models: ModelProviderModelDraft[];
+}
 
 export interface ConfigFileInfo {
 	file: ConfigFile;
@@ -70,6 +88,7 @@ export interface CommandMap {
 					api?: string;
 					modelCount: number;
 					hasApiKey: boolean;
+					models: ModelProviderModelDraft[];
 				}>;
 			};
 			mcp: { servers: string[] };
@@ -83,6 +102,18 @@ export interface CommandMap {
 	"config.write": {
 		args: { file: ConfigFile; content: string; expectedRevision?: string };
 		result: { file: ConfigFile; revision: string };
+	};
+	"config.models.upsertProvider": {
+		args: { draft: ModelProviderDraft; expectedRevision?: string };
+		result: { revision: string };
+	};
+	"config.models.removeProvider": {
+		args: { providerId: string; expectedRevision?: string };
+		result: { revision: string };
+	};
+	"config.models.setDefault": {
+		args: { provider: string; model: string; expectedRevision?: string };
+		result: { revision: string };
 	};
 
 	/** Track a workspace and (re)check project trust. */

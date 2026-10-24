@@ -48,7 +48,7 @@
     "react-dom": "19.2.3",
     "react-i18next": "^17.0.16",
     "react-native": "0.86.3",
-    "react-native-gesture-handler": "~2.32.0",
+    "react-native-gesture-handler": "^3.4.0",
     "react-native-keyboard-controller": "1.21.9",
     "react-native-markdown-display": "^7.0.2",
     "react-native-reanimated": "4.5.1",
@@ -68,5 +68,12 @@
     "@types/markdown-it": "^14.2.0",
     "@types/react": "~19.2.4",
     "typescript": "~6.0.3"
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "react-native-gesture-handler"
+      ]
+    }
   }
 }

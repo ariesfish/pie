@@ -1,7 +1,13 @@
 // Ported from getpaseo/paseo (Apache-2.0)
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { View } from "react-native";
-import { ScrollView, type ScrollView as ScrollViewType } from "react-native-gesture-handler";
+// RNGH 3's new ScrollView drops the `waitFor` relation prop this diff
+// viewport uses to yield to the explorer close gesture; the v3 legacy
+// component keeps that native-handler contract.
+import {
+  LegacyScrollView as ScrollView,
+  type LegacyScrollView as ScrollViewType,
+} from "react-native-gesture-handler";
 import {
   createAnimatedComponent,
   useAnimatedScrollHandler,

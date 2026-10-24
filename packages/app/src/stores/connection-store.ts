@@ -405,6 +405,8 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 			return false;
 		}
 		const requestedSession = sessionId;
+		const requestedLeaf = tree.currentLeafId;
+		const requestedCursor = olderHistory.cursor;
 		set({ olderHistory: { ...olderHistory, loading: true } });
 		try {
 			const page = await conn.request("session.entries", {
@@ -412,7 +414,15 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 				before: olderHistory.cursor,
 				limit: 100,
 			});
-			if (get().sessionId !== requestedSession) return false;
+			// A switch/navigate may land while the page is in flight; a page from
+			// the old branch must not leak into the new tree.
+			if (
+				get().sessionId !== requestedSession ||
+				tree.currentLeafId !== requestedLeaf ||
+				get().olderHistory.cursor !== requestedCursor
+			) {
+				return false;
+			}
 			tree.prependEntries(page.entries, {
 				hasMore: page.hasMore,
 				nextCursor: page.nextCursor,

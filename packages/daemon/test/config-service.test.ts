@@ -54,7 +54,12 @@ describe("ConfigService", () => {
 		writeFileSync(join(dir, "settings.json"), JSON.stringify({ defaultProvider: "p", theme: "dark" }));
 		writeFileSync(
 			join(dir, "models.json"),
-			JSON.stringify({ providers: { local: {}, "openai-compatible": {} } }),
+			JSON.stringify({
+				providers: {
+					local: { name: "Local", baseUrl: "http://localhost:1234", models: [{ id: "m1" }] },
+					"openai-compatible": { apiKey: "$OPENAI_KEY", models: [] },
+				},
+			}),
 		);
 		writeFileSync(
 			join(dir, "mcp.json"),
@@ -67,6 +72,24 @@ describe("ConfigService", () => {
 		expect(overview.settings.defaultProvider).toBe("p");
 		expect(overview.settings.theme).toBe("dark");
 		expect(overview.models.providers).toEqual(["local", "openai-compatible"]);
+		expect(overview.models.details).toEqual([
+			{
+				id: "local",
+				name: "Local",
+				baseUrl: "http://localhost:1234",
+				api: undefined,
+				modelCount: 1,
+				hasApiKey: false,
+			},
+			{
+				id: "openai-compatible",
+				name: undefined,
+				baseUrl: undefined,
+				api: undefined,
+				modelCount: 0,
+				hasApiKey: true,
+			},
+		]);
 		expect(overview.mcp.servers).toEqual(["browser", "files"]);
 		expect(overview.authProviders).toEqual(["openai"]);
 		expect(JSON.stringify(overview)).not.toContain("secret");

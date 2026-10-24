@@ -1,5 +1,5 @@
 ---
-version: 1.6
+version: 1.7
 name: Pie design system
 description: 近白纸上的工程工具：墨字、墨色强调、1px 细线 + 表面阶梯做深度；界面退到会话后面，强调只给操作与焦点，彩色只留给语义状态。
 resolved-from-defaults:
@@ -280,6 +280,12 @@ chip 内衬这类控件内部微调，不做分栏与页面级留白。禁止 3 
 ## Iteration Guide
 
 - 本文件是设计决策记录：每次修改写清「改什么 / 为什么 / 代价」，并 bump `version`。
+- v1.7（2026-10-23，T-037）：设置页聚焦 Pi 核心：**模型配置 + 扩展/包**。标签改为
+  通用 / 模型 / 扩展；模型页展示自定义 provider（名称、baseUrl、api、模型数、key
+  是否配置）、默认模型与可用模型目录，原始 `models.json` 仍在下方可编辑；扩展页
+  用 Pi 的 PackageManager 安装/移除/更新扩展包，并展示当前会话已加载的扩展 /
+  skills / prompts。MCP 不是 Pi 核心能力，从主设置界面移除；后端 `mcp.json`
+  读写保留，但不再作为核心配置展示。
 - v1.6（2026-10-23，T-036）：新增设置页（`/settings`）。顶部是 Pi agent 目录与
   默认模型 / auth provider / 模型 provider / MCP 计数摘要；下面用分段控件切换
   `settings.json` / `models.json` / `mcp.json`，正文是 mono JSON 编辑器。只开放

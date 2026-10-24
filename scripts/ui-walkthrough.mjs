@@ -252,6 +252,20 @@ async function runAssertions(appUrl, workspacePath) {
 		await page.getByText("General").first().isVisible().catch(() => false),
 	);
 	await shot(page, "00-settings");
+	await page.getByText("Models", { exact: true }).first().click();
+	await sleep(1200);
+	check(
+		"01c settings models tab shows providers",
+		await page.getByText("Custom providers").first().isVisible().catch(() => false),
+	);
+	await shot(page, "00b-settings-models");
+	await page.getByText("Extensions", { exact: true }).first().click();
+	await sleep(1200);
+	check(
+		"01d settings extensions tab shows packages",
+		await page.getByText("Installed packages").first().isVisible().catch(() => false),
+	);
+	await shot(page, "00c-settings-extensions");
 	await page.getByLabel("Back").click();
 	await sleep(800);
 

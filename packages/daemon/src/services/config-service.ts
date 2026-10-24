@@ -106,7 +106,17 @@ export class ConfigService {
 			theme?: string;
 			defaultProjectTrust?: string;
 		};
-		models: { providers: string[] };
+		models: {
+			providers: string[];
+			details: Array<{
+				id: string;
+				name?: string;
+				baseUrl?: string;
+				api?: string;
+				modelCount: number;
+				hasApiKey: boolean;
+			}>;
+		};
 		mcp: { servers: string[] };
 		errors?: Partial<Record<ConfigFile, string>>;
 	}> {
@@ -131,10 +141,22 @@ export class ConfigService {
 
 		const settings = contents.settings ?? {};
 		const models = contents.models ?? {};
-		const providers =
+		const providerMap =
 			models.providers && typeof models.providers === "object"
-				? Object.keys(models.providers as Record<string, unknown>).sort()
-				: [];
+				? (models.providers as Record<string, Record<string, unknown>>)
+				: {};
+		const providers = Object.keys(providerMap).sort();
+		const providerDetails = providers.map((id) => {
+			const provider = providerMap[id] ?? {};
+			return {
+				id,
+				name: typeof provider.name === "string" ? provider.name : undefined,
+				baseUrl: typeof provider.baseUrl === "string" ? provider.baseUrl : undefined,
+				api: typeof provider.api === "string" ? provider.api : undefined,
+				modelCount: Array.isArray(provider.models) ? provider.models.length : 0,
+				hasApiKey: typeof provider.apiKey === "string" && provider.apiKey.length > 0,
+			};
+		});
 		const mcp = contents.mcp ?? {};
 		const servers =
 			mcp.mcpServers && typeof mcp.mcpServers === "object"
@@ -154,7 +176,7 @@ export class ConfigService {
 				defaultProjectTrust:
 					typeof settings.defaultProjectTrust === "string" ? settings.defaultProjectTrust : undefined,
 			},
-			models: { providers },
+			models: { providers, details: providerDetails },
 			mcp: { servers },
 			...(Object.keys(errors).length > 0 ? { errors } : {}),
 		};

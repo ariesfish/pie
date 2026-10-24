@@ -61,7 +61,17 @@ export interface CommandMap {
 				theme?: string;
 				defaultProjectTrust?: string;
 			};
-			models: { providers: string[] };
+			models: {
+				providers: string[];
+				details: Array<{
+					id: string;
+					name?: string;
+					baseUrl?: string;
+					api?: string;
+					modelCount: number;
+					hasApiKey: boolean;
+				}>;
+			};
 			mcp: { servers: string[] };
 			errors?: Partial<Record<ConfigFile, string>>;
 		};

@@ -274,6 +274,28 @@ try {
 		JSON.stringify({ name: "smoke-local-pkg", version: "1.0.0", pi: { skills: [] } }),
 	);
 
+	const cfg0 = await request("config.overview");
+	ok("config.overview", `${cfg0.agentDir} (models ${cfg0.files.models.exists ? "present" : "absent"})`);
+	await request("config.models.upsertProvider", {
+		draft: {
+			id: "smoke-model",
+			api: "openai-completions",
+			models: [{ id: "smoke-1", name: "Smoke" }],
+		},
+		expectedRevision: cfg0.files.models.revision,
+	});
+	const cfg1 = await request("config.overview");
+	const smokeProvider = (cfg1.models.details as Array<{ id: string; modelCount: number }>).find(
+		(provider) => provider.id === "smoke-model",
+	);
+	if (!smokeProvider || smokeProvider.modelCount !== 1) throw new Error("config upsert missing");
+	ok("config.models.upsertProvider", "smoke-model/1 model");
+	await request("config.models.removeProvider", {
+		providerId: "smoke-model",
+		expectedRevision: cfg1.files.models.revision,
+	});
+	ok("config.models.removeProvider", "smoke-model");
+
 	const pkgs0 = await request("packages.list", { workspaceId: workspace });
 	ok("packages.list (empty)", `${(pkgs0.packages as unknown[]).length} configured`);
 

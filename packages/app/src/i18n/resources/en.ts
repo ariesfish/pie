@@ -79,7 +79,7 @@ export const en = {
 		discard: "Discard changes",
 		saved: "Saved.",
 		dirtyHint: "Unsaved changes. Save or discard before switching tabs.",
-		invalidJson: "Invalid JSON: {{message}}",
+		invalidJson: "Invalid JSON.",
 		conflict: "The file changed on disk. Reload before saving so you do not overwrite another writer.",
 		noConnection: "Connect to a daemon to edit config.",
 		revision: "Revision {{revision}}",

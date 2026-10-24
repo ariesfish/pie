@@ -292,7 +292,10 @@ export class ConfigService {
 			if (!Object.hasOwn(providers, providerId)) {
 				throw new ConfigError("invalid_args", "invalid_args");
 			}
-			// Clear the default first: a stale default is worse than a failed delete.
+			if (expectedRevision !== undefined && expectedRevision !== read.revision) {
+				throw new ConfigError("config_conflict", ErrorCodes.configConflict);
+			}
+			// Only after the CAS check: a stale delete must not clear the default.
 			await this.clearDefaultForDeletedProvider(providerId);
 			delete providers[providerId];
 			data.providers = providers;

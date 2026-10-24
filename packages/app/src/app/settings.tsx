@@ -352,11 +352,16 @@ export default function SettingsScreen() {
 				) : (
 					<Pressable
 						accessibilityLabel={t("settings.save")}
-						disabled={!dirty || busy !== null}
+						disabled={!dirty || busy !== null || draft !== null}
 						onPress={() => void save()}
-						style={[styles.save, (!dirty || busy !== null) && styles.saveDisabled]}
+						style={[styles.save, (!dirty || busy !== null || draft !== null) && styles.saveDisabled]}
 					>
-						<Text style={[styles.saveText, (!dirty || busy !== null) && styles.saveTextDisabled]}>
+						<Text
+							style={[
+								styles.saveText,
+								(!dirty || busy !== null || draft !== null) && styles.saveTextDisabled,
+							]}
+						>
 							{busy === "save" ? t("settings.saving") : t("settings.save")}
 						</Text>
 					</Pressable>

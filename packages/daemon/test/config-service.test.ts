@@ -54,6 +54,34 @@ describe("ConfigService", () => {
 		).rejects.toMatchObject({ code: "config_too_large" });
 	});
 
+	it("accepts comments/trailing commas only in models.json", async () => {
+		const commented = '{\n  // provider\n  "providers": { "acme": { "models": [{ "id": "m1" },] }, },\n}';
+		await expect(service.write("settings", commented)).rejects.toMatchObject({
+			code: "config_invalid",
+		});
+		await expect(service.write("models", commented)).resolves.toMatchObject({ file: "models" });
+		expect((await service.overview()).models.providers).toEqual(["acme"]);
+	});
+
+	it("does not clear the default when a delete loses the revision race", async () => {
+		writeFileSync(
+			join(dir, "models.json"),
+			JSON.stringify({ providers: { acme: { models: [] } } }),
+		);
+		writeFileSync(
+			join(dir, "settings.json"),
+			JSON.stringify({ defaultProvider: "acme", defaultModel: "m1" }),
+		);
+
+		await expect(service.removeProvider("acme", "stale")).rejects.toMatchObject({
+			code: "config_conflict",
+		});
+		expect(JSON.parse((await service.read("settings")).content)).toEqual({
+			defaultProvider: "acme",
+			defaultModel: "m1",
+		});
+	});
+
 	it("rejects invalid JSON and non-objects", async () => {
 		await expect(service.write("models", "{ nope")).rejects.toBeInstanceOf(ConfigError);
 		await expect(service.write("models", "[]")).rejects.toMatchObject({ code: "config_invalid" });

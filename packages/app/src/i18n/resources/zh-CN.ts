@@ -79,7 +79,7 @@ export const zhCN = {
 		discard: "放弃修改",
 		saved: "已保存。",
 		dirtyHint: "有未保存修改。切换标签前先保存或放弃。",
-		invalidJson: "JSON 无效：{{message}}",
+		invalidJson: "JSON 无效。",
 		conflict: "文件已在磁盘上变化。请先重载再保存，避免覆盖另一个写入者。",
 		noConnection: "连接 daemon 后才能编辑配置。",
 		revision: "版本 {{revision}}",

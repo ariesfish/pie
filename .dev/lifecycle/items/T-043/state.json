@@ -1,0 +1,49 @@
+{
+  "id": "T-043",
+  "title": "vitest 3 to 5",
+  "opened": "2026-10-24T11:51:44Z",
+  "closed": "2026-10-24T11:52:28Z",
+  "budget": 3,
+  "blocked": null,
+  "gates": {
+    "check": {
+      "class": "D",
+      "pass": true,
+      "runs": 1,
+      "first_pass": true,
+      "fails": 0,
+      "ts": "2026-10-24T11:52:28Z"
+    }
+  },
+  "history": [
+    {
+      "step": 1,
+      "ts": "2026-10-24T11:51:44Z",
+      "type": "open",
+      "budget": 3
+    },
+    {
+      "step": 2,
+      "ts": "2026-10-24T11:52:28Z",
+      "type": "run",
+      "gate": "check",
+      "class": "D",
+      "argv": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "dir": ".",
+      "exit": 0,
+      "pass": true,
+      "evidence": "\n> pie@0.1.0 check\n> npm run typecheck && npm run test\n\n\n> pie@0.1.0 typecheck\n> npm run typecheck --workspaces --if-present\n\n\n> @pie/protocol@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/client@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/daemon@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/app@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> @pie/desktop@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n\n> pie@0.1.0 test\n> vitest run\n\n\n RUN  v5.0.5 /home/ariesfish/Projects/harness/pie\n\n\n Test Files  97 passed (97)\n      Tests  773 passed | 1 skipped (774)\n   Start at  19:52:23\n   Duration  5.26s (import 48%, tests 18%, transform 16%, environment 12%, setup 4%, worker 2%)\n\n    Isolate  97 workers spawned · ~182ms startup each (spawn + environment, per file)\n             at least ~1.43s faster with isolate: false — reuses workers across files instead of one per file\n\n(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:\n  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:7:1). Use a `.mjs` extension or set `\"type\": \"module\"` in the closest package.json\nSet `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.\n",
+      "note": "vitest 5.0.5: 97 files, 773 passed, 1 skipped"
+    },
+    {
+      "step": 3,
+      "ts": "2026-10-24T11:52:28Z",
+      "type": "close",
+      "note": "vitest 3.2 -> 5.0.5 in root and all workspaces; config unchanged; full check green."
+    }
+  ]
+}

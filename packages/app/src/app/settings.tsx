@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useConnectionStore } from "@/stores/connection-store";
+import { useIsCompactFormFactor } from "@/constants/layout";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 
 type SettingsTab = "general" | "models" | "extensions";
@@ -48,6 +49,9 @@ export default function SettingsScreen() {
 	const conn = useConnectionStore((s) => s.conn);
 	const sessionId = useConnectionStore((s) => s.sessionId);
 	const workspaceId = useWorkspaceStore((s) => s.workspaceId);
+	const compact = useIsCompactFormFactor();
+	const density = compact ? styles.touch : styles.dense;
+	const buttonSize = compact ? "md" : "sm";
 
 	const [tab, setTab] = useState<SettingsTab>("general");
 	const [overview, setOverview] = useState<ConfigOverview | null>(null);
@@ -334,7 +338,7 @@ export default function SettingsScreen() {
 					accessibilityLabel={t("common.back")}
 					hitSlop={12}
 					onPress={() => router.back()}
-					style={styles.back}
+					style={[styles.back, density]}
 				>
 					<ArrowLeft size={16} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 				</Pressable>
@@ -343,6 +347,7 @@ export default function SettingsScreen() {
 					<Button
 						variant="outline"
 						hitSlop={10}
+						size={buttonSize}
 						style={styles.buttonShape}
 						disabled={!workspaceId || packageBusy !== null}
 						onPress={() => void updatePackages()}
@@ -354,7 +359,7 @@ export default function SettingsScreen() {
 						accessibilityLabel={t("settings.save")}
 						disabled={!dirty || busy !== null || draft !== null}
 						onPress={() => void save()}
-						style={[styles.save, (!dirty || busy !== null || draft !== null) && styles.saveDisabled]}
+						style={[styles.save, density, (!dirty || busy !== null || draft !== null) && styles.saveDisabled]}
 					>
 						<Text
 							style={[
@@ -391,6 +396,8 @@ export default function SettingsScreen() {
 						onInstall={() => void installPackage()}
 						onRemove={(pkg) => void removePackage(pkg)}
 						onOpenSession={() => router.push("/sessions")}
+						compact={compact}
+						buttonSize={buttonSize}
 					/>
 				) : (
 					<>
@@ -433,7 +440,7 @@ export default function SettingsScreen() {
 											setKeyTouched(false);
 											setConfirmDelete(null);
 										}}
-										style={styles.addProvider}
+										style={[styles.addProvider, density]}
 									>
 										<Plus size={14} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 										<Text style={styles.link}>{t("settings.addProvider")}</Text>
@@ -456,6 +463,8 @@ export default function SettingsScreen() {
 										onKeyTouched={() => setKeyTouched(true)}
 										onSave={() => void saveProvider()}
 										onCancel={() => setDraft(null)}
+										compact={compact}
+										buttonSize={buttonSize}
 									/>
 								) : overview?.models.details.length ? (
 									overview.models.details.map((provider) => (
@@ -488,7 +497,7 @@ export default function SettingsScreen() {
 														setDraftIsNew(false);
 														setKeyTouched(false);
 													}}
-													style={styles.iconButton}
+													style={[styles.iconButton, density]}
 												>
 													<Pencil size={13} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 												</Pressable>
@@ -496,7 +505,7 @@ export default function SettingsScreen() {
 													accessibilityLabel={t("settings.removeProvider")}
 													hitSlop={8}
 													onPress={() => setConfirmDelete(provider.id)}
-													style={styles.iconButton}
+													style={[styles.iconButton, density]}
 												>
 													<Trash2 size={13} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 												</Pressable>
@@ -525,7 +534,7 @@ export default function SettingsScreen() {
 																accessibilityLabel={t("settings.setDefault")}
 																disabled={providerBusy !== null}
 																onPress={() => void setDefault(provider.id, model.id)}
-																style={styles.setDefault}
+																style={[styles.setDefault, density]}
 															>
 																<Star size={12} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 																<Text style={styles.link}>{t("settings.setDefault")}</Text>
@@ -583,7 +592,7 @@ export default function SettingsScreen() {
 							<Pressable
 								accessibilityLabel={showAdvanced ? t("settings.hideAdvancedJson") : t("settings.advancedJson")}
 								onPress={() => setShowAdvanced((value) => !value)}
-								style={styles.advancedToggle}
+								style={[styles.advancedToggle, density]}
 							>
 								<Text style={styles.link}>
 									{showAdvanced ? t("settings.hideAdvancedJson") : t("settings.advancedJson")}
@@ -603,7 +612,7 @@ export default function SettingsScreen() {
 								accessibilityLabel={t("settings.reload")}
 								hitSlop={12}
 								onPress={() => file && void loadFile(file)}
-								style={styles.reload}
+								style={[styles.reload, density]}
 							>
 								<RotateCw size={13} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 							</Pressable>
@@ -656,6 +665,8 @@ function ProviderForm({
 	onKeyTouched,
 	onSave,
 	onCancel,
+	compact,
+	buttonSize,
 }: {
 	t: (key: string, options?: Record<string, unknown>) => string;
 	draft: ModelProviderDraft;
@@ -667,8 +678,11 @@ function ProviderForm({
 	onKeyTouched: () => void;
 	onSave: () => void;
 	onCancel: () => void;
+	compact: boolean;
+	buttonSize: "sm" | "md";
 }) {
 	const { theme } = useUnistyles();
+	const density = compact ? styles.touch : styles.dense;
 	const updateModel = (index: number, patch: Partial<ModelProviderDraft["models"][number]>) => {
 		const models = draft.models.map((model, i) => (i === index ? { ...model, ...patch } : model));
 		onChange({ ...draft, models });
@@ -692,7 +706,7 @@ function ProviderForm({
 						accessibilityLabel={t("settings.providerId")}
 						autoCapitalize="none"
 						autoCorrect={false}
-						style={[styles.input, !isNew && styles.inputReadonly]}
+						style={[styles.input, density, !isNew && styles.inputReadonly]}
 					/>
 				</View>
 				<View style={styles.field}>
@@ -701,7 +715,7 @@ function ProviderForm({
 						value={draft.name ?? ""}
 						onChangeText={(name) => onChange({ ...draft, name })}
 						accessibilityLabel={t("settings.providerName")}
-						style={styles.input}
+						style={[styles.input, density]}
 					/>
 				</View>
 				<View style={styles.field}>
@@ -713,7 +727,7 @@ function ProviderForm({
 						accessibilityLabel={t("settings.providerBaseUrl")}
 						autoCapitalize="none"
 						autoCorrect={false}
-						style={styles.input}
+						style={[styles.input, density]}
 					/>
 				</View>
 				<View style={styles.field}>
@@ -725,7 +739,7 @@ function ProviderForm({
 						accessibilityLabel={t("settings.providerApi")}
 						autoCapitalize="none"
 						autoCorrect={false}
-						style={styles.input}
+						style={[styles.input, density]}
 					/>
 				</View>
 				<View style={styles.field}>
@@ -741,7 +755,7 @@ function ProviderForm({
 						autoCapitalize="none"
 						autoCorrect={false}
 						secureTextEntry
-						style={styles.input}
+						style={[styles.input, density]}
 					/>
 				</View>
 			</View>
@@ -751,7 +765,7 @@ function ProviderForm({
 						onKeyTouched();
 						onChange({ ...draft, apiKey: "" });
 					}}
-					style={styles.clearKey}
+					style={[styles.clearKey, density]}
 				>
 					<Text style={styles.link}>{t("settings.clearKey")}</Text>
 				</Pressable>
@@ -760,38 +774,50 @@ function ProviderForm({
 			<Text style={styles.formSection}>{t("settings.modelsList")}</Text>
 			{draft.models.map((model, index) => (
 				<View key={index} style={styles.formModelRow}>
-					<TextInput
-						value={model.id}
-						onChangeText={(id) => updateModel(index, { id })}
-						placeholder={t("settings.modelId")}
-						accessibilityLabel={t("settings.modelId")}
-						autoCapitalize="none"
-						autoCorrect={false}
-						style={[styles.input, styles.modelIdInput]}
-					/>
-					<TextInput
-						value={model.name ?? ""}
-						onChangeText={(name) => updateModel(index, { name })}
-						placeholder={t("settings.modelName")}
-						accessibilityLabel={t("settings.modelName")}
-						style={[styles.input, styles.modelNameInput]}
-					/>
-					<TextInput
-						value={model.contextWindow == null ? "" : String(model.contextWindow)}
-						onChangeText={(value) => updateModel(index, { contextWindow: numberValue(value) })}
-						placeholder={t("settings.contextWindow")}
-						accessibilityLabel={t("settings.contextWindow")}
-						keyboardType="numeric"
-						style={[styles.input, styles.numberInput]}
-					/>
-					<TextInput
-						value={model.maxTokens == null ? "" : String(model.maxTokens)}
-						onChangeText={(value) => updateModel(index, { maxTokens: numberValue(value) })}
-						placeholder={t("settings.maxTokens")}
-						accessibilityLabel={t("settings.maxTokens")}
-						keyboardType="numeric"
-						style={[styles.input, styles.numberInput]}
-					/>
+					<View style={styles.modelField}>
+						<Text style={styles.fieldLabel}>{t("settings.modelId")}</Text>
+						<TextInput
+							value={model.id}
+							onChangeText={(id) => updateModel(index, { id })}
+							placeholder={t("settings.modelId")}
+							accessibilityLabel={t("settings.modelId")}
+							autoCapitalize="none"
+							autoCorrect={false}
+							style={[styles.input, density, styles.modelInput]}
+						/>
+					</View>
+					<View style={styles.modelField}>
+						<Text style={styles.fieldLabel}>{t("settings.modelName")}</Text>
+						<TextInput
+							value={model.name ?? ""}
+							onChangeText={(name) => updateModel(index, { name })}
+							placeholder={t("settings.modelName")}
+							accessibilityLabel={t("settings.modelName")}
+							style={[styles.input, density, styles.modelInput]}
+						/>
+					</View>
+					<View style={styles.modelNumberField}>
+						<Text style={styles.fieldLabel}>{t("settings.contextShort")}</Text>
+						<TextInput
+							value={model.contextWindow == null ? "" : String(model.contextWindow)}
+							onChangeText={(value) => updateModel(index, { contextWindow: numberValue(value) })}
+							placeholder={t("settings.contextWindow")}
+							accessibilityLabel={t("settings.contextWindow")}
+							keyboardType="numeric"
+							style={[styles.input, density, styles.modelInput]}
+						/>
+					</View>
+					<View style={styles.modelNumberField}>
+						<Text style={styles.fieldLabel}>{t("settings.maxShort")}</Text>
+						<TextInput
+							value={model.maxTokens == null ? "" : String(model.maxTokens)}
+							onChangeText={(value) => updateModel(index, { maxTokens: numberValue(value) })}
+							placeholder={t("settings.maxTokens")}
+							accessibilityLabel={t("settings.maxTokens")}
+							keyboardType="numeric"
+							style={[styles.input, density, styles.modelInput]}
+						/>
+					</View>
 					<Pressable
 						accessibilityLabel={t("settings.removeModel")}
 						hitSlop={10}
@@ -801,7 +827,7 @@ function ProviderForm({
 								models: draft.models.filter((_, i) => i !== index),
 							})
 						}
-						style={styles.iconButton}
+						style={[styles.iconButton, density, styles.removeModel]}
 					>
 						<X size={14} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 					</Pressable>
@@ -809,7 +835,7 @@ function ProviderForm({
 			))}
 			<Pressable
 				onPress={() => onChange({ ...draft, models: [...draft.models, { id: "" }] })}
-				style={styles.addModel}
+				style={[styles.addModel, density]}
 			>
 				<Plus size={13} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
 				<Text style={styles.link}>{t("settings.addModel")}</Text>
@@ -819,6 +845,7 @@ function ProviderForm({
 				<Button
 					variant="default"
 					hitSlop={10}
+					size={buttonSize}
 					style={styles.buttonShape}
 					disabled={busy}
 					loading={busy}
@@ -848,6 +875,8 @@ function ExtensionsPanel({
 	onInstall,
 	onRemove,
 	onOpenSession,
+	compact,
+	buttonSize,
 }: {
 	t: (key: string, options?: Record<string, unknown>) => string;
 	packages: PackageInfo[];
@@ -862,8 +891,11 @@ function ExtensionsPanel({
 	onInstall: () => void;
 	onRemove: (pkg: PackageInfo) => void;
 	onOpenSession: () => void;
+	compact: boolean;
+	buttonSize: "sm" | "md";
 }) {
 	const { theme } = useUnistyles();
+	const density = compact ? styles.touch : styles.dense;
 	return (
 		<View style={styles.extensions}>
 			<View style={styles.sectionHead}>
@@ -894,7 +926,7 @@ function ExtensionsPanel({
 							accessibilityLabel={t("settings.remove")}
 							disabled={busy !== null}
 							onPress={() => onRemove(pkg)}
-							style={styles.iconButton}
+							style={[styles.iconButton, density]}
 							hitSlop={12}
 						>
 							<Trash2 size={14} color={theme.colors.foregroundMuted} strokeWidth={1.5} />
@@ -919,11 +951,12 @@ function ExtensionsPanel({
 					accessibilityLabel={t("settings.installPlaceholder")}
 					autoCapitalize="none"
 					autoCorrect={false}
-					style={styles.installInput}
+					style={[styles.installInput, density]}
 				/>
 				<Button
 					variant="default"
 					hitSlop={10}
+					size={buttonSize}
 					style={styles.buttonShape}
 					disabled={!workspaceId || !source.trim() || busy !== null}
 					loading={busy === "install"}
@@ -987,7 +1020,9 @@ const styles = StyleSheet.create((theme) => ({
 		borderBottomWidth: theme.borderWidth[1],
 		borderBottomColor: theme.colors.border,
 	},
-	back: { minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" },
+	back: { alignItems: "center", justifyContent: "center" },
+	dense: { minWidth: 32, minHeight: 32 },
+	touch: { minWidth: 44, minHeight: 44 },
 	title: {
 		flex: 1,
 		color: theme.colors.foreground,
@@ -995,7 +1030,6 @@ const styles = StyleSheet.create((theme) => ({
 		fontWeight: theme.fontWeight.semibold,
 	},
 	save: {
-		minHeight: 44,
 		justifyContent: "center",
 		backgroundColor: theme.colors.accent,
 		borderRadius: theme.borderRadius.md,
@@ -1049,8 +1083,8 @@ const styles = StyleSheet.create((theme) => ({
 		fontSize: theme.fontSize.sm,
 		textDecorationLine: "underline",
 	},
-	addProvider: { flexDirection: "row", alignItems: "center", gap: theme.spacing[1], minHeight: 44 },
-	advancedToggle: { alignSelf: "flex-start", minHeight: 44, justifyContent: "center" },
+	addProvider: { flexDirection: "row", alignItems: "center", gap: theme.spacing[1] },
+	advancedToggle: { alignSelf: "flex-start", justifyContent: "center" },
 	warning: { color: theme.colors.statusWarning, fontSize: theme.fontSize.sm },
 	provider: {
 		gap: theme.spacing[1],
@@ -1064,8 +1098,6 @@ const styles = StyleSheet.create((theme) => ({
 	providerMeta: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm },
 	providerUrl: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm, fontFamily: theme.fontFamily.mono },
 	iconButton: {
-		minWidth: 44,
-		minHeight: 44,
 		alignItems: "center",
 		justifyContent: "center",
 	},
@@ -1086,7 +1118,7 @@ const styles = StyleSheet.create((theme) => ({
 		paddingHorizontal: theme.spacing[2],
 		paddingVertical: 1,
 	},
-	setDefault: { flexDirection: "row", alignItems: "center", gap: 2, minHeight: 44 },
+	setDefault: { flexDirection: "row", alignItems: "center", gap: 2 },
 	confirmRow: { flexDirection: "row", alignItems: "center", gap: theme.spacing[2], flexWrap: "wrap" },
 	catalog: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm, fontFamily: theme.fontFamily.mono },
 	form: {
@@ -1099,12 +1131,15 @@ const styles = StyleSheet.create((theme) => ({
 	},
 	formGrid: { flexDirection: "row", flexWrap: "wrap", gap: theme.spacing[2] },
 	formSection: { color: theme.colors.foregroundExtraMuted, fontSize: theme.fontSize.sm, fontWeight: theme.fontWeight.semibold },
-	formModelRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: theme.spacing[1] },
+	formModelRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-end", gap: theme.spacing[1] },
+	modelField: { flexGrow: 1, minWidth: 120, gap: 2 },
+	modelNumberField: { width: 140, gap: 2 },
+	modelInput: { minWidth: 0, width: "100%" },
+	removeModel: { alignSelf: "flex-end" },
 	formActions: { flexDirection: "row", gap: theme.spacing[2], alignItems: "center" },
 	input: {
 		flexGrow: 1,
 		minWidth: 160,
-		minHeight: 44,
 		borderWidth: theme.borderWidth[1],
 		borderColor: theme.colors.borderAccent,
 		borderRadius: theme.borderRadius.md,
@@ -1118,11 +1153,11 @@ const styles = StyleSheet.create((theme) => ({
 	modelIdInput: { minWidth: 120 },
 	modelNameInput: { minWidth: 120 },
 	numberInput: { minWidth: 92, flexGrow: 0 },
-	clearKey: { alignSelf: "flex-start", minHeight: 44, justifyContent: "center" },
-	addModel: { flexDirection: "row", alignItems: "center", gap: theme.spacing[1], minHeight: 44 },
+	clearKey: { alignSelf: "flex-start", justifyContent: "center" },
+	addModel: { flexDirection: "row", alignItems: "center", gap: theme.spacing[1] },
 	editorHeader: { flexDirection: "row", alignItems: "center", gap: theme.spacing[2] },
 	path: { flex: 1, color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm, fontFamily: theme.fontFamily.mono },
-	reload: { minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" },
+	reload: { alignItems: "center", justifyContent: "center" },
 	editor: {
 		minHeight: 360,
 		borderWidth: theme.borderWidth[1],
@@ -1154,7 +1189,6 @@ const styles = StyleSheet.create((theme) => ({
 	installRow: { flexDirection: "row", alignItems: "center", gap: theme.spacing[2] },
 	installInput: {
 		flex: 1,
-		minHeight: 44,
 		borderWidth: theme.borderWidth[1],
 		borderColor: theme.colors.borderAccent,
 		borderRadius: theme.borderRadius.md,

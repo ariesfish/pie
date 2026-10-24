@@ -146,6 +146,8 @@ export const zhCN = {
 		modelsList: "模型",
 		modelId: "模型 id",
 		modelName: "模型名称",
+		contextShort: "上下文",
+		maxShort: "最大 token",
 		contextWindow: "上下文窗口",
 		maxTokens: "最大输出 token",
 		removeModel: "删除模型",

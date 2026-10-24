@@ -146,6 +146,8 @@ export const en = {
 		modelsList: "Models",
 		modelId: "model id",
 		modelName: "model name",
+		contextShort: "Context",
+		maxShort: "Max tokens",
 		contextWindow: "context window",
 		maxTokens: "max tokens",
 		removeModel: "Remove model",

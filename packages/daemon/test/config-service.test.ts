@@ -171,6 +171,44 @@ describe("ConfigService", () => {
 		});
 	});
 
+	it("rejects values Pi's models schema rejects", async () => {
+		await expect(
+			service.upsertProvider({
+				id: "acme",
+				baseUrl: "https://acme.test/v1",
+				api: "openai-completions",
+				models: [{ id: "m1", contextWindow: 0 }],
+			}),
+		).rejects.toMatchObject({
+			code: "config_invalid",
+			message: expect.stringContaining("contextWindow"),
+		});
+	});
+
+	it("rejects a custom provider with models but no baseUrl", async () => {
+		await expect(
+			service.upsertProvider({
+				id: "acme",
+				api: "openai-completions",
+				models: [{ id: "m1" }],
+			}),
+		).rejects.toMatchObject({
+			code: "config_invalid",
+			message: expect.stringContaining("baseUrl"),
+		});
+	});
+
+	it("does not leak the validation temp path", async () => {
+		await expect(
+			service.upsertProvider({
+				id: "acme",
+				baseUrl: "https://acme.test/v1",
+				api: "openai-completions",
+				models: [{ id: "m1", contextWindow: 0 }],
+			}),
+		).rejects.not.toMatchObject({ message: expect.stringContaining(tmpdir()) });
+	});
+
 	it("rejects duplicate model ids", async () => {
 		await expect(
 			service.upsertProvider({

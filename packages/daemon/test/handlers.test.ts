@@ -87,6 +87,7 @@ describe("daemon command handlers", () => {
 			{
 				draft: {
 					id: "acme",
+					baseUrl: "https://acme.test/v1",
 					api: "openai-completions",
 					models: [{ id: "m1", name: "Model One" }],
 				},

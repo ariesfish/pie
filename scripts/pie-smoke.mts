@@ -279,6 +279,7 @@ try {
 	await request("config.models.upsertProvider", {
 		draft: {
 			id: "smoke-model",
+			baseUrl: "http://127.0.0.1:9/v1",
 			api: "openai-completions",
 			models: [{ id: "smoke-1", name: "Smoke" }],
 		},

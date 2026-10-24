@@ -38,6 +38,11 @@ function errorCode(err: unknown): string | undefined {
 	return (err as { code?: string }).code;
 }
 
+function errorMessage(err: unknown): string | undefined {
+	const message = (err as { message?: unknown }).message;
+	return typeof message === "string" && message.length > 0 ? message : undefined;
+}
+
 function emptyDraft(): ModelProviderDraft {
 	return { id: "", models: [{ id: "" }] };
 }
@@ -1007,7 +1012,10 @@ function ExtensionsPanel({
 function configError(t: (key: string) => string, err: unknown): string {
 	const code = errorCode(err);
 	if (code === ErrorCodes.configConflict) return t("settings.conflict");
-	if (code === ErrorCodes.configInvalid) return t("settings.invalidConfig");
+	if (code === ErrorCodes.configInvalid) {
+		const detail = errorMessage(err);
+		return detail ? `${t("settings.invalidConfig")} ${detail}` : t("settings.invalidConfig");
+	}
 	if (code === ErrorCodes.configTooLarge) return t("settings.tooLarge");
 	if (code === ErrorCodes.configComments) return t("settings.commentsBlockForm");
 	return t("settings.saveFailed");

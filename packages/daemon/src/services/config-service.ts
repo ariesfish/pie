@@ -9,6 +9,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import { ErrorCodes, stripJsonComments } from "@pie/protocol";
 import { MODEL_PROVIDER_ID_PATTERN, type CommandResult, type ConfigFile, type ConfigFileInfo, type ModelProviderDraft } from "@pie/protocol";
+import { validateModelsConfig } from "./model-config-validator.js";
 
 const FILE_NAMES: Record<ConfigFile, string> = {
 	settings: "settings.json",
@@ -284,6 +285,10 @@ export class ConfigService {
 			});
 			providers[draft.id] = next;
 			data.providers = providers;
+			const validationError = await validateModelsConfig(data);
+			if (validationError) {
+				throw new ConfigError(validationError, ErrorCodes.configInvalid);
+			}
 			const written = await this.writeUnlocked(
 				"models",
 				JSON.stringify(data, null, 2) + "\n",

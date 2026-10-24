@@ -14,7 +14,7 @@
 | `@pie/client` | 类型化 daemon 客户端：连接、请求关联、事件重放、会话树同步状态机 |
 | `@pie/daemon` | 内嵌 Pi SDK 的本地守护进程 + WebSocket 服务 + 内置聊天演示页 |
 | `@pie/desktop` | Electron 壳 + sidecar daemon（P2 收官：arm64 dmg 打包 + 打包后烟测） |
-| `@pie/app` | 正式 UI 主战场（iOS/Android/Web，Expo Router，中/英双语，P2c-3 + 桌面 Wave 1） |
+| `@pie/app` | 正式 UI 主战场（iOS/Android/Web，Expo Router，中/英双语，P2 + UI redesign + Pi 配置） |
 
 ## 快速开始（演示页：聊天 + 会话树 + 权限卡）
 
@@ -62,7 +62,7 @@ App 输入 daemon 的 `ws://<host>:8760` + token 即可连接（与演示页相�
 npm run check             # 五个包 typecheck + 全部 vitest 用例
 npm run smoke             # 无 LLM 的端到端烟测（临时 agent dir，不写 ~/.pi/agent）
 npm run ui-walkthrough    # UI 交互验收：daemon + fixture 仓库 + web 导出，浏览器驱动
-                          # 13 项断言（rail/文件/diff/会话/分栏/拖拽/双抽屉手势），
+                          # 38 项断言（rail/文件/diff/会话树/设置/分栏/拖拽/双抽屉手势），
                           # 截图落 ./ui-walkthrough-shots 供人工/vision 复核
 npm run daemon            # 前台启动 daemon（首次运行会打印浏览器入口 URL）
 ```
@@ -72,7 +72,7 @@ npm run daemon            # 前台启动 daemon（首次运行会打印浏览器
 - [`DESIGN.md`](DESIGN.md) — 视觉契约（token / 层级 / 导航 / 组件状态）
 - [`docs/CONSTRAINTS.md`](docs/CONSTRAINTS.md) — 可判定的质量底线（类型/测试/对比度/token）
 - [`docs/design/`](docs/design/) — 设计契约、参考图与 UI 审计/方案预览
-- [`.dev/README.md`](.dev/README.md) — feature-first 工单与过程记忆布局；当前工作在 `.dev/feature-ui-redesign/`
+- [`.dev/README.md`](.dev/README.md) — feature-first 工单与过程记忆布局；当前工作在 `.dev/feature-pi-config/`
 
 进度记录（逐轮）：
 - **会话树命令全落地**：`session.tree` / `session.entries` / `session.forkAt`（at/before 两种语义）/ `session.forkPreview` / `session.navigate`（navigate 后广播重同步快照）

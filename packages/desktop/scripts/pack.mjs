@@ -25,6 +25,16 @@ rmSync(staging, { recursive: true, force: true });
 mkdirSync(join(staging, "packages"), { recursive: true });
 
 const rootPkg = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8"));
+const rootLock = JSON.parse(readFileSync(join(repoRoot, "package-lock.json"), "utf8"));
+// The staging tree is a separate npm project: without these pins, Pi's
+// caret-range transitive deps resolve to newer (incompatible) 1.4 packages
+// while the daemon still embeds pi-coding-agent 1.1.0. Pin every scoped Pi
+// package to the version the dev lockfile uses.
+const piOverrides = {};
+for (const [path, meta] of Object.entries(rootLock.packages ?? {})) {
+	const match = path.match(/^node_modules\/(@earendil-works\/[^/]+)$/);
+	if (match && typeof meta.version === "string") piOverrides[match[1]] = meta.version;
+}
 writeFileSync(
 	join(staging, "package.json"),
 	JSON.stringify(
@@ -32,6 +42,7 @@ writeFileSync(
 			name: "pie-runtime",
 			private: true,
 			workspaces: ["packages/protocol", "packages/client", "packages/daemon"],
+			overrides: piOverrides,
 		},
 		null,
 		"\t",

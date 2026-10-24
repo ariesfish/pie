@@ -12,6 +12,12 @@
 		target: [{ target: "default", arch: ["arm64"] }],
 		identity: null,
 	},
+	// Linux is not a shipping target; the dir target keeps `pack` usable for
+	// the packaged smoke on Linux CI without snap/AppImage tooling.
+	linux: {
+		target: ["dir"],
+		executableName: "pie",
+	},
 	asar: true,
 	electronVersion: "37.10.3",
 }

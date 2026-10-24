@@ -22,21 +22,11 @@ import { resolveStreamRenderStrategy } from "@/agent-stream/strategy-resolver";
 import type { StreamViewportHandle } from "@/agent-stream/strategy";
 import { DEFAULT_CONTENT_MAX_WIDTH } from "@/styles/theme";
 
-/**
- * History pagination is parked: `session.entries` returns the whole snapshot
- * and the daemon has no cursor yet. The viewport keeps its state machine, but
- * these inputs keep it dormant. See `agent-stream/README.md`.
- */
-const PARKED_HISTORY = {
-	onNearHistoryStart: () => false,
-	isLoadingOlderHistory: false,
-	hasOlderHistory: false,
-	olderHistoryProgressKey: null,
-} as const;
-
 export function ChatList() {
 	const { t } = useTranslation();
 	const timeline = useSessionTimeline();
+	const olderHistory = useConnectionStore((s) => s.olderHistory);
+	const loadOlderEntries = useConnectionStore((s) => s.loadOlderEntries);
 	const streaming = useConnectionStore((s) => s.streaming);
 	const deltaText = useConnectionStore((s) => s.deltaText);
 	const deltaKind = useConnectionStore((s) => s.deltaKind);
@@ -153,7 +143,10 @@ export function ChatList() {
 				routeBottomAnchorRequest: null,
 				isAuthoritativeHistoryReady: true,
 				onNearBottomChange: () => {},
-				...PARKED_HISTORY,
+				onNearHistoryStart: loadOlderEntries,
+				isLoadingOlderHistory: olderHistory.loading,
+				hasOlderHistory: olderHistory.hasMore,
+				olderHistoryProgressKey: olderHistory.cursor,
 				scrollEnabled: true,
 				listStyle: styles.list,
 				baseListContentContainerStyle: styles.content,

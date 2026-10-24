@@ -36,6 +36,10 @@ export class SessionTreeStore {
 	private entries = new Map<string, SessionEntry>();
 	private leafId: string | null = null;
 	private snap: SessionSnapshot | null = null;
+	private window: { hasMore: boolean; nextCursor: string | null } = {
+		hasMore: false,
+		nextCursor: null,
+	};
 	private queues: { steering: string[]; followUp: string[] } = { steering: [], followUp: [] };
 	private state: SessionStateInfo | null = null;
 
@@ -47,6 +51,12 @@ export class SessionTreeStore {
 	}
 	get currentLeafId(): string | null {
 		return this.leafId;
+	}
+	get hasOlderEntries(): boolean {
+		return this.window.hasMore;
+	}
+	get olderCursor(): string | null {
+		return this.window.nextCursor;
 	}
 	get currentQueues(): { steering: string[]; followUp: string[] } {
 		return this.queues;
@@ -68,8 +78,31 @@ export class SessionTreeStore {
 		this.treeMap = new Map(snapshot.tree.map((n) => [n.id, n]));
 		this.entries = new Map(snapshot.entries.map((e) => [e.id, e]));
 		this.leafId = snapshot.leafId;
+		this.window = snapshot.entryWindow ?? { hasMore: false, nextCursor: null };
 		this.queues = { steering: [...snapshot.queues.steering], followUp: [...snapshot.queues.followUp] };
 		this.state = snapshot.state;
+	}
+
+	/**
+	 * Prepend a page fetched with `session.entries { before }`. The tree already
+	 * knows every node from the snapshot; only the entry payloads are missing.
+	 */
+	prependEntries(
+		entries: readonly SessionEntry[],
+		window: { hasMore: boolean; nextCursor: string | null },
+	): void {
+		for (const entry of entries) {
+			this.entries.set(entry.id, entry);
+			if (!this.treeMap.has(entry.id)) {
+				this.treeMap.set(entry.id, {
+					id: entry.id,
+					parentId: entry.parentId ?? null,
+					type: entry.type,
+					timestamp: entry.timestamp,
+				});
+			}
+		}
+		this.window = window;
 	}
 
 	/**
@@ -141,6 +174,11 @@ export class SessionTreeStore {
 				// stores that want them subscribe separately.
 				return;
 		}
+	}
+
+	/** Flat tree metadata copy in snapshot order (roots then depth-first). */
+	treeNodes(): TreeNodeMeta[] {
+		return [...this.treeMap.values()];
 	}
 
 	/** Derived: parent's child ids, ordered by timestamp then id. */

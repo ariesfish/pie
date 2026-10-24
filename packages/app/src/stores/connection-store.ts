@@ -8,7 +8,7 @@ import { Platform } from "react-native";
 
 import { PieConnection, SessionTreeStore } from "@pie/client";
 import { createWsTransportFactory } from "@pie/client/ws";
-import type { ContextUsage, SessionEntry } from "@pie/protocol";
+import type { ContextUsage, SessionEntry, TreeNodeMeta } from "@pie/protocol";
 import type { ModelCatalogItem, ModelRef, ThinkingLevel } from "@pie/protocol";
 import type { PermissionSettledData } from "@pie/protocol";
 
@@ -39,6 +39,13 @@ export interface ActivityItem {
 	count?: number;
 }
 
+/** Cursor window for older entries along the active branch. */
+export interface OlderHistoryState {
+	hasMore: boolean;
+	cursor: string | null;
+	loading: boolean;
+}
+
 /** Live tool-call record (event-sourced from session.tool.*). */
 export interface ToolCallRecord {
 	toolCallId: string;
@@ -56,6 +63,8 @@ interface ConnectionState {
 	sessionId: string | null;
 	/** Bumped whenever the shared tree mutates; derive timelines off this. */
 	revision: number;
+	/** Older-entry cursor for the active branch (session.entries). */
+	olderHistory: OlderHistoryState;
 	streaming: boolean;
 	deltaText: string;
 	deltaKind: "text" | "thinking" | "toolArgs" | null;
@@ -114,6 +123,19 @@ interface ConnectionState {
 	selectAllPermissions: () => void;
 	clearPermissionSelection: () => void;
 	clearError: () => void;
+	/** Load one older page and prepend it; false when there is nothing to do. */
+	loadOlderEntries: () => Promise<boolean>;
+	/** Rewind the active session to an entry (same file, Pi navigate semantics). */
+	navigateToEntry: (entryId: string) => Promise<void>;
+	/** Fork at an entry into a new session and make it the active one. */
+	forkAtEntry: (entryId: string) => Promise<string | null>;
+}
+
+export interface SessionTreeView {
+	nodes: TreeNodeMeta[];
+	leafId: string | null;
+	/** Entry ids on the current root -> leaf path. */
+	activePath: Set<string>;
 }
 
 export type PermissionDecision = "allow" | "allowSession" | "deny";
@@ -134,6 +156,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 	conn: null,
 	sessionId: null,
 	revision: 0,
+	olderHistory: { hasMore: false, cursor: null, loading: false },
 	streaming: false,
 	permissions: [],
 	permissionSelection: [],
@@ -350,6 +373,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 		// switch (they are re-applied on session.create via applySessionPreset).
 		set({
 			sessionId,
+			olderHistory: { hasMore: false, cursor: null, loading: false },
 			deltaText: "",
 			deltaKind: null,
 			streaming: false,
@@ -367,6 +391,75 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 			as: "readwrite",
 			...(sessionPath ? { path: sessionPath } : {}),
 		});
+	},
+
+	loadOlderEntries: async () => {
+		const { conn, sessionId, olderHistory } = get();
+		if (
+			!conn ||
+			!sessionId ||
+			olderHistory.loading ||
+			!olderHistory.hasMore ||
+			!olderHistory.cursor
+		) {
+			return false;
+		}
+		const requestedSession = sessionId;
+		set({ olderHistory: { ...olderHistory, loading: true } });
+		try {
+			const page = await conn.request("session.entries", {
+				sessionId,
+				before: olderHistory.cursor,
+				limit: 100,
+			});
+			if (get().sessionId !== requestedSession) return false;
+			tree.prependEntries(page.entries, {
+				hasMore: page.hasMore,
+				nextCursor: page.nextCursor,
+			});
+			set((state) => ({
+				revision: state.revision + 1,
+				olderHistory: {
+					hasMore: page.hasMore,
+					cursor: page.nextCursor,
+					loading: false,
+				},
+			}));
+			return true;
+		} catch (err) {
+			set({
+				olderHistory: { ...get().olderHistory, loading: false },
+				error: err instanceof Error ? err.message : String(err),
+			});
+			return false;
+		}
+	},
+
+	navigateToEntry: async (entryId) => {
+		const { conn, sessionId } = get();
+		if (!conn || !sessionId) return;
+		try {
+			await conn.request("session.navigate", { sessionId, entryId });
+		} catch (err) {
+			set({ error: err instanceof Error ? err.message : String(err) });
+		}
+	},
+
+	forkAtEntry: async (entryId) => {
+		const { conn, sessionId } = get();
+		if (!conn || !sessionId) return null;
+		try {
+			const forked = await conn.request("session.forkAt", {
+				sessionId,
+				entryId,
+				position: "at",
+			});
+			await get().switchSession(forked.sessionId, forked.sessionFile);
+			return forked.sessionId;
+		} catch (err) {
+			set({ error: err instanceof Error ? err.message : String(err) });
+			return null;
+		}
 	},
 }));
 
@@ -405,15 +498,22 @@ export function applyStoreEvent(
 			// Rename broadcast (open sessions): sync the row name in place.
 			useSessionListStore.getState().applyRenamed(event.data.sessionId, event.data.name);
 			break;
-		case "session.snapshot":
-			tree.applySnapshot(event.data.snapshot);
+		case "session.snapshot": {
+			const snapshot = event.data.snapshot;
+			tree.applySnapshot(snapshot);
 			useConnectionStore.setState((s) => ({
 				revision: s.revision + 1,
-				streaming: event.data.snapshot.state.isStreaming,
-				queue: event.data.snapshot.queues,
-				usage: event.data.snapshot.contextUsage ?? null,
+				streaming: snapshot.state.isStreaming,
+				queue: snapshot.queues,
+				usage: snapshot.contextUsage ?? null,
+				olderHistory: {
+					hasMore: snapshot.entryWindow?.hasMore ?? false,
+					cursor: snapshot.entryWindow?.nextCursor ?? null,
+					loading: false,
+				},
 			}));
 			break;
+		}
 		case "session.entry.appended":
 			tree.applyEvent(event);
 			useConnectionStore.setState((s) => ({ revision: s.revision + 1 }));
@@ -527,6 +627,22 @@ export function applyStoreEvent(
 export function useSessionTimeline(): SessionEntry[] {
 	const revision = useConnectionStore((s) => s.revision);
 	return useMemo(() => tree.timeline(), [revision]);
+}
+
+/** Session-tree metadata for the history panel; recomputed on tree revision. */
+export function useSessionTreeView(): SessionTreeView {
+	const revision = useConnectionStore((s) => s.revision);
+	return useMemo(() => {
+		const nodes = tree.treeNodes();
+		const activePath = new Set<string>();
+		let cursor = tree.currentLeafId;
+		while (cursor) {
+			activePath.add(cursor);
+			const node = nodes.find((n) => n.id === cursor);
+			cursor = node?.parentId ?? null;
+		}
+		return { nodes, leafId: tree.currentLeafId, activePath };
+	}, [revision]);
 }
 
 export const workspaceApplyFsChanged = useWorkspaceStore.getState().applyFsChanged;

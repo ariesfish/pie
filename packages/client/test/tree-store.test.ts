@@ -59,6 +59,35 @@ describe("SessionTreeStore", () => {
 		expect(store.currentLeafId).toBe("e3");
 	});
 
+	it("prepends an older page and tracks the remaining window", () => {
+		const store = new SessionTreeStore();
+		const snap = snapshot();
+		snap.entries = snap.entries.slice(1);
+		snap.entryWindow = { hasMore: true, nextCursor: "e2" };
+		store.applySnapshot(snap);
+
+		expect(store.timeline().map((e) => e.id)).toEqual(["e2", "e3"]);
+		expect(store.hasOlderEntries).toBe(true);
+		expect(store.olderCursor).toBe("e2");
+
+		store.prependEntries(
+			[
+				{
+					id: "e1",
+					parentId: null,
+					timestamp: "2025-10-10T10:00:00Z",
+					type: "message",
+					message: { role: "user", content: "hello" },
+				},
+			],
+			{ hasMore: false, nextCursor: null },
+		);
+
+		expect(store.timeline().map((e) => e.id)).toEqual(["e1", "e2", "e3"]);
+		expect(store.hasOlderEntries).toBe(false);
+		expect(store.olderCursor).toBeNull();
+	});
+
 	it("appends entries that extend the leaf", () => {
 		const store = new SessionTreeStore();
 		store.applySnapshot(snapshot());

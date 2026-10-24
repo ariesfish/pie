@@ -5,24 +5,19 @@ The live path is: `adapter` → `model` → a platform strategy
 `bottom-anchor-controller`, `history-window` and `history-row-revision`
 owning scroll anchoring and virtualization.
 
-## Parked: history pagination
+## History pagination
 
-`history-start-pagination` / `history-start-settle-scheduler` are wired into
-both strategies, but the app deliberately keeps them dormant:
+`history-start-pagination` / `history-start-settle-scheduler` load older
+entries as the reader reaches the top of the transcript:
 
-- `ChatList` passes `PARKED_HISTORY` (`hasOlderHistory: false` and no
-  progress key), so `evaluateHistoryStartPagination` never loads.
-- The daemon's `session.entries` returns the full snapshot and has no
-  cursor/limit contract, so there is nothing to page against.
+- the attach snapshot carries the newest page (daemon `SNAPSHOT_ENTRY_LIMIT`)
+  plus `entryWindow { hasMore, nextCursor }`;
+- `ChatList` passes the store's cursor to `onNearHistoryStart`;
+- the store calls `session.entries { before, limit }`, prepends the page into
+  `SessionTreeStore`, and bumps `revision` so the stream rebuilds.
 
-Reviving it is an end-to-end change, not a UI toggle:
-
-1. add cursor + `hasMore` to `session.entries`;
-2. keep a windowed entry list in the client/tree store;
-3. wire `onNearHistoryStart` / `isLoadingOlderHistory` / `olderHistoryProgressKey`
-   in `ChatList` and remove `PARKED_HISTORY`.
-
-Do not make the state machine look live by passing guessed values.
+The tree metadata is complete from the snapshot, so branch navigation does not
+need to fetch every branch's entries up front.
 
 ## Removed: jump-to-message
 
